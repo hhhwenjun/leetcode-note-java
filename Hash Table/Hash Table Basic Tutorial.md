@@ -67,7 +67,75 @@ Materials refer to: https://leetcode.com/explore/learn/card/hash-table/182/pract
 
 ## Hash Set
 
+* Hash set example
+  * [Set API](https://docs.oracle.com/javase/8/docs/api/java/util/Set.html)
+  * [HashSet API](https://docs.oracle.com/javase/8/docs/api/java/util/HashSet.html)
+
+```java
+import java.util.HashSet;
+import java.util.Set;
+
+public class HashSetExample {
+	
+	public static void main(String[] args) {
+		
+		// 1. initialize the hash set
+		Set<Integer> hashSet = new HashSet<>();
+		
+		// 2. add a new key
+		hashSet.add(3);
+		hashSet.add(2);
+		hashSet.add(1);
+		
+		// 3. remove the key
+		hashSet.remove(2);
+		
+		// 4. check if the key is in the hash set
+		if (!hashSet.contains(2)) {
+			System.out.println("Key 2 is not in the hash set");
+		}
+		
+		// 5. get the size of the hash set
+		System.out.println("The size of hash set is :" + hashSet.size());
+		
+		// 6. iterate the hash set
+		for (Integer i : hashSet) {
+			System.out.println(i);
+		}
+		System.out.println("are in the hash set.");
+		
+		// 7. clear the hash set
+		hashSet.clear();
+		
+		// 8. check if the hash set is empty
+		if (hashSet.isEmpty()) {
+			System.out.println("hash set is empty now!");
+		}
+	}
+}
+```
+
+* Hash set does not have duplicates
+
+  * **Apply hast set to find duplicates**
+
+  ```java
+  /** Template for using hast set to find duplicates.*/
+  boolean findDuplicates(List<Type> keys){
+      // Replace type with actual type of your key
+      Set<Type> hashSet = new HashSet<>();
+      for (Type key : keys){
+          if (hashSet.contains(key)){
+              return true;
+          }
+          hashSet.add(key);
+      }
+      return false;
+  }
+  ```
+
 * Separate chaining:
+  
   * Essentially, the primary storage underneath a Hash Set is a continuous memory as Array. Each element in this array corresponds to a bucket that stores the actual values.
   * Given a value, first we generate a key for the value via the *hash function*. The generated key serves as the index to locate the bucket.
   * Once the bucket is located, we then perform the desired operations on the bucket, such as add, remove and contains.
