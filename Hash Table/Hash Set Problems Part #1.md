@@ -251,6 +251,7 @@ public int singleNumber(int[] nums){
 
 - Time complexity : `O(n)`. We only iterate through $\text{nums}$, so the time complexity is the number of elements in $\text{nums}$.
 - Space complexity : `O(1)`.
+- Bit manipulation [CN introduction](https://www.runoob.com/java/java-operators.html)
 
 ## Single Number II (Medium #137)
 
@@ -293,4 +294,689 @@ Output: 99
     return 0;
 } //The Hash map solution of #136
 ```
+
+### Standard Solutions
+
+#### Overview
+
+* The problem seems to be quite simple and one could solve it in $\mathcal{O}(N)$ time and $\mathcal{O}(N)$ space by using an additional data structure like set or hash map.
+
+* The real game starts at the moment when Google interviewer (the problem is quite popular at Google the last six months) asks you to solve the problem in a constant space, testing if you are OK with **bitwise operators**.
+
+<img src="https://leetcode.com/problems/single-number-ii/Figures/137/methods.png" alt="fig" style="zoom: 33%;" />
+
+#### Solution #1 HashSet
+
+* The idea is to convert an input array into hash set and then to compare the tripled sum of the set with the array sum
+* $3×(a+b+c)−(a+a+a+b+b+b+c)=2c$
+
+```java
+public int singleNumber(int[] nums){
+    Set<long> set = new HashSet<>();
+    long sumSet = 0, sumArray = 0;
+    for (int n : nums){
+        sumArray += n;
+        set.add((long)n);
+    }
+    for (long s : set) sumSet += s;
+    return (int)((3 * sumSet - sumArray) / 2);
+}
+```
+
+* Time complexity: $O(N)$ to iterate over the input array
+* Space complexity: $O(N)$ to keep the set of $N/3$ elements
+
+#### Solution #2 HashMap
+
+* Same as my solution
+* Time complexity : $\mathcal{O}(N)$ to iterate over the input array.
+* Space complexity : $\mathcal{O}(N)$ to keep the hash map of N/3 elements.
+
+#### Solution #3 Bit Manipulation
+
+* Bit operators
+  * $∼x$ that means bitwise NOT
+  * $x \& y$ that means bitwise AND
+  * $x \oplus y $ that means bitwise XOR
+* One could see the bit in a bitmask only if it appears odd number of times
+
+<img src="https://leetcode.com/problems/single-number-ii/Figures/137/xor.png" alt="fig" style="zoom: 33%;" />
+
+* **AND and NOT**
+
+  To separate number that appears once from a number that appears three times let's use two bitmasks instead of one: `seen_once` and `seen_twice`.
+
+  The idea is to
+
+  - change `seen_once` only if `seen_twice` is unchanged
+  - change `seen_twice` only if `seen_once` is unchanged
+
+<img src="https://leetcode.com/problems/single-number-ii/Figures/137/three.png" alt="fig" style="zoom:33%;" />
+
+* Time complexity $O(N)$ to iterate over the input array.
+* Space complexity $O(1)$ since no additional data structures are allocated.
+
+```java
+public int singleNumber(int[] nums){
+    int seenOnce = 0, seenTwice = 0;
+    
+    for (int num : nums){
+        // first appearence: 
+        // add num to seen_once 
+        // don't add to seen_twice because of presence in seen_once
+
+        // second appearance: 
+        // remove num from seen_once 
+        // add num to seen_twice
+
+        // third appearance: 
+        // don't add to seen_once because of presence in seen_twice
+        // remove num from seen_twice
+        seenOnce = ~seenTwice & (seenOnce ^ num);
+        seenTwice = ~seenOnce & (seenTwice ^ num);
+    }
+    
+    return seenOnce;
+}
+```
+
+## Intersection of Two Arrays(Easy #349)
+
+**Question**: Given two integer arrays `nums1` and `nums2`, return an array of their intersection. Each element in the result must be **unique** and you may return the result in **any order**.
+
+**Example 1:**
+
+```
+Input: nums1 = [1,2,2,1], nums2 = [2,2]
+Output: [2]
+```
+
+**Example 2:**
+
+```
+Input: nums1 = [4,9,5], nums2 = [9,4,9,8,4]
+Output: [9,4]
+Explanation: [4,9] is also accepted.
+```
+
+### My Solution
+
+```java
+class Solution {
+    public int[] intersection(int[] nums1, int[] nums2) {
+        Set<Integer> hashSet1 = new HashSet<>();
+        Set<Integer> hashSet2 = new HashSet<>();
+        Set<Integer> uniset = new HashSet<>();        
+        for (int num : nums1){
+            if (!hashSet1.add(num)){
+                continue;
+            }
+        }       
+        for (int num : nums2){
+            if (!hashSet2.add(num)){
+                continue;
+            }
+        }       
+        for (int num : hashSet2){
+            if (!hashSet1.add(num)){
+                uniset.add(num);
+            }
+        }
+        Integer[] integerArry = uniset.toArray(new Integer[0]);
+        int[] intArry = Arrays.stream(integerArry).mapToInt(Integer::intValue).toArray();
+        
+        return intArry;
+    }
+}//Not a good way to solve the problem
+```
+
+### Standard Solutions
+
+#### Solution #1 Two Sets
+
+* Similar to my solution but a simpler way
+
+```java
+public int[] intersection(int[] nums1, int[] nums2){
+    HashSet<Integer> set1 = new HashSet<Integer>();
+    for (Integer n : nums1) set1.add(n);
+    HashSet<Integer> set2 = new HashSet<Integer>();
+    for (Integer n : nums2) set2.add(n);
+    
+    if (set1.size() < set2.size()) return set_intersection(set1, set2);
+    else return set_intersection(set2, set1);
+}
+
+public int[] set_intersection(HashSet<Integer> set1, HashSet<Integer> set2){
+    int[] output = new int[set1.size()];
+    int idx = 0;
+    for (Integer s : set1){
+        if (set2.contains(s)) output[idx++] = s;
+    }
+    return Arrays.copyOf(output, idx);
+}
+```
+
+* Time complexity: $O(m+n)$, where `n` and `m` are arrays' lengths. $\mathcal{O}(n)$ time is used to convert `nums1` into set, $\mathcal{O}(m)$ time is used to convert `nums2`, and `contains/in` operations are $\mathcal{O}(1)$ in the average case.
+* Space complexity : $\mathcal{O}(m + n)$ in the worst case when all elements in the arrays are different.
+
+#### Solution #2 Built-in Set Intersection
+
+* `retainAll`:  This method takes **collection c** as a parameter containing elements to be retained from this set. Check it as intersection.
+
+```java
+public int[] intersection(int[] nums1, int[] nums2){
+    HashSet<Integer> set1 = new HashSet<Integer>();
+    for (Integer n : nums1) set1.add(n);
+    HashSet<Integer> set2 = new HashSet<Integer>();
+    for (Integer n : nums2) set2.add(n);
+    
+    set1.retainAll(set2);
+    
+    int[] output = new int[set1.size()];
+    int idx = 0;
+    for (int s : set1) output[idx++] = s;
+    return output;
+}
+```
+
+* Time complexity : $\mathcal{O}(n + m)$ in the average case and $\mathcal{O}(n \times m)$.
+* Space complexity : $\mathcal{O}(n + m)$ in the worst case when all elements in the arrays are different.
+
+## Happy Number(#Easy 202)
+
+**Question**: Write an algorithm to determine if a number `n` is happy.
+
+A **happy number** is a number defined by the following process:
+
+- Starting with any positive integer, replace the number by the sum of the squares of its digits.
+- Repeat the process until the number equals 1 (where it will stay), or it **loops endlessly in a cycle** which does not include 1.
+- Those numbers for which this process **ends in 1** are happy.
+
+Return `true` *if* `n` *is a happy number, and* `false` *if not*.
+
+**Example 1:**
+
+```
+Input: n = 19
+Output: true
+Explanation:
+1^2 + 9^2 = 82
+8^2 + 2^2 = 68
+6^2 + 8^2 = 100
+1^2 + 0^2 + 02 = 1
+```
+
+**Example 2:**
+
+```
+Input: n = 2
+Output: false
+```
+
+### Standard Solution
+
+#### Solution #1 Detect Cycles with a HashSet
+
+* Start with examples to test the loop, here are some examples
+
+<img src="https://leetcode.com/problems/happy-number/Figures/202/image1.png" alt="The chain of numbers starting with 7. It has the numbers 7, 49, 97, 130, 10 and 1." style="zoom:50%;" />
+
+<img src="https://leetcode.com/problems/happy-number/Figures/202/image2.png" alt="The chain of numbers starting with 116. It has the numbers 116, 38, 73, 58, and then goes in a circle to 89, 145, 42, 20, 4, 16, 37, and back to 58." style="zoom: 50%;" />
+
+* For some numbers, the square process would repeat to a loop, we can use a hash set to record the loop
+* 2 parts the algorithm we'll need to design and code.
+  * Given a number n, what is its *next* number?
+  * Follow a chain of numbers and detect if we've entered a cycle.
+
+```java
+private int getNext(int n){
+    int totalSum = 0;
+    while(n > 0){
+        int d = n % 10; // remember this part of taking digits
+        n = n / 10;
+        totalSum += d * d;
+    }
+    return totalSum;
+}
+
+public boolean isHappy(int n){
+    Set<Integer> seen = new HashSet<>();
+    while(n != 1 && !seen.contains(n)){
+        seen.add(n);
+        n = getNext(n);
+    }
+    return n == 1;
+}
+```
+
+* Time complexity: $O(243⋅3+\log n+\log\log n+\log\log\log n)... = O(\log n)$.
+
+* Space complexity: $O(\log n)$ Closely related to the time complexity, and is a measure of what numbers we're putting in the HashSet, and how big they are. For a large enough, the most space will be taken by n itself.
+
+  We can optimize to $O(243 \cdot 3) = O(1)O(243⋅3)=O(1)$ easily by only saving numbers in the set that are less than 243, as we have already shown that for numbers that are higher, it's impossible to get back to them anyway.
+
+#### Solution #2 Floyd's Cycle-Finding Algorithm
+
+* Last solution `getNext(n)` is using an implicit linkedlist.
+* Use linkedlist structure to track the runners around a circular race track: 
+  * Tortoise and hare.
+  * Slow runner and fast runner.
+  * **Tortoise at location head, hare at location `head.next` at the beginning**
+  * **Each time tortoise moves one step, hare moves two steps.**
+
+* If n *is* a happy number, i.e. there is no cycle, then the fast runner will eventually get to 1 before the slow runner.
+* If n *is not* a happy number, then eventually the fast runner and the slow runner will be on the same number.
+
+```java
+public int getNext(int n){
+    int totalSum = 0;
+    while(n > 0){
+        int d = n % 10;
+        n = n / 10;
+        totalSum += d * d;
+    }
+    return totalSum;
+}
+
+public boolean isHappy(int n){
+    int slowRunner = n;
+    int fastRunner = getNext(n);
+    
+    while(fastRunner != 1 && slowRunner != fastRunner){
+        slowRunner = getNext(slowRunner);
+        fastRunner = getNext(getNext(fastRunner));
+    }
+    
+    return fastRunner == 1;
+}
+```
+
+* Time complexity: $O(\log n)$
+
+## LinkedList Cycle(Easy #141)
+
+**Question**: Given `head`, the head of a linked list, determine if the linked list has a cycle in it.
+
+There is a cycle in a linked list if there is some node in the list that can be reached again by continuously following the `next` pointer. Internally, `pos` is used to denote the index of the node that tail's `next` pointer is connected to. **Note that `pos` is not passed as a parameter**.
+
+Return `true` *if there is a cycle in the linked list*. Otherwise, return `false`.
+
+ **Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2018/12/07/circularlinkedlist.png" alt="img" style="zoom:50%;" />
+
+```
+Input: head = [3,2,0,-4], pos = 1
+Output: true
+Explanation: There is a cycle in the linked list, where the tail connects to the 1st node (0-indexed).
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2018/12/07/circularlinkedlist_test2.png)
+
+```
+Input: head = [1,2], pos = 0
+Output: true
+Explanation: There is a cycle in the linked list, where the tail connects to the 0th node.
+```
+
+**Example 3:**
+
+![img](https://assets.leetcode.com/uploads/2018/12/07/circularlinkedlist_test3.png)
+
+```
+Input: head = [1], pos = -1
+Output: false
+Explanation: There is no cycle in the linked list.
+```
+
+ **Constraints:**
+
+- The number of the nodes in the list is in the range `[0, 104]`.
+- `-105 <= Node.val <= 105`
+- `pos` is `-1` or a **valid index** in the linked-list.
+
+**Follow up:** Can you solve it using `O(1)` (i.e. constant) memory?
+
+### My Solution
+
+```java
+/**
+ * Definition for singly-linked list.
+ * class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) {
+ *         val = x;
+ *         next = null;
+ *     }
+ * }
+ */
+ 
+  public boolean hasCycle(ListNode head) {
+        
+        ListNode tor = head;
+        ListNode hare = head;
+        
+        if (tor == null || tor.next == null){
+            return false;
+        }     
+        hare = tor.next;
+        
+        while (tor != hare){
+            if (hare == null || hare.next == null){
+                return false;
+            }
+            tor = tor.next;
+            hare = hare.next.next;
+        }      
+        return hare == tor;
+   }// Floyd's Cycle Finding algorithm
+```
+
+### Standard Solution
+
+#### Solution #1 Hash Table
+
+* Check whether a node had been visited before
+* Go through the node one by one：
+  * `null`: reach the end of the list
+  * Current node is in the hash table indicates a cycle
+
+```java
+public boolean hasCycle(ListNode head){
+	Set<ListNode> nodesSeen = new HashSet<>();
+    while (head != null){
+        if (nodesSeen.contains(head)){
+            return ture;
+        }
+        nodesSeen.add(head);
+        head = head.next;
+    }
+    return false;
+}
+```
+
+* Time complexity : $O(n)$. We visit each of the n elements in the list at most once. Adding a node to the hash table costs only $O(1)$ time.
+* Space complexity: $O(n)$. The space depends on the number of elements added to the hash table, which contains at most n elements.
+
+#### Solution #2 Floyd's Cycle Finding Algorithm
+
+* Similar to my solution
+* Consider two pointers at different speed - a slow pointer and a fast pointer
+
+```java
+public boolean hasCycle(ListNode head){
+    if (head == null){
+        return false;
+    }
+    
+    ListNode slow = head;
+    ListNode fast = head.next;
+    
+    while (slow != fast){
+        if (fast == null || fast.next == null){
+            return false;
+        }
+        slow = slow.next;
+        fast = fast.next.next;
+    }
+    return true;
+}
+```
+
+* Time complexity : $O(n)$
+* Space complexity: $O(1)$
+
+## LinkedList Cycle II(Medium #142)
+
+**Question**: Given the `head` of a linked list, return *the node where the cycle begins. If there is no cycle, return* `null`.
+
+There is a cycle in a linked list if there is some node in the list that can be reached again by continuously following the `next` pointer. Internally, `pos` is used to denote the index of the node that tail's `next` pointer is connected to (**0-indexed**). It is `-1` if there is no cycle. **Note that** `pos` **is not passed as a parameter**.
+
+**Do not modify** the linked list.
+
+ 
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2018/12/07/circularlinkedlist.png)
+
+```
+Input: head = [3,2,0,-4], pos = 1
+Output: tail connects to node index 1
+Explanation: There is a cycle in the linked list, where tail connects to the second node.
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2018/12/07/circularlinkedlist_test2.png)
+
+```
+Input: head = [1,2], pos = 0
+Output: tail connects to node index 0
+Explanation: There is a cycle in the linked list, where tail connects to the first node.
+```
+
+**Example 3:**
+
+![img](https://assets.leetcode.com/uploads/2018/12/07/circularlinkedlist_test3.png)
+
+```
+Input: head = [1], pos = -1
+Output: no cycle
+Explanation: There is no cycle in the linked list.
+```
+
+ 
+
+**Constraints:**
+
+- The number of the nodes in the list is in the range `[0, 104]`.
+- `-105 <= Node.val <= 105`
+- `pos` is `-1` or a **valid index** in the linked-list.
+
+### My Solution
+
+```java
+/**
+ * Definition for singly-linked list.
+ * class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode(int x) {
+ *         val = x;
+ *         next = null;
+ *     }
+ * }
+ */
+public class Solution {
+    public ListNode detectCycle(ListNode head) {
+        
+        Set<ListNode> hashSetNode = new HashSet<ListNode>();   
+        ListNode current = head;      
+        while (current != null){
+            
+            if (!hashSetNode.add(current)){
+                return current;
+            }
+            current = current.next;
+        }
+        return null;
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Hash Table
+
+* Same as my solution
+* Allocate a set to store `ListNode` references.
+
+* Time complexity : $O(n)$
+* Space complexity : $O(n)$
+
+#### Solution #2 Floyd's Tortoise and Hare
+
+* There are two phases in the algorithm.
+* **Phase 1**
+  * Initialize hare and tortoise. Increment tortoise once and hare twice.
+  * If hare and tortoise point to the same node, we return it. Otherwise, continue.
+  * If while loop terminates without returning a node, return null to indicate `null`
+  * Eventually they would go to the same node if there is a cycle
+
+<img src="https://leetcode.com/problems/linked-list-cycle-ii/Figures/142/Slide1.PNG" alt="Diagram of cyclic list" style="zoom:33%;" />
+
+* **Phase 2**
+
+  * Given that phase 1 finds an intersection, phase 2 find the node that is the entrance to the cycle.
+
+  * Initialize two more pointers: `ptr1` and `ptr2`
+
+  * `ptr1` points to the head of the list, `ptr2` points to the intersection.
+
+  * Advance each of them by 1 until they meet, **the node they meet is the entrance of the cycle.**
+
+  * Suppose $F$ is the number of nodes outside of the cycle, $C$ is the length of the cycle
+
+  * To compute the intersection point, let's note that the hare has traversed twice as many nodes as the tortoise, *i.e.* $2d(\text{tortoise}) = d(\text{hare})$, that means
+
+    <img src="https://leetcode.com/problems/linked-list-cycle-ii/Figures/142/diagram.png" alt="Phase 2 diagram" style="zoom:33%;" />
+
+    $2(F + a) = F + nC + a$, where $n$ is some integer. 
+
+  * Hence the coordinate of the intersection point is $F + a = nC$.
+
+  ```java
+  private ListNode getIntersect(ListNode head){
+      ListNode tortoise = head;
+      ListNode hare = head;
+      
+      while(hare != null && hare.next != null){
+          tortoise = tortoise.next;
+          hare = hare.next.next;
+          if (tortoise == hare){
+              return tortoise;
+          }
+      }
+      return null;
+  }
+  
+  public ListNode detectCycle(ListNode head){
+      if (head == null){
+          return null;
+      }
+      
+      ListNode intersect = getIntersect(head);
+      if (intersect == null){
+          return null;
+      }
+      
+      ListNode ptr1 = head;
+      ListNode ptr2 = intersect;
+      while(ptr1 != ptr2){
+          ptr1 = ptr1.next;
+          ptr2 = ptr2.next;
+      }
+      
+      return ptr1;
+  }
+  ```
+
+* Time complexity : $O(n)$
+* Space complexity : $O(1)$
+
+## Find the Duplicate Number(Medium #287)
+
+**Question**: Given an array of integers `nums` containing `n + 1` integers where each integer is in the range `[1, n]` inclusive.
+
+There is only **one repeated number** in `nums`, return *this repeated number*.
+
+You must solve the problem **without** modifying the array `nums` and uses only constant extra space.
+
+**Example 1:**
+
+```
+Input: nums = [1,3,4,2,2]
+Output: 2
+```
+
+**Example 2:**
+
+```
+Input: nums = [3,1,3,4,2]
+Output: 3
+```
+
+ **Constraints:**
+
+- `1 <= n <= 105`
+- `nums.length == n + 1`
+- `1 <= nums[i] <= n`
+- All the integers in `nums` appear only **once** except for **precisely one integer** which appears **two or more** times.
+
+### My Solution
+
+```java
+public int findDuplicate(int[] nums) {
+
+    Map<Integer, Integer> hashMap = new HashMap<Integer, Integer>();
+    for (int num : nums){
+        hashMap.put(num, hashMap.getOrDefault(num, 0) + 1);
+        if (hashMap.get(num) == 2){
+            return num;
+        }
+    }
+    return 0;
+}
+```
+
+### Standard Solution
+
+This question has many solutions. The note would only take some of them which are well-written.
+
+#### Solution #1 Sort(Easiest)
+
+* Sort the array and find the duplicate one with for loop
+
+```java
+public int findDuplicate(int[] nums){
+    Arrays.sort(nums);
+    for (int i = 1; i < nums.length; i++){
+        if (nums[i] == nums[i-1]){
+            return nums[i];
+        }
+    }
+    return -1;
+}
+```
+
+* Time complexity: $O(n\log n)$
+
+  Sorting takes $O(n \log n)$ time. This is followed by a linear scan, resulting in a total of $O(n \log n)$+ $O(n)$ = $O(n \log n)$ time.
+
+* Space complexity: $O(\log n)$ in Java.
+
+#### Solution #2 HashSet
+
+```java
+public int findDuplicate(int[] nums){
+	Set<Integer> seen = new HashSet<Integer>();
+    for (int num : nums){
+        if (seen.contains(num)){
+            return num;
+        }
+        seen.add(num);
+    }
+    return -1;
+}
+```
+
+* Time complexity: $O(n)$
+* Space complexity: $O(n)$
+
+#### Solution #3 Negative Marking
 
