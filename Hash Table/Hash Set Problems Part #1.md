@@ -978,5 +978,38 @@ public int findDuplicate(int[] nums){
 * Time complexity: $O(n)$
 * Space complexity: $O(n)$
 
-#### Solution #3 Negative Marking
+#### Solution #3 Negative Marking(need to learn)
+
+* Since the array only contains positive integers, we can track each number (num) that has been seen before by flipping the sign of the number located at index num
+* **Algorithm**
+  1. Iterate over the array, evaluating each element (let's call the current element cur.
+  2. Since we use negative marking, we must ensure that the current element (cur) is positive (i.e. if cur is negative, then use its absolute value).
+  3. Check if nums[cur] is negative.
+     - If it is, then we have already performed this operation for the same number, and hence cur is the duplicate number. Store cur as the duplicate and exit the loop.
+     - Otherwise, flip the sign of nums[cur] (i.e. make it negative). Move to the next element and repeat step 3.
+  4. Once we've identified the duplicate, we could just return the duplicate number. However, even though we were not able to meet the problem constraints, we can show that we are mindful of the constraints by restoring the array. This is done by changing all negative numbers to positive.
+
+```java
+public int findDuplicate(int[] nums) {
+    int duplicate = -1;
+    for (int i = 0; i < nums.length; i++) {
+        int cur = Math.abs(nums[i]);
+        if (nums[cur] < 0) {
+            duplicate = cur;
+            break;
+        }
+        nums[cur] *= -1;
+    }
+
+    // Restore numbers
+    for (int i = 0; i < nums.length; i++)
+        nums[i] = Math.abs(nums[i]);
+
+    return duplicate;
+}
+
+```
+
+* Time Complexity: $O(n)$
+* Space Complexity: $O(1)$
 
