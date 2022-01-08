@@ -1013,3 +1013,87 @@ public int findDuplicate(int[] nums) {
 * Time Complexity: $O(n)$
 * Space Complexity: $O(1)$
 
+#### Solution #4 Array as HashMap (Recursion)
+
+* Use the Array as a HashMap -- map each number to its equivalent index in the array.
+* The array starts from [1, n]
+* Starts with index 0(since it must be out of place), if nums[first] == first, then we find a duplicate
+* Otherwise, swap the numbers located at index 0 and at index first
+* **Algorithm**:
+  * Start with the first index (index 0) of the array. Call store(nums, 0) to store the number 0 at index 0.
+    - Note that because all input numbers are in the range [1, n] no number will ever be mapped to index 00. Hence, index 00 can hold any dummy value, including 0.
+  * store(nums, cur) uses the current number, cur, as the target index. It first backs up the number that's stored at the equivalent position (next = nums[cur]), and then overwrites that index with cur.
+  * Now we need to deal with the number that was backed up (i.e. next). Recursively call store with this number as input (i.e. store(nums, next)) so it too can be placed at its equivalent index.
+  * Repeat steps 2 and 3. At some point, nums[cur] will already contain the number cur, in which case we have found the duplicate number.
+* **Example**:
+  * To illustrate the algorithm, let's consider an example [3,3,5,4,1,3]:
+    - store(nums, 0)
+      - Here cur = 0 and nums[cur]=3
+      - Back up the number 3 (that's at index 0)
+      - Store 0 at index 0. The array is now: [$\underline0$,3,5,4,1,3]
+      - Recursively call store(nums, 3)
+    - store(nums, 3)
+      - Back up the number 4 (at index 3)
+      - Store 3 at index 3. The array is now: $[0,3,5,\underline3,1,3]$
+      - Now call store(nums, 4)
+    - store(nums, 4)
+      - Back up the number 1 (at index 4)
+      - Store 4 at index 4. The array is now $[0,3,5,3,\underline4,3]$
+      - Now call store(nums, 1)
+    - store(nums, 1)
+      - Back up the number 3 (at index 1)
+      - Store 1 at index 1. The array is now $[0,\underline1,5,3,4,3]$
+      - Now call store(nums, 3)
+    - store(nums, 3)
+      - Since 3 already exists at index 3 in the array $[0,1,5,\underline3,4,3]$, and we have another instance of 3 that we are trying to store there, clearly that's the duplicate number. Return 3 as the duplicate, and stop execution.
+
+```java
+public int store(int[] nums, int cur){
+    if (cur == nums[cur]){
+        return cur;
+    }
+    int nxt = nums[cur];
+    nums[cur] = cur;
+    return store(nums, nxt);
+}
+
+public int findDuplicate(int[] nums){
+    return store(nums, 0);
+}
+```
+
+* Time Complexity: $O(n)$
+* Space Complexity: $O(n)$
+
+#### Solution #4.2 Array as HashMap(Iterative, Recommend)
+
+* Similar to last solution, but using index 0 to hold the temp value.
+* Swap the value if the nums[0] does not equal to nums[nums[0]], index does not equal to its value
+* If equals, it means that is the duplicate one
+
+* **Algorithm**:
+  * At every iteration, compare the number at index 0 (i.e. nums[0]) to the number at index nums[0] (i.e. nums[nums[0]]).
+  * Use index 0 as the source of all swapping because we know the number 0 is not in the array.
+  * Take each number at index 0 (let's call it first) and swap it with the number at its equivalent index in the array (i.e. the number at nums[first]).
+  * Repeat step 3 until first is the same as nums[first] (e.g. if the duplicate number is 3, then keep swapping nums[0] and nums[nums[0]] until both nums[3] == 3 and nums[0] == 3).
+
+* **Example**:
+  * $[3,3,5,4,1,3]$ // Compare nums[0] to nums[nums[0]] (i.e. nums[0] to nums[3]). 3 != 4. Swap them. Now the first 33 will be swapped into its correct position, and position 0 has 44.
+  * [$\underline4,3,5,3,\underline1,3]$ // Compare nums[0] to nums[4]. 4 != 1. Not equal, so swap again. Now 4 is in its correct position.
+  * $[\underline1,\underline3,5,3,4,3] $// Compare nums[0] with nums[1]. Not equal, swap.
+  * $[\underline3,1,5,\underline3,4,3] $// Now nums[0] == nums[3] (both are 3). That's it! 3 is in both positions 0 and position 3, so it's the duplicate.
+
+```java
+public int findDuplicate(int[] nums){
+    while (nums[0] != nums[nums[0]]){
+        int nxt = nums[nums[0]];
+        nums[nums[0]] = nums[0];
+        nums[0] = nxt;
+    }
+    return nums[0];
+}
+```
+
+* Time Complexity: $O(n)$
+* Space Complexity: $O(1)$
+
