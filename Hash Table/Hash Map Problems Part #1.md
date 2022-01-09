@@ -87,6 +87,90 @@ public int[] twoSum(int[] nums, int target){
 
 * Time and space complexity is same as last question.
 
+## Two Sum II - Input Array Is Sorted(Easy #167)
+
+**Question**: Given a **1-indexed** array of integers `numbers` that is already ***sorted in non-decreasing order\***, find two numbers such that they add up to a specific `target` number. Let these two numbers be `numbers[index1]` and `numbers[index2]` where `1 <= index1 < index2 <= numbers.length`.
+
+Return *the indices of the two numbers,* `index1` *and* `index2`*, **added by one** as an integer array* `[index1, index2]` *of length 2.*
+
+The tests are generated such that there is **exactly one solution**. You **may not** use the same element twice.
+
+ **Example 1:**
+
+```
+Input: numbers = [2,7,11,15], target = 9
+Output: [1,2]
+Explanation: The sum of 2 and 7 is 9. Therefore, index1 = 1, index2 = 2. We return [1, 2].
+```
+
+**Example 2:**
+
+```
+Input: numbers = [2,3,4], target = 6
+Output: [1,3]
+Explanation: The sum of 2 and 4 is 6. Therefore index1 = 1, index2 = 3. We return [1, 3].
+```
+
+**Example 3:**
+
+```
+Input: numbers = [-1,0], target = -1
+Output: [1,2]
+Explanation: The sum of -1 and 0 is -1. Therefore index1 = 1, index2 = 2. We return [1, 2].
+```
+
+### My Solution
+
+```java
+public int[] twoSum(int[] numbers, int target){
+    int low = numbers[0];
+    int len = numbers.length;
+    int high = numbers[len - 1];
+    int i = 0;
+    int j = len - 1;
+
+    while(low + high != target && i != j){
+
+        if (low + high < target) {
+            i++;
+            low = numbers[i];
+        }
+        else if(low + high > target) {
+            j--;
+            high = numbers[j];
+        }
+    }
+
+    return new int[]{i + 1, j + 1};
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Two Pointers
+
+* Concept is same as my solution
+* It is a better solution when the input array is sorted.
+
+```java
+public int[] twoSum(int[] numbers, int target){
+    int lo = 0, hi = numbers.length - 1;
+    while(lo < hi){
+        int curSum = numbers[lo] + numbers[hi];
+        if (curSum == target){
+            return new int[]{lo + 1, hi + 1};
+        }
+        else if (curSum > target){
+            hi--;
+        }
+        else {
+            lo++;
+        }
+    }
+    return new int[]{-1, -1};//in case there is no solution
+}
+```
+
 ## Isomorphic Strings(Easy #205)
 
 **Question**: Given two strings `s` and `t`, *determine if they are isomorphic*.
@@ -151,7 +235,9 @@ public boolean isIsomorphic(String s, String t) {
 * Length of string using `str.length()`
 * Map character to character
 
-### Standard Solution #1 Character Mapping with Dictionary
+### Standard Solution 
+
+#### Solution #1 Character Mapping with Dictionary
 
 * Similar to my solution
 
@@ -201,7 +287,7 @@ public boolean isIsomorphic(String s, String t){
 * Time complexity : $O(N)$
 * Space complexity: $O(1)$
 
-### Standard Solution #2 First Occurrence Transformation
+#### Solution #2 First Occurrence Transformation
 
 * **Algorithm**:
   * Define a function called `transform` that takes a string as an input and returns a new string with modifications as explained in the intuition section.
