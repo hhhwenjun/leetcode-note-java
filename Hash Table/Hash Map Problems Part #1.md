@@ -518,3 +518,205 @@ public List<List<Integer>> threeSum(int[] nums){
 * Time Complexity: $\mathcal{O}(n^2)$. We have outer and inner loops, each going through n elements.
 * Space Complexity: $\mathcal{O}(n)$ for the hashset/hashmap.
 
+## Minimum Index Sum of Two Lists(Easy #599)
+
+**Question**: Suppose Andy and Doris want to choose a restaurant for dinner, and they both have a list of favorite restaurants represented by strings.
+
+You need to help them find out their **common interest** with the **least list index sum**. If there is a choice tie between answers, output all of them with no order requirement. You could assume there always exists an answer.
+
+**Example 1:**
+
+```
+Input: list1 = ["Shogun","Tapioca Express","Burger King","KFC"], list2 = ["Piatti","The Grill at Torrey Pines","Hungry Hunter Steakhouse","Shogun"]
+Output: ["Shogun"]
+Explanation: The only restaurant they both like is "Shogun".
+```
+
+**Example 2:**
+
+```
+Input: list1 = ["Shogun","Tapioca Express","Burger King","KFC"], list2 = ["KFC","Shogun","Burger King"]
+Output: ["Shogun"]
+Explanation: The restaurant they both like and have the least index sum is "Shogun" with index sum 1 (0+1).
+```
+
+ **Constraints:**
+
+- `1 <= list1.length, list2.length <= 1000`
+- `1 <= list1[i].length, list2[i].length <= 30`
+- `list1[i]` and `list2[i]` consist of spaces `' '` and English letters.
+- All the stings of `list1` are **unique**.
+- All the stings of `list2` are **unique**.
+
+### My Solution
+
+```java
+public String[] findRestaurant(String[] list1, String[] list2){
+    Map<String, Integer> hashMap1 = new HashMap<>();
+    List<String> intersectList = new ArrayList<>();
+    int len1 = list1.length;
+    int len2 = list2.length;
+    int minSum = Integer.MAX_VALUE;
+    
+    for(int i = 0; i < len1; i++){
+        hashMap1.put(list1[i], i);
+    }
+    
+    for (int j = 0; j < len2; j++){
+        if (hashMap1.containsKey(list2[j])){
+            if (j + hashMap1.get(list2[j]) < minSum){
+                intersectList.clear();
+                intersectList.add(list2[j]);
+                minSum = j + hashMap1.get(list2[j]);
+            }
+            else if(j + hashMap1.get(list2[j]) == minSum){
+                intersectList.add(list2[j]);
+            }
+        }
+    }
+    
+    return intersectList.toArray(new String[intersectList.size()]);
+}
+```
+
+* Use `clear` method since we only need the one with minimum sum
+* Find the max value by `Integer.MAX_VALUE`
+* Use array list then covert it to array `toArray` method,  check the size of the list
+* Sum the values and compare the sum
+
+### Standard Solution
+
+#### Solution #1 Using HashMap(not recommended)
+
+* Nested loop, sum $i + j$ to find the value and make entry to the map.
+
+```java
+public String[] findRestaurant(String[] list1, String[] list2){
+    HashMap<Integer, List<String>> map = new HashMap<>();
+    for (int i = 0; i < list1.length; i++){
+        for (int j = 0; j < list2.length; j++){
+            if (list1[i].equals(list2[j])){
+                if (!map.containsKey(i + j)){
+                    map.put(i + j, new ArrayList<String>());
+                }
+                map.get(i + j).add(list1[i]);
+            }
+        }
+    }
+//    int min_index_sum = Integer.MAX_VALUE;
+//    for (int key : map.keySet()){
+//        min_index_sum = Math.min(min_index_sum, key);
+//    }
+//    String[] res = new String[map.get(min_index_sum).size()];
+//    return map.get(min_index_sum).toArray(res);
+    
+    int min_index_sum = Collections.min(map.keySet());
+    return map.get(min_index_sum).toArray(new String[map.get(min_index_sum).size()]);
+}
+```
+
+* Slower with the commented codes
+* Map integer with lists, add duplicate restaurant to the **corresponding list**
+* Use `Collections.min(map.keySet())` to find the minimum value
+  * `map.values()` and `map.keySet()` can apply `Collections.min()`
+* Compare one by one then use `Math.min(value1, value2)`
+* For loop in map keys: 
+
+```java
+for (int key : map.keySet()){
+    minSum = Math.min(value1, value2);
+}
+```
+
+* Time complexity: $O(l1∗l2∗x)$
+* Space complexity: $O(l1∗l2∗x)$
+
+#### Solution #2 Using HashMap(linear, recommended)
+
+* Same as my solution but a cleaner version
+
+```java
+public String[] findRestaurant(String[] list1, String[] list2){
+    HashMap<String, Integer> map = new HashMap<>();
+    for (int i = 0; i < list1.length; i++){
+        map.put(list1[i],i);
+    }
+    List<String> res = new ArrayList<>();
+    int min_sum = Integer.MAX_VALUE, sum;
+    for (int j = 0; j < list2.length && j <= min_sum; j++){
+        if (map.containsKey(list2[j])){
+            sum = j + map.get(list2[j]);
+            if (sum < min_sum){
+                res.clear();
+                res.add(list2[j]);
+                min_sum = sum;
+            }
+            else if (sum == min_sum){
+                res.add(list2[j]);
+            }
+        }
+    }
+    return res.toArray(new String[res.size()]);
+}
+```
+
+* Time complexity : $O(l_1+l_2)$.
+* Space complexity : $O(l_1*x)$
+
+## First Unique Character in a String(Easy #387)
+
+**Question**: Given a string `s`, *find the first non-repeating character in it and return its index*. If it does not exist, return `-1`.
+
+ **Example 1:**
+
+```
+Input: s = "leetcode"
+Output: 0
+```
+
+**Example 2:**
+
+```
+Input: s = "loveleetcode"
+Output: 2
+```
+
+**Example 3:**
+
+```
+Input: s = "aabb"
+Output: -1
+```
+
+ **Constraints:**
+
+- `1 <= s.length <= 105`
+- `s` consists of only lowercase English letters.
+
+### My Solution
+
+```java
+public int firstUniqChar(String s){
+	Map<Character, Integer> charMap = new HashMap<>();
+    
+    for (Character chr : s){
+        charMap.put(s, charMap.getOrDefault(s,0) + 1);
+    }
+    
+    for (int i = 0; i < s.length; i++){
+        if (charMap.get(s.charAt(i)) == 1) return i;
+    }
+	return -1;
+}
+```
+
+### Standard Solution
+
+* Same as my solution
+* Use hashmap to store characters and corresponding number of times
+* Then loop to find the first one which number of times is 1
+* String need to use `.length()`, array can use `.length`
+  * [`length()` vs `length`](https://www.geeksforgeeks.org/length-vs-length-java/)
+
+* Time complexity : $\mathcal{O}(N)$ since we go through the string of length `N` two times.
+* Space complexity : $\mathcal{O}(1)$ because English alphabet contains 26 letters.
