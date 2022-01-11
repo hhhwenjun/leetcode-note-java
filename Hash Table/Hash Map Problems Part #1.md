@@ -720,3 +720,364 @@ public int firstUniqChar(String s){
 
 * Time complexity : $\mathcal{O}(N)$ since we go through the string of length `N` two times.
 * Space complexity : $\mathcal{O}(1)$ because English alphabet contains 26 letters.
+
+## Intersection of Two Arrays II(Easy #350)
+
+**Question**: Given two integer arrays `nums1` and `nums2`, return *an array of their intersection*. Each element in the result must appear as many times as it shows in both arrays and you may return the result in **any order**.
+
+ **Example 1:**
+
+```
+Input: nums1 = [1,2,2,1], nums2 = [2,2]
+Output: [2,2]
+```
+
+**Example 2:**
+
+```
+Input: nums1 = [4,9,5], nums2 = [9,4,9,8,4]
+Output: [4,9]
+Explanation: [9,4] is also accepted.
+```
+
+ **Constraints:**
+
+- `1 <= nums1.length, nums2.length <= 1000`
+- `0 <= nums1[i], nums2[i] <= 1000`
+
+### My Solution
+
+```java
+public int[] intersect(int[] nums1, int[] nums2){
+    Map<Integer, Integer> map = new HashMap<>();
+    List<Integer> intersectList = new ArrayList<>();
+    
+    for (int i = 0; i < nums1.length; i++){
+        map.put(nums1[i], map.getOrDefault(nums1[i],0) + 1);
+    }
+    
+    for (int j = 0; j < nums2.length; j++){
+        if (map.containsKey(nums2[j])){
+            intersectList.add(nums2[j]);
+            map.put(nums2[j], map.get(nums2[j]) - 1);
+            if (map.get(nums2[j]) == 0) map.remove(nums2[j]);
+        }
+    }
+    int[] arr = intersectList.stream().mapToInt(Integer::intValue).toArray();
+    return arr;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Hash Map
+
+* Same as my solution
+* Compare the length of the two arrays
+* **Algorithm**:
+  * If `nums1` is larger than `nums2`, swap the arrays.
+  * For each element in `nums1`:
+    - Add it to the hash map `m`.
+      - Increment the count if the element is already there.
+  * Initialize the insertion pointer (`k`) with zero.
+  * Iterate along `nums2`:
+    - If the current number is in the hash map and count is positive:
+      - Copy the number into `nums1[k]`, and increment `k`.
+      - Decrement the count in the hash map.
+  * Return first `k` elements of `nums1`.
+
+```java
+public int[] intersect(int[] nums1, int[] nums2){
+    if (nums1.length > nums2.length){
+        return intersect(nums2, nums1);//short comes first
+    }
+    
+    HashMap<Integer, Integer> m = new HashMap<>();
+    for (int n : nums1){
+        m.put(n, m.getOrDefault(n, 0) + 1);
+    }
+    int k = 0;
+    for (int n : nums2){
+        int cnt = m.getOrDefault(n, 0);
+        if (cnt > 0){
+            nums1[k++] = n;//modify on the first array
+            m.put(n, cnt - 1);
+        }
+    }
+    return Arrays.copyOfRange(nums1, 0, k);
+}
+```
+
+* `copyOfRange(array, from_index, to_index)` to cut the part of the array
+* Time Complexity: $\mathcal{O}(n + m)$, where n and m are the lengths of the arrays. We iterate through the first, and then through the second array; insert and lookup operations in the hash map take a constant time.
+* Space Complexity: $\mathcal{O}(\min(n, m))$. We use hash map to store numbers (and their counts) from the smaller array.
+
+#### Solution #2 Sort
+
+* Recommend the method when the input is sorted
+* **Algorithm**:
+  * Sort `nums1` and `nums2`.
+  * Initialize `i`, `j` and `k` with zero.
+  * Move indices `i` along `nums1`, and `j` through `nums2`:
+    - Increment `i` if `nums1[i]` is smaller.
+    - Increment `j` if `nums2[j]` is smaller.
+    - If numbers are the same, copy the number into `nums1[k]`, and increment `i`, `j` and `k`.
+  * Return first `k` elements of `nums1`.
+
+```java
+public int[] intersect(int[] nums1, int[] nums2){
+    Arrays.sort(nums1);
+    Arrays.sort(nums2);
+    int i = 0, j = 0, k = 0;
+    while(i < nums1.length && j < nums2.length){
+        if (nums1[i] < nums2[j]){
+            ++i;
+        } else if (nums1[i] > nums2[j]){
+            ++j;
+        } else {
+            nums1[k++] = nums1[i++];//previous spot is used to store intersect
+            ++j;
+        }
+    }
+    return Arrays.copyOfRange(nums1, 0, k);
+}
+```
+
+- Time Complexity: $\mathcal{O}(n\log{n} + m\log{m})$, where n and m are the lengths of the arrays. We sort two arrays independently, and then do a linear scan.
+- Space Complexity: from $\mathcal{O}(\log{n} + \log{m})$ to $\mathcal{O}(n + m)$, depending on the implementation of the sorting algorithm. For the complexity analysis purposes, we ignore the memory required by inputs and outputs.
+
+## Contains Duplicate II(Easy #219)
+
+**Question**: Given an integer array `nums` and an integer `k`, return `true` if there are two **distinct indices** `i` and `j` in the array such that `nums[i] == nums[j]` and `abs(i - j) <= k`.
+
+ **Example 1:**
+
+```
+Input: nums = [1,2,3,1], k = 3
+Output: true
+```
+
+**Example 2:**
+
+```
+Input: nums = [1,0,1,1], k = 1
+Output: true
+```
+
+**Example 3:**
+
+```
+Input: nums = [1,2,3,1,2,3], k = 2
+Output: false
+```
+
+ **Constraints:**
+
+- `1 <= nums.length <= 105`
+- `-109 <= nums[i] <= 109`
+- `0 <= k <= 105`
+
+### My Solution
+
+```java
+public boolean containsNearbyDuplicate(int[] nums, int k){
+    Map<Integer, Integer> map = new HashMap<>();
+    
+    for (int i = 0; i < nums.length; i++){
+        if (map.containsKey(nums[i])){
+            int diff = Math.abs(map.get(nums[i]) - i);
+            if (diff <= k) return true;
+        }
+        map.put(nums[i], i);
+    }
+    return false;
+}
+```
+
+### Standard Solution
+
+![img](https://media.geeksforgeeks.org/wp-content/cdn-uploads/20210315172345/Java-Collections-Framework-Hierarchy.png)
+
+#### Solution #1 TreeSet
+
+* A BST supports `search`, `delete` and `insert` operations all in $O(\log k)$ time, where k*k* is the number of elements in the BST.
+
+* **Algorithm**:
+  * Loop through the array, for each element do
+    - Search current element in the BST, return `true` if found
+    - Put current element in the BST
+    - If the size of the BST is larger than k*k*, remove the oldest item.
+* **Exceed time limit**(not recommended in the question), just provide some thoughts
+
+```java
+public boolean containsNearbyDuplicatee(int[] nums, int k){
+    Set<Integer> set = new TreeSet<>();
+    for (int i = 0; i < nums.length; ++i){
+        if (set.contains(nums[i])) return true;
+        set.add(nums[i]);
+        if (set.size() > k){
+            set.remove(nums[i - k]);
+        }
+    }
+    return false;
+}
+```
+
+* Time complexity : $O(n \log (\min(k,n)))$.
+* Space complexity : $O(\min(n,k))$.
+
+#### Solution #2 HashSet
+
+* Keep a sliding window
+
+```java
+public boolean containsNearbyDuplicate(int[] nums, int k) {
+    Set<Integer> set = new HashSet<>();
+    for (int i = 0; i < nums.length; ++i){
+        if (set.contains(nums[i])) return true;
+        set.add(nums[i]);
+        if (set.size() > k){
+            set.remove(nums[i - k]);
+        }
+    }
+    return false;
+}
+```
+
+- Time complexity : $O(n)$). We do n operations of `search`, `delete` and `insert`, each with constant time complexity.
+- Space complexity : $O(\min(n,k))$. The extra space required depends on the number of items stored in the hash table, which is the size of the sliding window, $\min(n,k)$.
+
+## Contains Duplicate III(Medium #220)
+
+**Question**: Given an integer array `nums` and two integers `k` and `t`, return `true` if there are **two distinct indices** `i` and `j` in the array such that `abs(nums[i] - nums[j]) <= t` and `abs(i - j) <= k`.
+
+ **Example 1:**
+
+```
+Input: nums = [1,2,3,1], k = 3, t = 0
+Output: true
+```
+
+**Example 2:**
+
+```
+Input: nums = [1,0,1,1], k = 1, t = 2
+Output: true
+```
+
+**Example 3:**
+
+```
+Input: nums = [1,5,9,1,5,9], k = 2, t = 3
+Output: false
+```
+
+ **Constraints:**
+
+- `1 <= nums.length <= 2 * 104`
+- `-231 <= nums[i] <= 231 - 1`
+- `0 <= k <= 104`
+- `0 <= t <= 231 - 1`
+
+### My Solution
+
+* Sliding window for the loop
+* Nested loop(not efficient)
+* Naïve search method, exceed time limit, not compliant with constraints.
+
+```java
+public boolean containsNearbyAlmostDuplicate(int[] nums, int k, int t){
+    int low, high;
+    
+    for (int high = 0; high < nums.length; high++){
+        for (int low = high - k; low < high && low >= 0; low++){
+            int diff = Math.abs((long)nums[high] - nums[low]);
+            if (diff <= t) return true;
+        }
+    }
+    return false;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Tree Set
+
+* By utilizing self-balancing Binary Search Tree, one can keep the window ordered at all times with logarithmic time `insert` and `delete`.
+* We need a *dynamic* data structure that supports faster `insert`, `search` and `delete`. Self-balancing Binary Search Tree (BST) is the right data structure. 
+
+* Why does self-balancing matter? That is because most operations on a BST take time directly proportional to the height of the tree. 
+* **Algorithm**:
+  * Initialize an empty BST `set`
+  * Loop through the array, for each element x
+    - Find the *smallest* element s in `set` that is *greater* than or equal to x, return true if $s - x \leq t$
+    - Find the *greatest* element g in `set` that is *smaller* than or equal to x, return true if $x - g \leq t$
+    - Put x in `set`
+    - If the size of the set is larger than k, remove the oldest item.
+  * Return false
+
+```java
+public boolean containsNearbyAlmostDuplicate(int[] nums, int k, int t){
+    TreeSet<Integer> set = new TreeSet<>();
+    for (int i = 0; i < nums.length; i++){
+        //Find the successor of current element
+        Integer s = set.ceiling(nums[i]);
+        if (s != null && (long) s <= nums[i] + t) return true;
+        
+        //Find the predecessor of current element
+        Integer g = set.floor(nums[i]);
+        if (g != null && nums[i] <= (long) g + t) return true;
+        
+        set.add(nums[i]);
+        if (set.size() > k){
+            set.remove(nums[i - k]);
+        }
+    }
+    return false;
+}
+```
+
+* The **ceiling()** method of **java.util.TreeSet** class is used to return the least element in this set greater than or equal to the given element, or null if there is no such element.
+* Time complexity: $O(n \log (\min(n,k)))$. We iterate through the array of size n. For each iteration, it costs $O(\log \min(k, n))$ time (`search`, `insert` or `delete`) in the BST, since the size of the BST is upper bounded by both k and n.
+* Space complexity: $O(\min(n,k))$. Space is dominated by the size of the BST, which is upper bounded by both k*k* and n.
+
+#### Solution #2 Bucket Sort
+
+* Inspired by `bucket sort`, we can achieve linear time complexity in our problem using *buckets* as window.
+* **Bucket Sort**: Bucket sort is a sorting algorithm that works by distributing the elements of an array into a number of buckets. Each bucket is then sorted individually, using a different sorting algorithm.
+  *  Each of the eight elements is in a particular bucket. For element with value x, its bucket label is $x / w$ and here we have $w = 10$. 
+  * We apply the above bucketing principle and design buckets covering the ranges of $..., [0,t], [t+1, 2t+1]$
+
+<img src="https://leetcode.com/problems/contains-duplicate-iii/Figures/220/220_Buckets.png" alt="Illustration of buckets" style="zoom: 25%;" />
+
+* Each of our buckets contains **at most one element** at any time, because two elements in a bucket means "almost duplicate" and we can return early from the function.
+* A HashMap with an element associated with a bucket label is enough for our purpose.
+
+```java
+//Get the ID of the bucket from element value x and bucket width w
+//In java, `-3/5 = 0` but we need `-3/5=-1`
+private long getID(long x, long w){
+    return x < 0 ? (x + 1) / w - 1 : x / w;
+}
+
+public boolean containsNearbyAlmostDuplicate(int[] nums, int k, int t){
+    if (t < 0) return false;
+    Map<long, long> d = new HashMap<>();
+    long w = (long)t + 1;
+    for (int i = 0; i < nums.length; ++i){
+        long m = getID(nums[i], w);
+        // check if bucket m is empty, each bucket may contain at most one element
+        if (d.containsKey(m)) return true;
+        // check the neighbor buckets for almost duplicate
+        if (d.containsKey(m - 1) && Math.abs(nums[i] - d.get(m - 1)) < w); return true;
+        if (d.containsKey(m + 1) && Math.abs(nums[i] - d.get(m + 1)) < w); return true;
+        // now bucket m is empty and no almost duplicate in neighbor buckets
+        d.put(m, (long)nums[i]);
+        if (i >= k) d.remove(getID(nums[i - k], w));
+    }
+    return false;
+}
+```
+
+* Time complexity: $O(n)$. For each of the n elements, we do at most three searches, one insert, and one delete on the HashMap, which costs constant time on average. Thus, the entire algorithm costs $O(n)$ time.
+* Space complexity: $O(\min(n,k))$. Space is dominated by the HashMap, which is linear to the size of its elements. The size of the HashMap is upper bounded by both n and k. Thus the space complexity is $O(\min(n, k))$.
