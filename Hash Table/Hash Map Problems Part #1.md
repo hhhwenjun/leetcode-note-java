@@ -1081,3 +1081,174 @@ public boolean containsNearbyAlmostDuplicate(int[] nums, int k, int t){
 
 * Time complexity: $O(n)$. For each of the n elements, we do at most three searches, one insert, and one delete on the HashMap, which costs constant time on average. Thus, the entire algorithm costs $O(n)$ time.
 * Space complexity: $O(\min(n,k))$. Space is dominated by the HashMap, which is linear to the size of its elements. The size of the HashMap is upper bounded by both n and k. Thus the space complexity is $O(\min(n, k))$.
+
+## Logger Rate Limiter(Easy #359)
+
+**Question**: Design a logger system that receives a stream of messages along with their timestamps. Each **unique** message should only be printed **at most every 10 seconds** (i.e. a message printed at timestamp `t` will prevent other identical messages from being printed until timestamp `t + 10`).
+
+All messages will come in chronological order. Several messages may arrive at the same timestamp.
+
+Implement the `Logger` class:
+
+- `Logger()` Initializes the `logger` object.
+- `bool shouldPrintMessage(int timestamp, string message)` Returns `true` if the `message` should be printed in the given `timestamp`, otherwise returns `false`.
+
+ **Example 1:**
+
+```
+Input
+["Logger", "shouldPrintMessage", "shouldPrintMessage", "shouldPrintMessage", "shouldPrintMessage", "shouldPrintMessage", "shouldPrintMessage"]
+[[], [1, "foo"], [2, "bar"], [3, "foo"], [8, "bar"], [10, "foo"], [11, "foo"]]
+Output
+[null, true, true, false, false, false, true]
+
+Explanation
+Logger logger = new Logger();
+logger.shouldPrintMessage(1, "foo");  // return true, next allowed timestamp for "foo" is 1 + 10 = 11
+logger.shouldPrintMessage(2, "bar");  // return true, next allowed timestamp for "bar" is 2 + 10 = 12
+logger.shouldPrintMessage(3, "foo");  // 3 < 11, return false
+logger.shouldPrintMessage(8, "bar");  // 8 < 12, return false
+logger.shouldPrintMessage(10, "foo"); // 10 < 11, return false
+logger.shouldPrintMessage(11, "foo"); // 11 >= 11, return true, next allowed timestamp for "foo" is 11 + 10 = 21
+```
+
+ **Constraints:**
+
+- `0 <= timestamp <= 109`
+- Every `timestamp` will be passed in non-decreasing order (chronological order).
+- `1 <= message.length <= 30`
+- At most `104` calls will be made to `shouldPrintMessage`.
+
+### My Solution
+
+```java
+class Logger {
+    
+    private HashMap<String, Integer> messageMap;
+
+    public Logger() {
+        messageMap = new HashMap<>();
+    }
+    
+    public boolean largerThanTimestamp(int timestamp, String message){
+        if (messageMap.get(message) > timestamp){
+                return false;
+        }
+        else {
+            messageMap.put(message, timestamp + 10);
+            return true;
+        }
+    }
+    
+    public boolean shouldPrintMessage(int timestamp, String message) {
+        
+        if (!messageMap.containsKey(message)) {
+            messageMap.put(message, timestamp + 10);
+            return true;
+        }
+        else return largerThanTimestamp(timestamp, message);
+    }
+}
+
+/**
+ * Your Logger object will be instantiated and called as such:
+ * Logger obj = new Logger();
+ * boolean param_1 = obj.shouldPrintMessage(timestamp,message);
+ */
+```
+
+* Claim private field correctly, claim the data type, initialize it in the constructor
+* Avoid nasty loops
+
+### Standard Solution
+
+#### Solution #1 Hash Table
+
+* Similar to my solution
+* The hash table keeps all the unique messages along with the latest timestamp that the message was printed.
+
+```java
+class Logger {
+    private HashMap<String, Integer> msgDict;
+    
+    /** Initialize your data structure here**/
+    public Logger(){
+        msgDict = new HashMap<String, Integer>();
+    }
+    
+    /** Returns true if the msg should be printed in the given timestamp**/
+    public booolean shouldPrintMessage(int timestamp, String message){
+        if (!this.msgDict.containsKey(message)){
+            this.msgDict.put(message, timestamp);
+            return true;
+        }
+        
+        Integer oldTimestamp = this.msgDict.get(message);
+        if (timestamp - oldTimestamp >= 10){
+            this.msgDict.put(message, timestamp);
+            return true;
+        }
+        else return false;
+    }
+}
+```
+
+- Time Complexity: $\mathcal{O}(1)$. The lookup and update of the hashtable takes a constant time.
+- Space Complexity: $\mathcal{O}(M)$ where M is the size of all incoming messages. Over the time, the hashtable would have an entry for each unique message that has appeared.
+
+#### Solution #2 Queue + Set
+
+![pic](https://leetcode.com/problems/logger-rate-limiter/Figures/359/359_deque.png)
+
+* **Algorithm**:
+  * First of all, we use a queue as a sort of sliding window to keep all the printable messages in certain time frame (10 seconds).
+  * At the arrival of each incoming message, it comes with a `timestamp`. This timestamp implies the evolution of the sliding windows. Therefore, we should first invalidate those *expired* messages in our queue.
+  * Since the `queue` and `set` data structures should be in sync with each other, we would also remove those expired messages from our message set.
+  * After the updates of our message queue and set, we then simply check if there is any duplicate for the new incoming message. If not, we add the message to the queue as well as the set.
+
+```java
+class Pair<U, V>{
+    public U first;
+    public V second;
+    
+    public Pair(U first, V second){
+        this.first = first;
+        this.second = second;
+    }
+}
+
+class Logger{
+    private LinkedList<Pair<String, Integer>> msgQueue;
+    private HashSet<String> msgSet;
+    
+    /** Initialize your data structure here**/
+    public Logger(){
+        msgQueue = new LinkedList<Pair<String, Integer>>();
+        msgSet = new HashSet<String>();
+    }
+    
+    public boolean shouldPrintMessage(int timestamp, String message){
+        //clean up
+        while(msgQueue.size() > 0){
+            Pair<String, Integer> head = msgQueue.getFirst();
+            if (timestamp - head.second >= 10){//outdated msg
+                msgQueue.removeFirst();
+                msgSet.remove(head.first);
+            } else
+              break;
+        }
+        if (!msgSet.contains(message)){
+            Pair<String, Integer> newEntry = 
+                new Pair<String, Integer>(message, timestamp);
+            msgQueue.addLast(newEntry);
+            msgSet.add(message);
+            return true;
+        } else return false;
+    }
+}
+```
+
+* Be familiar with queue structure and methods
+* Add to queue and set, remove from queue and set is a little redundant
+* Time Complexity: $\mathcal{O}(N)$ where N is the size of the queue. 
+* Space Complexity: $\mathcal{O}(N)$ where N is the size of the queue. We keep the incoming messages in both the queue and set. The upper bound of the required space would be 2N, if we have no duplicate at all.
