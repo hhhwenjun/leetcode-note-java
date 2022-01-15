@@ -433,6 +433,24 @@ public class Main {
 }
 ```
 
+### Design the Key
+
+* When the order of each element in the string/array doesn't matter, you can use the `sorted string/array` as the key.<img src="https://s3-lc-upload.s3.amazonaws.com/uploads/2018/02/28/screen-shot-2018-02-28-at-144518.png" alt="img" style="zoom:50%;" />
+
+* If you only care about the offset of each value, usually the offset from the first value, you can use the `offset` as the key.<img src="https://s3-lc-upload.s3.amazonaws.com/uploads/2018/02/28/screen-shot-2018-02-28-at-144738.png" alt="img" style="zoom:50%;" />
+
+* In a tree, you might want to directly use the `TreeNode` as key sometimes. But in most cases, the `serialization of the subtree` might be a better idea.
+
+  <img src="https://s3-lc-upload.s3.amazonaws.com/uploads/2018/02/28/screen-shot-2018-02-28-at-143858.png" alt="img" style="zoom:33%;" />
+
+* In a matrix, you might want to use `the row index` or `the column index` as key.
+
+* In a Sudoku, you can combine the row index and the column index to identify which `block` this element belongs to.
+
+  <img src="https://s3-lc-upload.s3.amazonaws.com/uploads/2018/02/28/screen-shot-2018-02-28-at-145454.png" alt="img" style="zoom:33%;" />
+
+* Sometimes, in a matrix, you might want to aggregate the values in the same `diagonal line`. <img src="https://s3-lc-upload.s3.amazonaws.com/uploads/2018/02/28/screen-shot-2018-02-28-at-140029.png" alt="img" style="zoom:33%;" />
+
 ### Design HashMap (Easy #706)
 
 **Leetcode problem**: Design a HashMap without using any built-in hash table libraries.

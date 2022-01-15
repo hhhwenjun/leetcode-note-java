@@ -41,30 +41,21 @@ Notice that the answer must be a substring, "pwke" is a subsequence and not a su
 
 ```java
 public int lengthOfLongestSubstring(String s) {
-    int low = 0, diff = 0, wordLength = 0;
-    Set<Character> charSet = new HashSet<>();
-    String longestWord = null;
-
-    if (s.length() == 0) return 0;
-    if (s.length() == 1) return 1;
-
-
-    for (int high = 0; high < s.length(); high++){
-        diff = high - low;
-        if (!charSet.contains(s.charAt(high))){
-            charSet.add(s.charAt(high));
-        }
-        else {
-            if (diff > wordLength){
-                longestWord = s.substring(low, high);
-                wordLength = longestWord.length();
-                low = high;
-                charSet.clear();
-                charSet.add(s.charAt(high));
+    public int lengthOfLongestSubstring(String s) {
+        int wordLength = 0;  
+        Map<Character, Integer> wordMap = new HashMap<>();
+        char[] scharArry = s.toCharArray();
+        
+        for (int low = 0, high = 0; high < s.length(); high++){           
+            if (wordMap.containsKey(scharArry[high])){
+                low = Math.max(wordMap.get(scharArry[high]) + 1, low);
             }
+
+            wordLength = Math.max(wordLength, high - low + 1);
+            wordMap.put(scharArry[high], high);
         }
+        return wordLength;
     }
-    return longestWord != null ? longestWord.length() : diff + 1;
 }
 ```
 
@@ -531,5 +522,275 @@ public boolean isAnagram(String s, String t) {
 }
 ```
 
-* Time complexity : O(n)*O*(*n*). Time complexity is O(n)*O*(*n*) because accessing the counter table is a constant time operation.
-* Space complexity : O(1)*O*(1). Although we do use extra space, the space complexity is O(1)*O*(1) because the table's size stays constant no matter how large n*n* is.
+* Time complexity : $O(n)$. Time complexity is $O(n)$ because accessing the counter table is a constant time operation.
+* Space complexity : $O(1)$. Although we do use extra space, the space complexity is $O(1)$ because the table's size stays constant no matter how large n is.
+
+## Valid Sudoku(Medium #36)
+
+**Question**: Determine if a `9 x 9` Sudoku board is valid. Only the filled cells need to be validated **according to the following rules**:
+
+1. Each row must contain the digits `1-9` without repetition.
+2. Each column must contain the digits `1-9` without repetition.
+3. Each of the nine `3 x 3` sub-boxes of the grid must contain the digits `1-9` without repetition.
+
+**Note:**
+
+- A Sudoku board (partially filled) could be valid but is not necessarily solvable.
+- Only the filled cells need to be validated according to the mentioned rules.
+
+ **Example 1:**
+
+![img](https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Sudoku-by-L2G-20050714.svg/250px-Sudoku-by-L2G-20050714.svg.png)
+
+```
+Input: board = 
+[["5","3",".",".","7",".",".",".","."]
+,["6",".",".","1","9","5",".",".","."]
+,[".","9","8",".",".",".",".","6","."]
+,["8",".",".",".","6",".",".",".","3"]
+,["4",".",".","8",".","3",".",".","1"]
+,["7",".",".",".","2",".",".",".","6"]
+,[".","6",".",".",".",".","2","8","."]
+,[".",".",".","4","1","9",".",".","5"]
+,[".",".",".",".","8",".",".","7","9"]]
+Output: true
+```
+
+**Example 2:**
+
+```
+Input: board = 
+[["8","3",".",".","7",".",".",".","."]
+,["6",".",".","1","9","5",".",".","."]
+,[".","9","8",".",".",".",".","6","."]
+,["8",".",".",".","6",".",".",".","3"]
+,["4",".",".","8",".","3",".",".","1"]
+,["7",".",".",".","2",".",".",".","6"]
+,[".","6",".",".",".",".","2","8","."]
+,[".",".",".","4","1","9",".",".","5"]
+,[".",".",".",".","8",".",".","7","9"]]
+Output: false
+Explanation: Same as Example 1, except with the 5 in the top left corner being modified to 8. Since there are two 8's in the top left 3x3 sub-box, it is invalid.
+```
+
+ **Constraints:**
+
+- `board.length == 9`
+- `board[i].length == 9`
+- `board[i][j]` is a digit `1-9` or `'.'`.
+
+### My Solution
+
+```java
+public boolean isValidSudoku(char[][] board){
+    
+    int len = board.length;
+    Set<Character>[] digitRowSet = new HashSet[len];
+    Set<Character>[] digitColSet = new HashSet[len];
+    Set<Character>[] digitBlockSet = new HashSet[len];
+    
+    for (int i = 0; i < len; i++){
+        digitRowSet[i] = new HashSet<Character>();
+        digitColSet[i] = new HashSet<Character>();
+        digitBlockSet[i] = new HashSet<Character>();
+    }
+    
+    for (int i = 0; i < board.length; i++){
+        for (int j = 0; j < board.length; j++){
+            if (board[i][j] == '.'){
+                continue;
+            }
+
+            if (digitRowSet[i].contains(board[i][j])) return false;
+            digitRowSet[i].add(board[i][j]);
+            
+            if (digitColSet[j].contains(board[i][j])) return false;
+            digitColSet[j].add(board[i][j]);
+            
+            int blockIndex = (i / 3) * 3 + j / 3;
+            if (digitBlockSet[blockIndex].contains(board[i][j])) return false;
+            digitBlockSet[blockIndex].add(board[i][j]);
+
+        }
+    }
+    return true;
+}
+```
+
+### Standard Solution
+
+* Need to find a way to label the block sub sudoku. It is `(r/3) * 3 + (c/3)`
+
+#### Solution #1 Hash Set
+
+* Same as my solution
+* Each row, column, and each box is a hashset. Create hashset arrays.
+* Initialize hashset in each hashset arrays.
+
+* Time complexity: $O(N^2)$ because we need to traverse every position in the board, and each of the four check steps is an $O(1)$ operation.
+* Space complexity: $O(N^2)$ because in the worst-case scenario, if the board is full, we need a hash set each with size `N` to store all seen numbers for each of the `N` rows, `N` columns, and `N` boxes, respectively.
+
+#### Solution #2 Array of Fixed Length
+
+* Similar idea of the solution 1 but using 0 arrays to store the number of times and change it to 1 if presented
+* Using 2D integer arrays
+
+```java
+public boolean isValidSudoku(char[][] board){
+    int N = 9;
+    
+    // Use the array to record the status
+    int[][] rows = new int[N][N];
+    int[][] cols = new int[N][N];
+    int[][] boxes = new int[N][N];
+    
+    for (int r = 0; r < N; r++){
+        for (int c = 0; c < N; c++){
+            // Check if the position is filled with number
+            if (board[r][c] == '.'){
+                continue;
+            }
+            int pos = board[r][c] - '1';
+            
+            // Check the row
+            if (rows[r][pos] == 1){
+                return false;
+            }
+            rows[r][pos] = 1;
+            
+            // Check the column
+            if (cols[c][pos] == 1){
+                return false;
+            }
+            cols[c][pos] = 1;
+            
+            // Check the box
+            int idx = (r / 3) * 3 + c / 3;
+            if (boxes[idx][pos] == 1){
+                return false;
+            }
+            boxes[idx][pos] = 1;
+        }
+    }
+    return true;
+}
+```
+
+* Time complexity: $O(N^2)$ 
+* Space complexity: $O(N^2)$
+
+## Find Duplicate Subtrees(Medium #652)
+
+**Question**: Given the `root` of a binary tree, return all **duplicate subtrees**.
+
+For each kind of duplicate subtrees, you only need to return the root node of any **one** of them.
+
+Two trees are **duplicate** if they have the **same structure** with the **same node values**.
+
+ **Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2020/08/16/e1.jpg" alt="img" style="zoom:33%;" />
+
+```
+Input: root = [1,2,3,4,null,2,4,null,null,4]
+Output: [[2,4],[4]]
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2020/08/16/e2.jpg" alt="img" style="zoom:33%;" />
+
+```
+Input: root = [2,1,1]
+Output: [[1]]
+```
+
+**Example 3:**
+
+<img src="https://assets.leetcode.com/uploads/2020/08/16/e33.jpg" alt="img" style="zoom:33%;" />
+
+```
+Input: root = [2,2,2,3,null,3,null]
+Output: [[2,3],[3]]
+```
+
+ **Constraints:**
+
+- The number of the nodes in the tree will be in the range `[1, 10^4]`
+- `-200 <= Node.val <= 200`
+
+### Solution
+
+```java
+public List<TreeNode> findDuplicateSubtrees(TreeNode root){
+    List<TreeNode> res = new LinkedList<>();
+    postorder(root, new HashMap<>(), res);
+    return res;
+}
+
+public String postorder(TreeNode cur, Map<String, Integer> map, List<TreeNode> res){
+    if (cur == null) return "#";
+    String serial = cur.val + ','
+        + postorder(cur.left, map, res) + ',' + postorder(cur.right, map, res);
+    // the way construct the string is preorder
+    map.put(serial, map.getOrDefault(serial, 0) + 1);
+    if (map.get(serial) == 2) res.add(cur);
+    return serial;
+}
+```
+
+* Time complexity is $O(n^2)$
+
+## Jewels and Stones
+
+**Question**: You're given strings `jewels` representing the types of stones that are jewels, and `stones` representing the stones you have. Each character in `stones` is a type of stone you have. You want to know how many of the stones you have are also jewels.
+
+Letters are case sensitive, so `"a"` is considered a different type of stone from `"A"`.
+
+ **Example 1:**
+
+```
+Input: jewels = "aA", stones = "aAAbbbb"
+Output: 3
+```
+
+**Example 2:**
+
+```
+Input: jewels = "z", stones = "ZZ"
+Output: 0
+```
+
+ **Constraints:**
+
+- `1 <= jewels.length, stones.length <= 50`
+- `jewels` and `stones` consist of only English letters.
+- All the characters of `jewels` are **unique**.
+
+### My Solution
+
+```java
+public int numJewelsInStones(String jewels, String stones){
+    Set<Character> jewelSet = new HashSet<>();
+    char[] jewelsChArry = jewels.toCharArray();
+    char[] stonesChArry = stones.toCharArray();
+    int num = 0;
+    
+    for (Character c : jewelsChArry){
+        jewelSet.add(c);
+    }
+    
+    for (Character s : stonesChArry){
+        if (jewelSet.contains(s)){
+            num++;
+        }
+    }
+    return num;
+}
+```
+
+### Standard Solution
+
+* Same as my solution
+* Time Complexity: $O(jewels\text{.length} + stones\text{.length})$. 
+* Space Complexity: $O(jewels\text{.length})$.
