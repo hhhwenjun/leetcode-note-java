@@ -741,7 +741,7 @@ public String postorder(TreeNode cur, Map<String, Integer> map, List<TreeNode> r
 
 * Time complexity is $O(n^2)$
 
-## Jewels and Stones
+## Jewels and Stones(Easy #771)
 
 **Question**: You're given strings `jewels` representing the types of stones that are jewels, and `stones` representing the stones you have. Each character in `stones` is a type of stone you have. You want to know how many of the stones you have are also jewels.
 
@@ -794,3 +794,541 @@ public int numJewelsInStones(String jewels, String stones){
 * Same as my solution
 * Time Complexity: $O(jewels\text{.length} + stones\text{.length})$. 
 * Space Complexity: $O(jewels\text{.length})$.
+
+## Two Sum III - Data Structure Design(Easy #170)
+
+**Question**: Design a data structure that accepts a stream of integers and checks if it has a pair of integers that sum up to a particular value.
+
+Implement the `TwoSum` class:
+
+-   `TwoSum()` Initializes the `TwoSum` object, with an empty array initially.
+-   `void add(int number)` Adds `number` to the data structure.
+-   `boolean find(int value)` Returns `true` if there exists any pair of numbers whose sum is equal to `value`, otherwise, it returns `false`.
+
+ **Example 1:**
+
+```
+Input
+["TwoSum", "add", "add", "add", "find", "find"]
+[[], [1], [3], [5], [4], [7]]
+Output
+[null, null, null, null, true, false]
+
+Explanation
+TwoSum twoSum = new TwoSum();
+twoSum.add(1);   // [] --> [1]
+twoSum.add(3);   // [1] --> [1,3]
+twoSum.add(5);   // [1,3] --> [1,3,5]
+twoSum.find(4);  // 1 + 3 = 4, return true
+twoSum.find(7);  // No two integers sum up to 7, return false
+```
+
+ **Constraints:**
+
+-   `-105 <= number <= 105`
+-   `-231 <= value <= 231 - 1`
+-   At most `104` calls will be made to `add` and `find`.
+
+### My Solution
+
+```java
+class TwoSum {
+    private Map<Integer, Integer> sumMap; 
+    public TwoSum(){
+        this.sumMap = new HashMap<Integer, Integer>();
+    }
+    public void add(int number){
+        this.sumMap.put(number, this.sumMap.getOrDefault(number, 0) + 1);
+    }
+    public boolean find(int value){      
+        for (Integer key : this.sumMap.keySet()){
+            int diff = value - key;
+            if (diff != key){
+                if (this.sumMap.containsKey(diff)){
+                  return true;
+               }
+            } else {
+               if (sumMap.get(key) > 1) return true;
+            }            
+        }
+      return false;
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Sorted list
+
+*   Sort the list and provide two pointers for low and high index
+*   **Algorithm**:
+    *   We initialize **two pointers** `low` and `high` which point to the head and the tail elements of the list respectively.
+    *   With the two pointers, we start a **loop** to iterate the list. The loop would terminate either we find the two-sum solution or the two pointers meet each other.
+    *   Within the loop, at each step, we would move either of the pointers, according to different conditions:
+        -   If the sum of the elements pointed by the current pointers is ***less than*** the desired value, then we should try to increase the sum to meet the desired value, *i.e.* we should move the `low` pointer forwards to have a larger value.
+        -   Similarly if the sum of the elements pointed by the current pointers is ***greater than*** the desired value, we then should try to reduce the sum by moving the `high` pointer towards the `low` pointer.
+        -   If the sum happen to the desired value, then we could simply do an **early return** of the function.
+    *   If the loop is terminated at the case where the two pointers meet each other, then we can be sure that there is no solution to the desired value.
+
+```java
+class TwoSum{
+    private ArrayList<Integer> nums;
+    private boolean is_sorted;
+    
+    /** Initialize your data structure here.**/
+    public TwoSum(){
+        this.nums = new ArrayList<Integer>();
+        this.is_sorted = false;
+    }
+    
+    /** Add the number to an internal data structure.**/
+    public void add(int number){
+        this.nums.add(number);
+        this.is_sorted = false;
+    }
+    
+    /** Find if there exists any pair of numbers which sum is equal to the value.**/
+    public boolean find(int value){
+        if (!this.is_sorted){
+            Collections.sort(this.nums);
+            this.is_sorted = true;
+        }
+        int low = 0, high = this.nums.size() - 1;
+        while(low < high){
+            int twosum = this.nums.get(low) + this.nums.get(high);
+            if (twosum < value){
+                low += 1;
+            }
+            else if (twosum > value){
+                high -= 1;
+            }
+            else {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+```
+
+-   Time Complexity:
+    -   For the `add(number)` function: $\mathcal{O}(1)$, since we simply append the element into the list.
+    -   For the `find(value)` function: $\mathcal{O}(N \cdot \log(N))$. In the worst case, we would need to sort the list first, which is of $\mathcal{O}(N \cdot \log(N))$ time complexity normally. And later, again in the worst case we need to iterate through the entire list, which is of $\mathcal{O}(N)$ time complexity. As a result, the overall time complexity of the function lies on $\mathcal{O}(N \cdot \log(N))$ of the sorting operation, which dominates over the later iteration part.
+-   Space Complexity: the overall space complexity of the data structure is $\mathcal{O}(N)$ where N is the total number of *numbers* that have been added.
+
+#### Solution #2 Hash Table
+
+*   Similar to my solution
+*   The number can be repeated, so need to clarify if `containsKey` is finding the key we locate to avoid duplicate
+
+```java
+import java.util.HashMap;
+
+class TwoSum {
+  private HashMap<Integer, Integer> num_counts;
+
+  /** Initialize your data structure here. */
+  public TwoSum() {
+    this.num_counts = new HashMap<Integer, Integer>();
+  }
+
+  /** Add the number to an internal data structure.. */
+  public void add(int number) {
+    if (this.num_counts.containsKey(number))
+      this.num_counts.replace(number, this.num_counts.get(number) + 1);
+    else
+      this.num_counts.put(number, 1);
+  }
+
+  /** Find if there exists any pair of numbers which sum is equal to the value. */
+  public boolean find(int value) {
+    for (Map.Entry<Integer, Integer> entry : this.num_counts.entrySet()) {
+      int complement = value - entry.getKey();
+      if (complement != entry.getKey()) {
+        if (this.num_counts.containsKey(complement))
+          return true;
+      } else {
+        if (entry.getValue() > 1)
+          return true;
+      }
+    }
+    return false;
+  }
+}
+```
+
+*   Time Complexity:
+    -   For the `add(number)` function: $\mathcal{O}(1)$, since it takes a constant time to update an entry in hashtable.
+    -   For the `find(value)` function: $\mathcal{O}(N)$, where N is the total number of **unique** *numbers*. In the worst case, we would iterate through the entire table.
+*   Space Complexity: $\mathcal{O}(N)$, where N is the total number of **unique** *numbers* that we will see during the usage of the data structure.
+
+## 4Sum II（Medium #454)
+
+**Question**: Given four integer arrays `nums1`, `nums2`, `nums3`, and `nums4` all of length `n`, return the number of tuples `(i, j, k, l)` such that:
+
+-   `0 <= i, j, k, l < n`
+-   `nums1[i] + nums2[j] + nums3[k] + nums4[l] == 0`
+
+ **Example 1:**
+
+```
+Input: nums1 = [1,2], nums2 = [-2,-1], nums3 = [-1,2], nums4 = [0,2]
+Output: 2
+Explanation:
+The two tuples are:
+1. (0, 0, 0, 1) -> nums1[0] + nums2[0] + nums3[0] + nums4[1] = 1 + (-2) + (-1) + 2 = 0
+2. (1, 1, 0, 0) -> nums1[1] + nums2[1] + nums3[0] + nums4[0] = 2 + (-1) + (-1) + 0 = 0
+```
+
+**Example 2:**
+
+```
+Input: nums1 = [0], nums2 = [0], nums3 = [0], nums4 = [0]
+Output: 1
+```
+
+ **Constraints:**
+
+-   `n == nums1.length`
+-   `n == nums2.length`
+-   `n == nums3.length`
+-   `n == nums4.length`
+-   `1 <= n <= 200`
+-   `-228 <= nums1[i], nums2[i], nums3[i], nums4[i] <= 228`
+
+### My Solution
+
+```java
+public int fourSumCount(int[] nums1, int[] nums2, int[] nums3, int[] nums4){
+    Map<Integer, Integer> countMap = new HashMap<>();
+    int count = 0;
+    // a : nums1, b : nums2, c : nums3, d : nums4
+    for (int a : nums1){
+        for (int b : nums2){
+            countMap.put(a + b, countMap.getOrDefault(0) + 1);
+        }
+    }  
+    for (int c : nums3){
+        for (int d : nums4){
+            int find = -(c + d);
+            if (countMap.containsKey(find)){
+                count += countMap.get(find);
+            }
+        }
+    }
+    return count;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Hash Map
+
+*   Same as my solution 
+*   First, we will count sums of elements `a + b` from the first two arrays using a hashmap. Then, we will enumerate elements from the third and fourth arrays, and search for a complementary sum `a + b == -(c + d)` in the hashmap.
+*   A cleaner solution version
+
+```java
+public int fourSumCount(int[] A, int[] B, int[] C, int[] D) {
+    int cnt = 0;
+    Map<Integer, Integer> m = new HashMap<>();
+    for (int a : A)
+        for (int b : B)
+            m.put(a + b, m.getOrDefault(a + b, 0) + 1);
+    for (int c : C)
+        for (int d : D)
+            cnt += m.getOrDefault(-(c + d), 0);
+    return cnt;
+}
+```
+
+*   Time Complexity: $\mathcal{O}(n^2)$. We have 2 nested loops to count sums, and another 2 nested loops to find complements.
+*   Space Complexity: $\mathcal{O}(n^2)$ for the hashmap. There could be up to $\mathcal{O}(n^2)$ distinct `a + b` keys.
+
+#### Solution #2 kSum II (Important)
+
+*   For the first group, we will have $\frac{k}{2}$ nested loops to count sums. Another $\frac{k}{2}$ nested loops will enumerate arrays in the second group and search for complements.
+
+```java
+public int fourSumCount(int[] A, int[] B, int[] C, int[] D){
+    return kSumCount(new int[][]{A, B, C, D});
+}
+public int kSumCount(int[][] lists){
+    Map<Integer, Integer> m = new HashMap<>();
+    addToHash(lists, m, 0, 0);
+    return countComplements(lists, m, lists.length / 2, 0);
+}
+void addToHash(int[][] lists, Map<Integer, Integer> m, int i, int sum){
+    if (i == lists.length / 2){
+        m.put(sum, m.getOrDefault(sum, 0) + 1);
+    }
+    else {
+        for (int a : lists[i]){
+            addToHash(lists, m, i + 1, sum + a);
+        }
+    }
+}
+int countComplements(int[][] lists, Map<Integer, Integer> m, int i, int complement){
+    if (i == lists.length){
+        return m.getOrDefault(complement, 0);
+    }
+    int cnt = 0;
+    for (int a : lists[i]){
+        cnt += countComplements(lists, m, i + 1, complement - a);
+    }
+    return cnt;
+}
+```
+
+*   Time Complexity: $\mathcal{O}(n^{\frac{k}{2}})$, or $\mathcal{O}(n^2)$ for 4Sum II. We have $\frac{k}{2}$ nested loops to count sums, and another $\frac{k}{2}$ nested loops to find complements.
+
+    If the number of arrays is odd, the time complexity will be $\mathcal{O}(n^{\frac{k+1}{2}})$. We will pass $\frac{k}{2}$  arrays to `addToHash`, and $\frac{k+1}{2}$ arrays to `kSumCount` to keep the space complexity $\mathcal{O}(n ^ {\frac{k}{2}})$.
+
+*   Space Complexity: $\mathcal{O}(n^{\frac{k}{2}})$ for the hashmap. The space needed for the recursion will not exceed $\frac{k}{2}$
+
+## Valid Parentheses(Easy #20)
+
+**Question**: Given a string `s` containing just the characters `'('`, `')'`, `'{'`, `'}'`, `'['` and `']'`, determine if the input string is valid.
+
+An input string is valid if:
+
+1.  Open brackets must be closed by the same type of brackets.
+2.  Open brackets must be closed in the correct order.
+
+ **Example 1:**
+
+```
+Input: s = "()"
+Output: true
+```
+
+**Example 2:**
+
+```
+Input: s = "()[]{}"
+Output: true
+```
+
+**Example 3:**
+
+```
+Input: s = "(]"
+Output: false
+```
+
+ **Constraints:**
+
+-   `1 <= s.length <= 104`
+-   `s` consists of parentheses only `'()[]{}'`.
+
+### Standard Solution
+
+*   The solution is not a complete one since there are a few valid cases
+
+```
+(((((()))))) -- VALID
+
+()()()()     -- VALID
+
+(((((((()    -- INVALID
+
+((()(())))   -- VALID
+```
+
+#### Solution #1 Using stack and hash map
+
+*   An interesting property about a valid parenthesis expression is that a sub-expression of a valid expression should also be a valid expression.
+
+<img src="https://leetcode.com/problems/valid-parentheses/Figures/20/20-Valid-Parentheses-Recursive-Property.png" alt="img" style="zoom: 33%;" />
+
+*   The stack data structure can come in handy here in representing this recursive structure of the problem.
+*   **Algorithm**
+    *   Initialize a stack S.
+    *   Process each bracket of the expression one at a time.
+    *   If we encounter an opening bracket, we simply push it onto the stack. This means we will process it later, let us simply move onto the **sub-expression** ahead.
+    *   If we encounter a closing bracket, then we check the element on top of the stack. If the element at the top of the stack is an opening bracket `of the same type`, then we pop it off the stack and continue processing. Else, this implies an invalid expression.
+    *   In the end, if we are left with a stack still having elements, then this implies an invalid expression.
+
+```java
+class Solution{
+    // Hash table to take care of the mappings
+    private HashMap<Character, Character> mappings;
+
+    // Initialize hash map with mappings, this simply akes the code easier to read
+    public Solution(){
+        this.mappings = new HashMap<Character, Character>();
+        this.mappings.put('}','{');
+        this.mappings.put(')','(');
+        this.mappings.put(']','[');
+    }
+    
+    public boolean isValid(String s){
+        // Initialize a stack to be used in the algorithm.
+        Stack<Character> stack = new Stack<Character>();
+        
+        for (int i = 0; i < s.length(); i++){
+            char c = s.charAt(i);
+            
+            // If the current character is a closing bracket.
+            if (this.mappings.containsKey(c)){
+                
+                // Get the top element of the stack. If the stack is empty, set a dummy value of '#'
+                char topElement = stack.empty() ? '#' : stack.pop();
+                
+                // If the mapping for the bracket doesn't match the stack's top element, return false
+                if (topElement != this.mappings.get(c)){
+                    return false;
+                }
+                else {
+                    // If it was an opening bracket, push to the stack.
+                    stack.push(c);
+                }
+            }
+        }
+        // If the stack still contains elements, then it is an invalid expressions.
+        return stack.isEmpty();
+    }
+}   
+
+```
+
+```java
+public boolean isValid(String s) {
+        Map<Character, Character> map = new HashMap<>();
+        map.put('{','}');
+        map.put('(',')');
+        map.put('[',']');
+        
+        Stack<Character> parenthesis = new Stack<>();
+        for (int i = 0; i < s.length(); i++){
+            char c = s.charAt(i);
+            if (map.containsKey(c)){
+                parenthesis.push(map.get(c));
+            }
+            else if (map.containsValue(c)){
+                if (parenthesis.isEmpty() || parenthesis.pop() != c){
+                    return false;
+                }
+            }
+        }
+        return parenthesis.isEmpty();
+    }
+```
+
+*   Time complexity : $O(n)$ because we simply traverse the given string one character at a time and push and pop operations on a stack take $O(1)$ time.
+*   Space complexity : $O(n)$ as we push all opening brackets onto the stack and in the worst case, we will end up pushing all the brackets onto the stack. e.g. `((((((((((`
+
+## Top K Frequent Elements(Medium #347)
+
+**Question**: Given an integer array `nums` and an integer `k`, return *the* `k` *most frequent elements*. You may return the answer in **any order**.
+
+ **Example 1:**
+
+```
+Input: nums = [1,1,1,2,2,3], k = 2
+Output: [1,2]
+```
+
+**Example 2:**
+
+```
+Input: nums = [1], k = 1
+Output: [1]
+```
+
+ **Constraints:**
+
+-   `1 <= nums.length <= 105`
+-   `k` is in the range `[1, the number of unique elements in the array]`.
+-   It is **guaranteed** that the answer is **unique**.
+
+### My Solution
+
+```java
+ public List<Map.Entry<Integer, Integer>> sortByValue(HashMap<Integer, Integer> hm){
+    List<Map.Entry<Integer, Integer>> list = new LinkedList<Map.Entry<Integer,Integer>>(hm.entrySet());
+    Collections.sort(list, new Comparator<Map.Entry<Integer, Integer>>(){
+        public int compare(Map.Entry<Integer,Integer> o1,
+                          Map.Entry<Integer,Integer> o2){
+            return (o1.getValue()).compareTo(o2.getValue());
+        }
+    });
+    return list;
+}
+
+public int[] topKFrequent(int[] nums, int k) {
+    HashMap<Integer, Integer> countMap = new HashMap<>();
+    for(int num : nums){
+        countMap.put(num, countMap.getOrDefault(num, 0) + 1);
+    }
+    List<Map.Entry<Integer, Integer>> sortedMap = sortByValue(countMap);
+    Collections.reverse(sortedMap);
+    int[] intArry = new int[k];
+    int i = 0;
+    for (Map.Entry<Integer, Integer> countPair : sortedMap){
+        Integer countVal = countPair.getKey();
+        intArry[i] = Integer.valueOf(countVal);
+        i++;
+        if (i == k) break;
+    }
+    return intArry;
+}
+```
+
+*   The solution contains a sorting algorithm by comparator
+*   After sorting it, need to reverse the sorted list
+*   Cannot just sort the map values or key set, need to store the map into a list for sorting
+
+### Standard Solution
+
+#### Solution #1 Heap
+
+*   [Heap introduction](https://en.wikipedia.org/wiki/Heap_(data_structure))
+*   The heap is one maximally efficient implementation of an abstract data type called a priority queue, and in fact, priority queues are often referred to as "heaps", regardless of how they may be implemented.
+*   In a max heap, for any given node C, if P is a parent node of C, then the key (the value) of P is greater than or equal to the key of C. In a min heap, the key of P is less than or equal to the key of C. The node at the "top" of the heap (with no parents) is called the root node.
+*   In a heap, the highest (or lowest) priority element is always stored at the root. 
+*   A heap is a useful data structure when it is necessary to repeatedly remove the object with the highest (or lowest) priority, or when insertions need to be interspersed with removals of the root node.
+
+![diff](https://leetcode.com/problems/top-k-frequent-elements/Figures/347_rewrite/summary.png)
+
+*   **Algorithm**:
+    *   The first step is to build a hash map element -> its frequency. In Java, we use the data structure HashMap. Python provides dictionary subclass Counter to initialize the hash map we need directly from the input array.
+        This step takes $\mathcal{O}(N)$ time where N is a number of elements in the list.
+    *   The second step is to build a heap of size k using N elements. To add the first k elements takes a linear time $\mathcal{O}(k)$ in the average case, and $\mathcal{O}(\log 1 + \log 2 + ... + \log k) = \mathcal{O}(\log k!) = \mathcal{O}(k \log k)$ in the worst case. It's equivalent to heapify implementation in Python. After the first k elements we start to push and pop at each step, N - k steps in total. The time complexity of heap push/pop is $\mathcal{O}(\log k)$ and we do it N - k times that means $\mathcal{O}((N - k)\log k)$time complexity. Adding both parts up, we get $\mathcal{O}(N \log k)$ time complexity for the second step.
+    *   The third and the last step is to convert the heap into an output array. That could be done in $\mathcal{O}(k \log k)$ time.
+
+```java
+public int[] topKFrequent(int[] nums, int k){
+    // O(1) time
+    if (k == nums.length){
+        return nums;
+    }
+    
+    // 1. build hash map O(N) time
+    Map<Integer, Integer> count = new HashMap();
+    for (int n : nums){
+        count.put(n, count.getOrDefault(n, 0) + 1);
+    }
+    
+    // init heap 'the less frequent element first'
+    Queue<Integer> heap = new PriorityQueue<>((n1, n2) -> count.get(n1) - count.get(n2));
+    
+    // 2. keep k top frequent elements in the heap
+    // O(N log k) < O(N log N) time
+    for (int n : count.keySet()){
+        heap.add(n);
+        if (heap.size() > k) heap.poll();
+    }
+    
+    // 3. build an output array
+    // O(k log k) time
+    int[] top = new int[k];
+    for(int i = k - 1; i >= 0; --i){
+        top[i] = heap.poll();
+    }
+    return top;
+}
+```
+
+*   Time complexity : $\mathcal{O}(N \log k)$ if $k < N$and $\mathcal{O}(N)$ in the particular case of $N = k$. That ensures time complexity to be better than $\mathcal{O}(N \log N)$.
+*   Space complexity : $\mathcal{O}(N + k)$ to store the hash map with not more $N$ elements and a heap with $k$ elements.
