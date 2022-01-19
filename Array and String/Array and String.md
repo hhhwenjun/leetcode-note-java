@@ -1,8 +1,8 @@
-# Array and String
+# Array and String Tutorial 
 
 Materials refer to: https://leetcode.com/explore/learn/card/array-and-string/201/introduction-to-array/1143/
 
-## Introduction to Array
+# Introduction to Array
 
 *   An `array` is a basic data structure to `store a collection of elements sequentially`. 
 *   An array can have one or more dimensions. Here we start with the `one-dimensional array`, which is also called the linear array.
@@ -389,3 +389,375 @@ private void swap(int[] array, int a, int b){
 
 *   Time complexity: $O(n)$. In worst case, only two scans of the whole array are needed.
 *   Space complexity: $O(1)$. No extra space is used. In place replacements are done.
+
+## Plus One(Easy #66)
+
+**Question**: You are given a **large integer** represented as an integer array `digits`, where each `digits[i]` is the `ith` digit of the integer. The digits are ordered from most significant to least significant in left-to-right order. The large integer does not contain any leading `0`'s.
+
+Increment the large integer by one and return *the resulting array of digits*.
+
+ **Example 1:**
+
+```
+Input: digits = [1,2,3]
+Output: [1,2,4]
+Explanation: The array represents the integer 123.
+Incrementing by one gives 123 + 1 = 124.
+Thus, the result should be [1,2,4].
+```
+
+**Example 2:**
+
+```
+Input: digits = [4,3,2,1]
+Output: [4,3,2,2]
+Explanation: The array represents the integer 4321.
+Incrementing by one gives 4321 + 1 = 4322.
+Thus, the result should be [4,3,2,2].
+```
+
+**Example 3:**
+
+```
+Input: digits = [9]
+Output: [1,0]
+Explanation: The array represents the integer 9.
+Incrementing by one gives 9 + 1 = 10.
+Thus, the result should be [1,0].
+```
+
+ **Constraints:**
+
+-   `1 <= digits.length <= 100`
+-   `0 <= digits[i] <= 9`
+-   `digits` does not contain any leading `0`'s.
+
+### My Solution
+
+```java
+public int[] plusOne(int[] digits){
+    // Use a linkedlist to store the digits from least important ones
+    List<Integer> digitList = new ArrayList<>();
+    
+    int len = digits.length;
+    int carry = 1;
+    
+    // Loop throught the array and store the value to arraylist with carry
+    for (int i = len - 1; i >= 0; i--){
+        int currentSum = digits[i] + carry;
+        carry = currentSum / 10;
+        int currentDigit = currentSum % 10;
+        digitList.add(currentDigit);
+    }
+    digitList.add(carry);
+    Collections.reverse(digitList);
+    return digitList.stream().mapToInt(Integer::intValue).toArray();
+    //convenient but rarely use in leetcode
+}
+```
+
+### Standard Solution
+
+*   A straightforward idea to convert everything into integers and then apply the addition could be risky, especially for the implementation in Java, due to the potential integer overflow issue.
+
+#### Solution #1 Schoolbook Addition with Carrt
+
+*   **Algorithm**:
+    *   Move along the input array starting from the end of array.
+    *   Set all the nines at the end of array to zero.
+    *   If we meet a not-nine digit, we would increase it by one. The job is done - return `digits`.
+    *   We're here because ***all\*** the digits were equal to nine. Now they have all been set to zero. We then append the digit `1` in front of the other digits and return the result.
+
+```java
+public int[] plusOne(int[] digits){
+    int n = digits.length;
+    
+    // move along the input array starting from the end
+    for (int idx = n - 1; idx >= 0; idx--){
+        // set all the nines at the end of array to zeros
+        if (digits[idx] == 9){
+            digits[idx] = 0;
+        }
+        // here we have the rightmost not-nine
+        else {
+            //increase this rightmost not-nine by 1 and just return the digits
+            digits[idx]++;
+            return digits;
+        }
+    }
+    // we're here because all the digits are nines
+    digits = new int[n + 1];
+    digits[0] = 1;
+    return digits;
+}
+```
+
+```java
+public int[] plusOne(int[] digits) {
+    int i = digits.length - 1;
+
+    while(i >= 0 && digits[i] == 9) digits[i--] = 0;
+
+    if (i < 0){
+        digits = new int[digits.length + 1];
+        i = 0;
+    }
+    digits[i]++;
+    return digits;
+}
+```
+
+*   Time complexity: $O(N)$
+*   Space complexity: $O(N)$
+    *   Although we perform the operation **in-place** (*i.e.* on the input list itself), in the worst scenario, we would need to allocate an intermediate space to hold the result, which contains the N+1 elements. Hence the overall space complexity of the algorithm is $\mathcal{O}(N)$.
+
+# Introduction to 2D Array
+
+*   Similar to a one-dimensional array, a `two-dimensional array` also consists of a sequence of elements. But the elements can be laid out in a `rectangular grid` rather than a line.
+*   Similar to the one-dimensional dynamic array, we can also define a dynamic two-dimensional array. Actually, it can be just `a nested dynamic array`. 
+
+```java
+// "static void main" must be defined in a public class.
+public class Main {
+    private static void printArray(int[][] a) {
+        for (int i = 0; i < a.length; ++i) {
+            System.out.println(a[i]);
+        }
+        for (int i = 0; i < a.length; ++i) {
+            for (int j = 0; a[i] != null && j < a[i].length; ++j) {//pay attention to this condition
+                System.out.print(a[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+    public static void main(String[] args) {
+        System.out.println("Example I:");
+        int[][] a = new int[2][5];
+        printArray(a);
+        System.out.println("Example II:");
+        int[][] b = new int[2][];
+        printArray(b);
+        System.out.println("Example III:");
+        b[0] = new int[3];
+        b[1] = new int[5];
+        printArray(b);
+    }
+}
+```
+
+## Diagonal Traverse(Medium #498)
+
+**Question**: Given an `m x n` matrix `mat`, return *an array of all the elements of the array in a diagonal order*.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2021/04/10/diag1-grid.jpg)
+
+```
+Input: mat = [[1,2,3],[4,5,6],[7,8,9]]
+Output: [1,2,4,7,5,3,6,8,9]
+```
+
+**Example 2:**
+
+```
+Input: mat = [[1,2],[3,4]]
+Output: [1,2,3,4] 
+```
+
+**Constraints:**
+
+-   `m == mat.length`
+-   `n == mat[i].length`
+-   `1 <= m, n <= 104`
+-   `1 <= m * n <= 104`
+-   `-105 <= mat[i][j] <= 105`
+
+### My Solution
+
+*   Sum of i and j is the same for the diagonal
+*   While i + j is odd, the print order is normal(**yellow**), while i + j is even, the print order is reverse order(**red**)
+*   While i + j is odd, the next print order is reverse(**red**), while i + j is even, the next print order is normal order(**yellow**)
+
+```java
+public int[] findDiagonalOrder(int[][] mat){
+    int rowMax = mat.length;
+    int colMax = mat[0].length;
+    int row = 0, col = 0, i = 0;
+    int[] nextPoint = new int[]{row, col};
+    int[] returnArry = new int[rowMax*colMax];
+    //returnArry[0] = mat[row][col];
+
+    while(i < rowMax * colMax && row < rowMax && col < colMax){
+        returnArry[i] = mat[row][col];
+        i++;
+        int[] nextIdx = traversePrintNext(new int[]{row, col}); 
+        if (nextIdx[0] >= 0 && nextIdx[1] >= 0 && nextIdx[1] < colMax && nextIdx[0] < rowMax){
+            nextPoint = nextIdx;
+        }
+        else {
+            nextPoint = findNextStart(new int[]{row, col}, colMax, rowMax);
+        }
+        row = nextPoint[0];
+        col = nextPoint[1];
+    }
+    return returnArry;
+}
+
+public int[] findNextStart(int[] lastEnd, int colMax, int rowMax){
+    int sum = lastEnd[0] + lastEnd[1];//0 index for row, 1 index for col
+    int nextStartRow = 0, nextStartCol = 0;
+    if (sum % 2 == 0){// sum of i + j is even, next one is normal order
+        if (lastEnd[1] + 1 >= colMax){//exceed col limit, go to next row
+            nextStartCol = lastEnd[1];
+            nextStartRow = lastEnd[0] + 1;
+        }
+        else{
+            nextStartRow = lastEnd[0];
+            nextStartCol = lastEnd[1] + 1;
+        }
+    } else {
+        if (lastEnd[0] + 1 < rowMax){//if exceed row limit, go to next col
+            nextStartCol = lastEnd[1];
+            nextStartRow = lastEnd[0] + 1;
+        }
+        else{
+            nextStartRow = lastEnd[0];
+            nextStartCol = lastEnd[1] + 1;
+        }
+    }   
+    return new int[]{nextStartRow, nextStartCol};
+}
+
+public int[] traversePrintNext(int[] lastNum){
+    int sum = lastNum[0] + lastNum[1];
+    int nextRow = 0, nextCol = 0;
+    if (sum % 2 == 0){
+        nextRow = lastNum[0] - 1;
+        nextCol = lastNum[1] + 1;
+    }
+    else{
+        nextRow = lastNum[0] + 1;
+        nextCol = lastNum[1] - 1;
+    }
+    int[] nextPoint = new int[]{nextRow, nextCol};
+    return nextPoint;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Diagonal Reversal
+
+```java
+public int[] findDiagonalOrder(int[][] matrix){
+    if (matrix == null || matrix.length == 0) return new int[0];
+    
+    int m = matrix.length;// row length
+    int n = matrix[0].length;// col length
+    int[] nums = new int[m * n];
+    
+    boolean bXFlag = true; // use it to determine the direction of reversal
+    // true: reverse direction, false: normal direction
+    int k = 0;
+    for (int i = 0; i < m + n; i++){ // i < sum of row and col idx
+        int pm = bXFlag ? m : n; // determine the limit of row and col
+        int pn = bXFlag ? n : m;
+        
+        int x = (i < pm) ? i : pm - 1;
+        int y = i - x;
+        
+        while(x >= 0 && y < pn){ // reverse x and y, let them stand for x-axis and y-axis
+            nums[k++] = bXFlag ? matrix[x][y] : matrix[y][x];
+            x--;
+            y++;
+        }
+        bXFlag = !bXFlag;
+    }
+    return nums;
+}
+```
+
+```java
+/** Same idea but easier for understanding**/
+class Solution {
+    public int[] findDiagonalOrder(int[][] matrix) {
+        
+        // Check for empty matrices
+        if (matrix == null || matrix.length == 0) {
+            return new int[0];
+        }
+        
+        // Variables to track the size of the matrix
+        int N = matrix.length;
+        int M = matrix[0].length;
+        
+        // Incides that will help us progress through 
+        // the matrix, one element at a time.
+        int row = 0, column = 0;
+        
+        // As explained in the article, this is the variable
+        // that helps us keep track of what direction we are
+        // processing the current diaonal
+        int direction = 1;
+        
+         // The final result array
+        int[] result = new int[N*M];
+        int r = 0;
+        
+        // The uber while loop which will help us iterate over all
+        // the elements in the array.
+        while (row < N && column < M) {
+            
+            // First and foremost, add the current element to 
+            // the result matrix. 
+            result[r++] = matrix[row][column];
+            
+            // Move along in the current diagonal depending upon
+            // the current direction.[i, j] -> [i - 1, j + 1] if 
+            // going up and [i, j] -> [i + 1][j - 1] if going down.
+            int new_row = row + (direction == 1 ? -1 : 1);
+            int new_column = column + (direction == 1 ? 1 : -1);
+            
+            // Checking if the next element in the diagonal is within the
+            // bounds of the matrix or not. If it's not within the bounds,
+            // we have to find the next head. 
+            if (new_row < 0 || new_row == N || new_column < 0 || new_column == M) {
+                
+                // If the current diagonal was going in the upwards
+                // direction.
+                if (direction == 1) {
+                    
+                    // For an upwards going diagonal having [i, j] as its tail
+                    // If [i, j + 1] is within bounds, then it becomes
+                    // the next head. Otherwise, the element directly below
+                    // i.e. the element [i + 1, j] becomes the next head
+                    row += (column == M - 1 ? 1 : 0) ;
+                    column += (column < M - 1 ? 1 : 0);
+                        
+                } else {
+                    
+                    // For a downwards going diagonal having [i, j] as its tail
+                    // if [i + 1, j] is within bounds, then it becomes
+                    // the next head. Otherwise, the element directly below
+                    // i.e. the element [i, j + 1] becomes the next head
+                    column += (row == N - 1 ? 1 : 0);
+                    row += (row < N - 1 ? 1 : 0);
+                }
+                    
+                // Flip the direction
+                direction = 1 - direction;        
+                        
+            } else {
+                
+                row = new_row;
+                column = new_column;
+            }
+        }
+        return result;      
+    }
+}
+```
+
+*   Time Complexity: $O(N \cdot M)$ considering the array has N rows and M columns.
+*   Space Complexity: $O(1)$ since we don't make use of any additional data structure. Note that the space occupied by the output array doesn't count towards the space complexity since that is a requirement of the problem itself. Space complexity comprises any `additional` space that we may have used to get to build the final array. 
