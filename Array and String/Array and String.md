@@ -761,3 +761,317 @@ class Solution {
 
 *   Time Complexity: $O(N \cdot M)$ considering the array has N rows and M columns.
 *   Space Complexity: $O(1)$ since we don't make use of any additional data structure. Note that the space occupied by the output array doesn't count towards the space complexity since that is a requirement of the problem itself. Space complexity comprises any `additional` space that we may have used to get to build the final array. 
+
+# Introduction to String
+
+*   A string is actually an array of `unicode characters`. You can perform almost all the operations we used in an array. 
+*   Java may not use "==" to compare two strings.
+
+```java
+// "static void main" must be defined in a public class.
+public class Main {
+    public static void main(String[] args) {
+        // initialize
+        String s1 = "Hello World";
+        System.out.println("s1 is \"" + s1 + "\"");
+        String s2 = s1;
+        System.out.println("s2 is another reference to s1.");
+        String s3 = new String(s1);
+        System.out.println("s3 is a copy of s1.");
+        // compare using '=='
+        System.out.println("Compared by '==':");
+        // true since string is immutable and s1 is binded to "Hello World"
+        System.out.println("s1 and \"Hello World\": " + (s1 == "Hello World"));
+        // true since s1 and s2 is the reference of the same object
+        System.out.println("s1 and s2: " + (s1 == s2));
+        // false since s3 is refered to another new object
+        System.out.println("s1 and s3: " + (s1 == s3));
+        // compare using 'equals'
+        System.out.println("Compared by 'equals':");
+        System.out.println("s1 and \"Hello World\": " + s1.equals("Hello World"));
+        System.out.println("s1 and s2: " + s1.equals(s2));
+        System.out.println("s1 and s3: " + s1.equals(s3));
+        // compare using 'compareTo'
+        System.out.println("Compared by 'compareTo':");
+        System.out.println("s1 and \"Hello World\": " + (s1.compareTo("Hello World") == 0));
+        System.out.println("s1 and s2: " + (s1.compareTo(s2) == 0));
+        System.out.println("s1 and s3: " + (s1.compareTo(s3) == 0));
+    }
+}
+```
+
+*   `Immutable` means that you can't change the content of the string once it's initialized.
+*   **Operations**
+
+```java
+// "static void main" must be defined in a public class.
+public class Main {
+    public static void main(String[] args) {
+        String s1 = "Hello World";
+        // 1. concatenate
+        s1 += "!";
+        System.out.println(s1);
+        // 2. find
+        System.out.println("The position of first 'o' is: " + s1.indexOf('o'));
+        System.out.println("The position of last 'o' is: " + s1.lastIndexOf('o'));
+        // 3. get substring
+        System.out.println(s1.substring(6, 11));
+    }
+}
+```
+
+*   You should be aware of `the time complexity` of these built-in operations
+
+*   Also, in languages which the string is immutable, you should be careful with the **concatenation** operation
+
+    *   In Java, since the string is `immutable`, concatenation works by first allocating enough space for the new string, copy the contents from the old string and append to the new string which is $O(n^2)$.
+
+*   Obviously, an immutable string cannot be modified. If you want to modify just one of the characters, you have to create a new string.
+
+*   **Solutions**
+
+    *   If you did want your string to be mutable, you can convert it to a **char array**.
+
+    ```java
+    // "static void main" must be defined in a public class.
+    public class Main {
+        public static void main(String[] args) {
+            String s = "Hello World";
+            char[] str = s.toCharArray();
+            str[5] = ',';
+            System.out.println(str);
+        }
+    }
+    ```
+
+    *   If you have to concatenate strings often, it will be better to use some other data structures like `StringBuilder`. The below code runs in **`O(n)`** complexity.
+
+    ```java
+    // "static void main" must be defined in a public class.
+    public class Main {
+        public static void main(String[] args) {
+            int n = 10000;
+            StringBuilder str = new StringBuilder();
+            for (int i = 0; i < n; i++) {
+                str.append("hello");
+            }
+            String s = str.toString();
+        }
+    }
+    ```
+
+## Add Binary(Easy #67)
+
+**Question**: Given two binary strings `a` and `b`, return *their sum as a binary string*.
+
+**Example 1:**
+
+```
+Input: a = "11", b = "1"
+Output: "100"
+```
+
+**Example 2:**
+
+```
+Input: a = "1010", b = "1011"
+Output: "10101"
+```
+
+**Constraints:**
+
+-   `1 <= a.length, b.length <= 104`
+-   `a` and `b` consist only of `'0'` or `'1'` characters.
+-   Each string does not contain leading zeros except for the zero itself.
+
+### My Solution
+
+```java
+public String addBinary(String a, String b) {
+    int minLength = Math.min(a.length(), b.length());
+    int maxLength = Math.max(a.length(), b.length());
+    char[] longString, shortString;
+    if (a.length() == maxLength) {
+        longString = a.toCharArray();
+        shortString = b.toCharArray();
+    } else {
+        longString = b.toCharArray();
+        shortString = a.toCharArray();
+    }
+
+    int carry = 0;
+    StringBuilder sb = new StringBuilder();
+    // use the shorter string to loop from last char to the front
+    for (int i = minLength - 1, j = maxLength - 1; i >= 0; i--, j--){
+        int sumDigit = Character.getNumericValue(shortString[i]) + 
+            Character.getNumericValue(longString[j]) + carry;
+        carry = sumDigit / 2;// take the carry to the next calculation
+        int digit = sumDigit % 2;
+        sb.insert(0, digit);
+    }
+    while(minLength < maxLength){
+        int location = maxLength - minLength - 1;
+        int sumDigit = 0;
+        // add the rest digits of the longer string
+        sumDigit = Character.getNumericValue(longString[location]) + carry;
+
+        carry = sumDigit / 2;
+        int digit = sumDigit % 2;
+        sb.insert(0, digit);
+        minLength++;
+    }
+    if (carry == 1) sb.insert(0, carry);// if we have a carry then need to add a digit
+    return sb.toString();
+}
+```
+
+### Solution
+
+*   A built-in solution: but low efficiency due to $O(M + N)$ complexity
+    *   Convert a and b into integers.
+    *   Compute the sum.
+    *   Convert the sum back into binary form
+
+```java
+public String addBinary(String a, String b){
+    return Integer.toBinaryString(Integer.parseInt(a, 2) + Integer.parseInt(b, 2));
+}
+```
+
+#### Solution #1 Bit-by-Bit Computation
+
+*   Same logics as my solution but a cleaner way
+*   Start from carry = 0
+
+```java
+public String addBinary(String a, String b){
+    int n = a.length(), m = b.length();
+    if (n < m) return addBinary(b, a);//if not, recursion to switch
+    int L = Math.max(n, m);
+    
+    StringBuilder sb = new StringBuilder();
+    int carry = 0, j = m - 1;
+    for(int i = L - 1; i > -1; --i){
+        if (a.charAt(i) == '1') ++carry;
+        if (j > -1 && b.charAt(j--) == '1') ++carry;
+        
+        if (carry % 2 == 1) sb.append('1');
+        else sb.append('0');
+        
+        carry /= 2;
+    }
+    if (carry == 1) sb.append('1');
+    sb.reverse(); //string builder has a reverse function **
+    return sb.toString();
+}
+```
+
+*   Time complexity: $\mathcal{O}(\max(N, M))$, where N and M are lengths of the input strings a and b.
+*   Space complexity: $\mathcal{O}(\max(N, M))$ to keep the answer.
+
+## Implement strStr()(Easy #28)
+
+**Question**: Implement [strStr()](http://www.cplusplus.com/reference/cstring/strstr/).
+
+Return the index of the first occurrence of needle in haystack, or `-1` if `needle` is not part of `haystack`.
+
+**Clarification:**
+
+What should we return when `needle` is an empty string? This is a great question to ask during an interview.
+
+For the purpose of this problem, we will return 0 when `needle` is an empty string. This is consistent to C's [strstr()](http://www.cplusplus.com/reference/cstring/strstr/) and Java's [indexOf()](https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#indexOf(java.lang.String)).
+
+**Example 1:**
+
+```
+Input: haystack = "hello", needle = "ll"
+Output: 2
+```
+
+**Example 2:**
+
+```
+Input: haystack = "aaaaa", needle = "bba"
+Output: -1
+```
+
+**Example 3:**
+
+```
+Input: haystack = "", needle = ""
+Output: 0
+```
+
+**Constraints:**
+
+-   `0 <= haystack.length, needle.length <= 5 * 104`
+-   `haystack` and `needle` consist of only lower-case English characters.
+
+### My Solution
+
+```java
+public int strStr(String haystack, String needle) {
+    if (needle.equals("") || needle == null) return 0;
+
+    char[] haystackArry = haystack.toCharArray();
+    char[] needleArry = needle.toCharArray();
+
+    for (int i = 0; i < haystackArry.length; i++){
+        if (haystackArry[i] == needleArry[0]){
+            if (i + needleArry.length > haystackArry.length) break;
+            String comp = haystack.substring(i, i + needleArry.length);
+            if (comp.equals(needle)){
+                return i;
+            }
+        }
+    }
+
+    return -1;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 One-line solution
+
+*   Simple but slow
+
+```java
+public int strStr(String haystack, String needle){
+    return haystack.indexOf(needle);
+}
+```
+
+#### Solution #2 Two-pointers
+
+*   Use two pointers to compare the characters
+*   No need to transfer string to char array
+*   A much faster solution
+
+```java
+public int strStr(String haystack, String needle){
+    int h = haystack.length();
+    int n = needle.length();
+    if (needle.isEmpty()) return 0;
+    if (n > h) return -1;
+    
+    for (int i = 0; i < h - n + 1; i++){
+        int j = 0, k;
+        if ((haystack.charAt(i) == needle.charAt(j)) 
+            && (haystack.charAt(i + n - 1) == needle.charAt(j + n - 1))){
+            // each time compare the first char and the last char to see if the same
+            k = i; // locate the idx
+            // loop through the needle and haystack and idx + 1
+            while(k < h && j < n && haystack.charAt(k) == needle.charAt(j)){
+                k++;
+                j++;
+            }
+            if (j == n) return i; // if all char are the same
+        }
+    }
+    return -1;
+}
+```
+
+
+

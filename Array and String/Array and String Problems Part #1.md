@@ -316,3 +316,144 @@ public List<List<Integer>> generate(int numRows){
 *   Space complexity : $O(numRows^2)$
 
     Because we need to store each number that we update in `triangle`, the space requirement is the same as the time complexity.
+
+## Gas Station(Medium #134)
+
+**Question**: There are `n` gas stations along a circular route, where the amount of gas at the `ith` station is `gas[i]`.
+
+You have a car with an unlimited gas tank and it costs `cost[i]` of gas to travel from the `ith` station to its next `(i + 1)th` station. You begin the journey with an empty tank at one of the gas stations.
+
+Given two integer arrays `gas` and `cost`, return *the starting gas station's index if you can travel around the circuit once in the clockwise direction, otherwise return* `-1`. If there exists a solution, it is **guaranteed** to be **unique**
+
+**Example 1:**
+
+```
+Input: gas = [1,2,3,4,5], cost = [3,4,5,1,2]
+Output: 3
+Explanation:
+Start at station 3 (index 3) and fill up with 4 unit of gas. Your tank = 0 + 4 = 4
+Travel to station 4. Your tank = 4 - 1 + 5 = 8
+Travel to station 0. Your tank = 8 - 2 + 1 = 7
+Travel to station 1. Your tank = 7 - 3 + 2 = 6
+Travel to station 2. Your tank = 6 - 4 + 3 = 5
+Travel to station 3. The cost is 5. Your gas is just enough to travel back to station 3.
+Therefore, return 3 as the starting index.
+```
+
+**Example 2:**
+
+```
+Input: gas = [2,3,4], cost = [3,4,3]
+Output: -1
+Explanation:
+You can't start at station 0 or 1, as there is not enough gas to travel to the next station.
+Let's start at station 2 and fill up with 4 unit of gas. Your tank = 0 + 4 = 4
+Travel to station 0. Your tank = 4 - 3 + 2 = 3
+Travel to station 1. Your tank = 3 - 3 + 3 = 3
+You cannot travel back to station 2, as it requires 4 unit of gas but you only have 3.
+Therefore, you can't travel around the circuit once no matter where you start.
+```
+
+**Constraints:**
+
+-   `gas.length == n`
+-   `cost.length == n`
+-   `1 <= n <= 105`
+-   `0 <= gas[i], cost[i] <= 104`
+
+### My Solution
+
+```java
+public int canCompleteCircuit(int[] gas, int[] cost){
+    int sumGas = 0;
+    for (int i = 0; i < gas.length; i++){
+        if (sumGas + gas[i] - cost[i] < 0){
+            sumGas = 0;
+            continue;
+        } else {
+            int j = 0;
+            while(j < gas.length && sumGas >= 0){
+                int idx = (i + j) % gas.length;
+                sumGas += gas[idx];
+                sumGas -= cost[idx];
+                j++;
+            }
+            return i;
+        }
+    }
+    return -1;
+}
+```
+
+*   The solution is correct but exceed the time limit due to nested loop
+*   But the idea is similar to the standard solution, just need a little improvement
+
+### Standard Solution
+
+#### Solution #1 One Pass
+
+*   The first idea is to check every single station :
+    -   Choose the station as starting point.
+    -   Perform the road trip and check how much gas we have in tank at each station.
+    -   That means $\mathcal{O}(N^2)$ time complexity, and for sure one could do better(**My solution**).
+*   The second fact could be generalized. Let's introduce `curr_tank` variable to track the current amount of gas in the tank. If at some station `curr_tank` is less than `0`, that means that one couldn't reach this station.
+
+*   **Algorithm**
+
+    Now the algorithm is straightforward :
+
+    1.  Initiate `total_tank` and `curr_tank` as zero, and choose station `0` as a starting station.
+    2.  Iterate over all stations :
+        -   Update `total_tank` and `curr_tank` at each step, by adding `gas[i]` and subtracting `cost[i]`.
+        -   If `curr_tank < 0` at `i + 1` station, make `i + 1` station a new starting point and reset `curr_tank = 0` to start with an empty tank.
+    3.  Return `-1` if `total_tank < 0` and `starting station` otherwise.
+
+```java
+class Solution {
+  public int canCompleteCircuit(int[] gas, int[] cost) {
+    int n = gas.length;
+
+    int total_tank = 0;
+    int curr_tank = 0;
+    int starting_station = 0;
+    for (int i = 0; i < n; ++i) {
+      total_tank += gas[i] - cost[i];
+      curr_tank += gas[i] - cost[i];
+      // If one couldn't get here,
+      if (curr_tank < 0) {
+        // Pick up the next station as the starting one.
+        starting_station = i + 1;
+        // Start with an empty tank.
+        curr_tank = 0;
+      }
+    }
+    return total_tank >= 0 ? starting_station : -1;
+    // go through the loop and total > 0 means if we start at the start point, the gas would be enough         
+    // for the whole trip
+  }
+}
+```
+
+```java
+// similar idea, but a simpler algorithm design
+public int canCompleteCircuit(int[] gas, int[] cost){
+    int len = gas.length;
+    int spare = 0;
+    int minSpare = Integer.MAX_VALUE;
+    int minIndex = 0;
+    
+    for (int i = 0; i < len; i++){
+        spare += gas[i] - cost[i];
+        if (spare < minSpare){
+            minSpare = spare;
+            minIndex = i;
+        }
+    }
+    return spare < 0 ? -1 : (minIndex + 1) % len;
+    // you need to draw a line plot of gas in the tank, 
+    // the lowest point in the lineplot is the start point
+}
+```
+
+*   Time complexity : $ \mathcal{O}(N)$ since there is only one loop over all stations here.
+*   Space complexity : $\mathcal{O}(1)$ since it's a constant space solution.
