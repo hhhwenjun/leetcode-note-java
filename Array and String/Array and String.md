@@ -1046,6 +1046,7 @@ public int strStr(String haystack, String needle){
 
 *   Use two pointers to compare the characters
 *   No need to transfer string to char array
+*   Save the time of comparison
 *   A much faster solution
 
 ```java
@@ -1073,5 +1074,180 @@ public int strStr(String haystack, String needle){
 }
 ```
 
+#### Solution #3 KMP algorithm
 
+*   [KMP algorithm](https://leetcode-cn.com/leetbook/read/array-and-string/cpoo6/)
+*   Create a next integer array to represent encountered times of the characters
+
+```java
+public int strStr(String haystack, String needle) {
+    if(needle.length()==0) return 0;
+    int m = haystack.length(), i = 0;
+    int n = needle.length(),   j = 0;
+
+    int[] next = nextBuilder(needle);
+    while(i<m && j<n) {
+        if(j<0 || haystack.charAt(i) == needle.charAt(j)) {
+            i++;j++;
+        }else{j = next[j];}
+    }
+    if(j == n) { return i - j;}
+    else return -1;
+
+}
+private int[] nextBuilder(String needle) {
+    int m = needle.length();
+    int[] next = new int[m];
+    next[0] = -1;
+    int t = -1, j = 0;
+    while(j < m-1) {
+        if(t < 0 || needle.charAt(t) == needle.charAt(j)) {
+            t++;
+            j++;
+            next[j] = t;
+        } else { t = next[t];}
+    }
+    return next;
+}
+
+作者：AguynamedRich
+链接：https://leetcode-cn.com/leetbook/read/array-and-string/cm5e2/?discussion=aQc2Qy
+来源：力扣（LeetCode）
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处
+```
+
+# Two-pointer Technique
+
+*   Many situations require two-pointer
+
+    *   Reverse the elements in an array
+    *   The idea is to swap the first element with the end, advance to the next element and swapping repeatedly until it reaches the middle position. 
+    *   And it is worth noting that this technique is often used in a `sorted` array.
+
+    ```java
+    public static void reverse(int[] v, int N) {
+        int i = 0;
+        int j = N - 1;
+        while (i < j) {
+            swap(v, i, j);  // this is a self-defined function
+            i++;
+            j--;
+        }
+    }
+    ```
+
+*   **Iterate the array from two ends to the middle.**
+
+*   **One pointer starts from the beginning while the other pointer starts from the end.**
+
+## Reverse String(Easy #344)
+
+**Question**: Write a function that reverses a string. The input string is given as an array of characters `s`.
+
+You must do this by modifying the input array in-place with `O(1)` extra memory.
+
+**Example 1:**
+
+```
+Input: s = ["h","e","l","l","o"]
+Output: ["o","l","l","e","h"]
+```
+
+**Example 2:**
+
+```
+Input: s = ["H","a","n","n","a","h"]
+Output: ["h","a","n","n","a","H"]
+```
+
+**Constraints:**
+
+-   `1 <= s.length <= 105`
+-   `s[i]` is a printable ascii character.
+
+### My Solution
+
+```java
+public void reverseString(char[] s){
+    int front = 0, end = s.length - 1;
+    while(front < end){
+        swap(s, front, end);
+        front++;
+        end--;
+    }
+}
+public void swap(char[] s, int front, int end){
+    char temp = s[front];
+    s[front] = s[end];
+    s[end] = temp;
+}
+```
+
+-   Time complexity : $\mathcal{O}(N)$ to swap N/2 element.
+-   Space complexity : $\mathcal{O}(1)$, it's a constant space solution.
+-   Same as the standard solution
+
+## Array Partition I(Easy #561)
+
+**Question**: Given an integer array `nums` of `2n` integers, group these integers into `n` pairs `(a1, b1), (a2, b2), ..., (an, bn)` such that the sum of `min(ai, bi)` for all `i` is **maximized**. Return *the maximized sum*.
+
+**Example 1:**
+
+```
+Input: nums = [1,4,3,2]
+Output: 4
+Explanation: All possible pairings (ignoring the ordering of elements) are:
+1. (1, 4), (2, 3) -> min(1, 4) + min(2, 3) = 1 + 2 = 3
+2. (1, 3), (2, 4) -> min(1, 3) + min(2, 4) = 1 + 2 = 3
+3. (1, 2), (3, 4) -> min(1, 2) + min(3, 4) = 1 + 3 = 4
+So the maximum possible sum is 4.
+```
+
+**Example 2:**
+
+```
+Input: nums = [6,2,6,5,1,2]
+Output: 9
+Explanation: The optimal pairing is (2, 1), (2, 5), (6, 6). min(2, 1) + min(2, 5) + min(6, 6) = 1 + 2 + 6 = 9.
+```
+
+**Constraints:**
+
+-   `1 <= n <= 104`
+-   `nums.length == 2 * n`
+-   `-104 <= nums[i] <= 104`
+
+### My Solution
+
+```java
+public int arrayPairSum(int[] nums){
+    /** sort the array and group them by order (small with small, large with large in order)**/
+    Arrays.sort(nums);
+    int first = 0, second = 1;
+    int sum = 0;
+    while(first < nums.length){
+        int min = Math.min(nums[first], nums[second]);
+        sum += min;
+        first += 2;
+        second += 2;
+    }
+    return sum;
+}
+```
+
+### Standard Solution
+
+*   Same as my solution but a simpler one
+
+```java
+public int arrayPairSum(int[] nums) {
+    Arrays.sort(nums);
+    int sum = 0;
+    for(int i=0; i<nums.length;i+=2) sum+=nums[i];
+    return sum;
+}
+```
+
+*   Time complexity: $O(n\log n)$
+*   Space complexity: $O(1)$
 

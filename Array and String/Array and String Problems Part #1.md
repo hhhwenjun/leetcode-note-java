@@ -457,3 +457,234 @@ public int canCompleteCircuit(int[] gas, int[] cost){
 
 *   Time complexity : $ \mathcal{O}(N)$ since there is only one loop over all stations here.
 *   Space complexity : $\mathcal{O}(1)$ since it's a constant space solution.
+
+## Longest Common Prefix(Easy #14)
+
+**Question**: Write a function to find the longest common prefix string amongst an array of strings.
+
+If there is no common prefix, return an empty string `""`.
+
+**Example 1:**
+
+```
+Input: strs = ["flower","flow","flight"]
+Output: "fl"
+```
+
+**Example 2:**
+
+```
+Input: strs = ["dog","racecar","car"]
+Output: ""
+Explanation: There is no common prefix among the input strings.
+```
+
+**Constraints:**
+
+-   `1 <= strs.length <= 200`
+-   `0 <= strs[i].length <= 200`
+-   `strs[i]` consists of only lower-case English letters.
+
+### Standard Solution
+
+#### Solution #1 Vertical Scanning
+
+*   Compare characters from top to bottom on the same column
+
+<img src="https://assets.leetcode-cn.com/solution-static/14/14_fig2.png" alt="fig2" style="zoom:33%;" />
+
+```java
+public String longestCommonPrefix(String[] strs){
+    if (strs == null || strs.length == 0){
+        return "";
+    }
+    int length = strs[0].length();
+    int count = strs.length;
+    for (int i = 0; i < length; i++){
+        char c = strs[0].charAt(i);
+        for (int j = 1; j < count; j++){
+            if (i == strs[j].length() || strs[j].charAt(i) != c){
+                return strs[0].substring(0, i);
+            }
+        }
+    }
+    return strs[0];
+}
+```
+
+*   Time complexity: $O(mn)$, m is the average length of the strs, and n is the number of string. 
+*   Space complexity: $O(1)$, other extra space complexity is constant
+
+#### Solution #2 Horizontal Scan
+
+*   Each time traverse the substring inside the string and update the prefix
+*   When the prefix is empty, just return empty string
+
+<img src="https://assets.leetcode-cn.com/solution-static/14/14_fig1.png" alt="fig1" style="zoom:33%;" />
+
+```java
+public String longestCommonPrefix(String[] strs){
+    if (strs == null || strs.length == 0){
+        return "";
+    }
+    String prefix = strs[0];
+    int count = strs.length;
+    for (int i = 1; i < count; i++){
+        prefix = longestCommonPrefix(prefix, strs[i]);
+        if (prefix.length() == 0){
+            break;
+        }
+    }
+    return prefix;
+}
+public String longestCommonPrefix(String str1, String str2){
+    int length = Math.min(str1.length(), str2.length());
+    int index = 0;
+    while(index < length && str1.charAt(index) == str2.charAt(index)){
+        index++;
+    }
+    return str1.substring(0, index);
+}
+```
+
+*   Time complexity: $O(mn)$, m is the average length of the strs, and n is the number of string. 
+*   Space complexity: $O(1)$, other extra space complexity is constant
+
+#### Solution #3 Binary Search
+
+*   Find the shortest string in the strs, and use binary search to find the length of the prefix to shorten the range.
+
+<img src="https://assets.leetcode-cn.com/solution-static/14/14_fig4.png" alt="fig4" style="zoom: 33%;" />
+
+```java
+public String longestCommonPrefix(String[] strs){
+    if (strs == null || strs.length == 0) return "";
+    int minLength = Integer.MAX_VALUE;
+    for (String str : strs){
+        minLength = Math.min(minLength, str.length());
+    }
+    int low = 0, high = minLength;
+    while(low < high){
+        int mid = (high - low + 1) / 2 + low;
+        if (isCommonPrefix(strs, mid)){
+            low = mid;
+        } else {
+            high = mid - 1;
+        }
+    }
+    return strs[0].substring(0, low);
+}
+
+public boolean isCommonPrefix(String[] strs, int length){
+    String str0 = strs[0].substring(0, length);
+    int count = strs.length;
+    for (int i = 1; i < count; i++){
+        String str = strs[i];
+        for (int j = 0; j < length; j++){
+            if (str0.charAt(j) != str.charAt(j)){
+                return false;
+            }
+        }
+    }
+}
+```
+
+*   Time complexity: $O(mn\log m)$. M is the shortest length of string, n is the number of strings. Binary search operation is $O(\log m)$, each time iteration need to compare $mn$ characters.
+*   Space complexity: $O(1)$.
+
+## Sequential Digits(Medium #1291)
+
+**Question**: An integer has *sequential digits* if and only if each digit in the number is one more than the previous digit.
+
+Return a **sorted** list of all the integers in the range `[low, high]` inclusive that have sequential digits.
+
+**Example 1:**
+
+```
+Input: low = 100, high = 300
+Output: [123,234]
+```
+
+**Example 2:**
+
+```
+Input: low = 1000, high = 13000
+Output: [1234,2345,3456,4567,5678,6789,12345]
+```
+
+**Constraints:**
+
+-   `10 <= low <= high <= 10^9`
+
+### My Solution
+
+```java
+public List<Integer> sequentialDigits(int low, int high) {
+    /**The digits can only be 1,2,3,4,5,6,7,8,9, use slicing window of the 9 digits**/
+    String range = "123456789";
+
+    // the we need to know the low and high has how many digits
+    int lowBound = findDigit(low), upperBound = findDigit(high);
+
+    // the window size is same as lowBound, but could not larger than upperBound
+    int winSize = lowBound;
+    List<Integer> seq = new ArrayList<Integer>();
+    for(int length = lowBound; length < upperBound + 1; length++){
+        for(int start = 0; start < 10 - length; start++){
+            int val = Integer.valueOf(range.substring(start, start + length));
+            if (val > high) break;
+            if (val < low) continue;
+            seq.add(Integer.valueOf(range.substring(start, start + length)));
+        }
+    }
+    return seq;
+}
+
+public int findDigit(int num){
+    int digit = 0;
+    while(num > 0){
+        num /= 10;
+        digit++;
+    }
+    return digit;
+}
+```
+
+*   Actually a good solution with fast speed and low space complexity
+
+### Standard Solution
+
+#### Solution #1 Sliding Window
+
+![diff](https://leetcode.com/problems/sequential-digits/Figures/1291/sliding.png)
+
+*   Same idea as my solution
+
+*   **Algorithm**: 
+    *   Initialize sample string "123456789". This string contains all integers that have sequential digits as substrings. Let's implement sliding window algorithm to generate them.
+    *   Iterate over all possible string lengths: from the length of `low` to the length of `high`.
+        *   For each length iterate over all possible start indexes: from `0` to `10 - length`.
+            *   Construct the number from digits inside the sliding window of current length.
+            *   Add this number in the output list `nums`, if it's greater than `low` and less than `high`.
+    *   Return `nums`.
+
+```java
+public List<Integer> sequentialDigits(int low, int high){
+    String sample = "123456789";
+    int n = 10;
+    List<Integer> nums = new ArrayList();
+    
+    int lowLen = String.valueOf(low).length();
+    int highLen = String.valueOf(high).length();
+    for (int length = lowLen; length < highLen + 1; length++){
+        for (int start = 0; start < n - length; start++){
+            int num = Integer.parseInt(sample.substring(start, start + length));
+            if (num >= low && num <= high) nums.add(num);
+        }
+    }
+    return nums;
+}
+```
+
+-   Time complexity: $\mathcal{O}(1)$. Length of sample string is 9, and lengths of low and high are between 2 and 9. Hence the nested loops are executed no more than $8 \times 8 = 64$ times.
+-   Space complexity: $\mathcal{O}(1)$ to keep not more than 36 integers with sequential digits.
