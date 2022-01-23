@@ -112,3 +112,98 @@ class Solution {
 
 *   Time complexity: $O(n \cdot \log m)$
 *   Space complexity: $O(1)$
+
+## Reverse Integer(Medium #7)
+
+**Question**: Given a signed 32-bit integer `x`, return `x` *with its digits reversed*. If reversing `x` causes the value to go outside the signed 32-bit integer range `[-2^31, 2^31 - 1]`, then return `0`.
+
+**Assume the environment does not allow you to store 64-bit integers (signed or unsigned).**
+
+**Example 1:**
+
+```
+Input: x = 123
+Output: 321
+```
+
+**Example 2:**
+
+```
+Input: x = -123
+Output: -321
+```
+
+**Example 3:**
+
+```
+Input: x = 120
+Output: 21
+```
+
+**Constraints:**
+
+-   `-231 <= x <= 231 - 1`
+
+#### My Solution
+
+*   Similar to pop and push to reverse the order
+
+```java
+public int reverse(int x){
+    if (x < 0){
+        char sign = '-';
+    }
+    int val = Math.abs(x);
+    int reVal = 0;
+    while(val != 0){
+        int digit = val % 10;
+        val /= 10;
+        reVal = reVal * 10 + digit;
+    }
+    if (sign){
+        reVal *= -1;
+    }
+    return reVal;
+}
+```
+
+*   Could not cover all the cases
+
+#### Standard Solution
+
+*   It is very important to learn the limit of the primitive data type
+*   Always use MAX value devide 10, not the smaller one * 10 just in case overflow
+*   Consider if add the digit would it be overflow
+
+#### Solution #1 Pop and Push & Check before Overflow
+
+```java
+public int reverse(int x){
+    int rev = 0;
+    while(x != 0){
+        int pop = x % 10;
+        x /= 10;
+        if (rev > Integer.MAX_VALUE / 10 || (rev == Integer.MAX_VALUE / 10 && pop > 7)) return 0;
+        if (rev < Integer.MIN_VALUE / 10 || (rev == Integer.MIN_VALUE / 10 && pop < -8)) return 0;
+        rev = rev * 10 + pop;
+    }
+    return rev;
+}
+```
+
+*   Time Complexity: $O(\log(x))$. There are roughly $\log_{10}(x)$ digits in x*x*.
+*   Space Complexity: $O(1)$.
+
+#### Solution #2 Built-in Method
+
+```java
+public int reverse(int x) {
+    String reversed = new StringBuilder().append(Math.abs(x)).reverse().toString();
+    try {
+        return (x < 0) ? Integer.parseInt(reversed) * -1 : Integer.parseInt(reversed);
+    } catch (NumberFormatException e) {
+        return 0;
+    }
+}
+```
+
