@@ -145,6 +145,31 @@ public int[] twoSum(int[] numbers, int target){
 }
 ```
 
+```java
+/**second attempt**/
+public int[] twoSum(int[] numbers, int target){
+    int low = 0, high = numbers.length - 1;
+    int[] res = new int[2];
+    while(low < high){
+        int sum = numbers[low] + numbers[high];
+        if (sum > target){
+            high--;
+        }
+        else if (sum < target){
+            low++;
+        }
+        else {
+            res[0] = low;
+            res[1] = high;
+            break;
+        }
+    }
+    return res;
+}
+```
+
+
+
 ### Standard Solution
 
 #### Solution #1 Two Pointers

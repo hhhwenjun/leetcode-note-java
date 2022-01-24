@@ -688,3 +688,283 @@ public List<Integer> sequentialDigits(int low, int high){
 
 -   Time complexity: $\mathcal{O}(1)$. Length of sample string is 9, and lengths of low and high are between 2 and 9. Hence the nested loops are executed no more than $8 \times 8 = 64$ times.
 -   Space complexity: $\mathcal{O}(1)$ to keep not more than 36 integers with sequential digits.
+
+## Two Sum II - Input Array is Sorted(Easy 167)
+
+**Question**: Given a **1-indexed** array of integers `numbers` that is already ***sorted in non-decreasing order\***, find two numbers such that they add up to a specific `target` number. Let these two numbers be `numbers[index1]` and `numbers[index2]` where `1 <= index1 < index2 <= numbers.length`.
+
+Return *the indices of the two numbers,* `index1` *and* `index2`*, **added by one** as an integer array* `[index1, index2]` *of length 2.*
+
+The tests are generated such that there is **exactly one solution**. You **may not** use the same element twice.
+
+**Example 1:**
+
+```
+Input: numbers = [2,7,11,15], target = 9
+Output: [1,2]
+Explanation: The sum of 2 and 7 is 9. Therefore, index1 = 1, index2 = 2. We return [1, 2].
+```
+
+**Example 2:**
+
+```
+Input: numbers = [2,3,4], target = 6
+Output: [1,3]
+Explanation: The sum of 2 and 4 is 6. Therefore index1 = 1, index2 = 3. We return [1, 3].
+```
+
+**Example 3:**
+
+```
+Input: numbers = [-1,0], target = -1
+Output: [1,2]
+Explanation: The sum of -1 and 0 is -1. Therefore index1 = 1, index2 = 2. We return [1, 2].
+```
+
+**Constraints:**
+
+-   `2 <= numbers.length <= 3 * 104`
+-   `-1000 <= numbers[i] <= 1000`
+-   `numbers` is sorted in **non-decreasing order**.
+-   `-1000 <= target <= 1000`
+-   The tests are generated such that there is **exactly one solution**.
+
+### My Solution
+
+*   Two pointer, low pointer at the beginning, high pointer at the end
+*   While smaller than target, low pointer + 1, if larger than target high pointer -1
+
+```java
+public int[] twoSum(int[] numbers, int target){
+    int low = 0, high = numbers.length - 1;
+    int[] res = new int[2];
+    while(low < high){
+        int sum = numbers[low] + numbers[high];
+        if (sum > target){
+            high--;
+        }
+        else if (sum < target){
+            low++;
+        }
+        else {
+            res[0] = low;
+            res[1] = high;
+            break;
+        }
+    }
+    return res;
+}
+```
+
+*   Time complexity: $O(n)$. The input array is traversed at most once. Thus the time complexity is O(n)*O*(*n*).
+*   Space complexity: $O(1)$. We only use additional space to store two indices and the sum, so the space complexity is $O(1)$.
+*   Same as standard solution
+
+## Max Consecutive Ones(Easy #485)
+
+**Question**: Given a binary array `nums`, return *the maximum number of consecutive* `1`*'s in the array*.
+
+**Example 1:**
+
+```
+Input: nums = [1,1,0,1,1,1]
+Output: 3
+Explanation: The first two digits or the last three digits are consecutive 1s. The maximum number of consecutive 1s is 3.
+```
+
+**Example 2:**
+
+```
+Input: nums = [1,0,1,1,0,1]
+Output: 2
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 105`
+-   `nums[i]` is either `0` or `1`.
+
+### My Solution
+
+*   Loop through the array and record 1 number
+*   If 0, we reset the calculation and record the max number of consecutive 1
+
+```java
+public int findMaxConsecutiveOnes(int[] nums){
+    int count = 0, max = 0, i = 0;
+    while(i < nums.length){
+        if (nums[i] == 1){
+            count++;
+            max = Math.max(max, count);
+        }
+        else {
+            count = 0;
+        }
+        i++;
+    }
+    return max;
+}
+```
+
+*   Same as the standard solution
+*   Time Complexity: $O(N)$, where N is the number of elements in the array.
+*   Space Complexity: $O(1)$. We do not use any extra space.
+
+## Minimum Size Subarray Sum(Medium #209)
+
+**Question**: Given an array of positive integers `nums` and a positive integer `target`, return the minimal length of a **contiguous subarray** `[numsl, numsl+1, ..., numsr-1, numsr]` of which the sum is greater than or equal to `target`. If there is no such subarray, return `0` instead.
+
+**Example 1:**
+
+```
+Input: target = 7, nums = [2,3,1,2,4,3]
+Output: 2
+Explanation: The subarray [4,3] has the minimal length under the problem constraint.
+```
+
+**Example 2:**
+
+```
+Input: target = 4, nums = [1,4,4]
+Output: 1
+```
+
+**Example 3:**
+
+```
+Input: target = 11, nums = [1,1,1,1,1,1,1,1]
+Output: 0 
+```
+
+**Constraints:**
+
+-   `1 <= target <= 109`
+-   `1 <= nums.length <= 105`
+-   `1 <= nums[i] <= 105`
+
+### My Solution
+
+*   Two pointer, 1 start, 1 end, use helper function to sum up
+*   Compare the sum, if exceed the target, shorten the range of the two pointer, use Math.min to compare the range
+
+```java
+public int minSubArrayLen(int target, int[] nums){
+    int range = nums.length;
+    int min = Integer.MAX_VALUE;
+    boolean pass = true;
+    while(pass){
+        pass = findEqualOrLargerTarget(nums, range, target);
+        if (!pass) break;
+        min = Math.min(min, range);
+        range--;
+    }
+   return min != Integer.MAX_VALUE ? min : 0;
+}
+public boolean findEqualOrLargerTarget(int[] nums, int range, int target){
+    int low = 0, high = low + range;
+    while (low <= nums.length - range){
+        int findSum = findSum(Arrays.copyOfRange(nums, low, high));
+        if (findSum >= target){
+            return true;
+        }
+        low++;
+        high++;
+    }
+    return false;
+}
+public int findSum(int[] nums){
+    int sum = 0;
+    int i = 0;
+    while(i < nums.length){
+        sum += nums[i];
+        i++;
+    }
+    return sum;
+}
+```
+
+*   It can solve the problem, but it is a brute force method so it exceed the time limit
+
+### Standard Solution
+
+*   For subarray, usually we have the following methods
+    *   Sliding window ($O(N)$) - similar to queue
+    *   Sum of prefix (need extra $O(N)$ for space)
+    *   Binary search(usually $O(N \log N)$)
+
+#### Solution #1 Two Pointer + Sliding Window
+
+*   Keep two pointers left and right to maintain the range of the subarray, sum to the right pointer
+*   Start from the maximum length of range
+*   When sum is larger than the target:
+    *   Move to right and remove the left number when adding to the sum
+    *   Update the minimum 
+    *   Until cannot delete any left number, we then continue to add the right number
+
+```java
+public int MinSubArrayLen(int s, int[] nums) {
+	int minLen = nums.length +1;
+	int sum = 0;
+	int left = 0;
+	for (int right = 0; right < nums.length; right++){
+		sum += nums[right];
+		while (sum >= s && left <= right){
+			//decrease till get smallest subarray possible in current window
+			minLen = Math.min(minLen, right -left + 1);
+			sum -= nums[left++];
+    	}
+	}
+    return minLen == nums.length + 1 ? 0 : minLen;    
+}
+```
+
+*   Time complexity: $O(n)$. Single iteration of $O(n)$.
+    -   Each element can be visited atmost twice, once by the right pointer(i) and (atmost)once by the $\text{left}$ pointer.
+*   Space complexity: $O(1)$ extra space. Only constant space required for $\text{left}$, $\text{sum}$, $\text{ans}$ and i.
+
+#### Solution #2 Binary Search + Prefix Sum
+
+*   Prefix sum: sum[i] = sum from nums[0] to nums[i-1]
+*   Each element need to be **positive**
+*   Use binary search to find the upper bound so that sums[bound] - sums[i - 1] >= target
+*   We can use `Arrays.binarySearch` to help us to find the bound
+    *   Need to be applied on a sorted array, the sums array is cumulative so it is ok
+
+```java
+class Solution {
+    public int minSubArrayLen(int s, int[] nums) {
+        int n = nums.length;
+        if (n == 0) {
+            return 0;
+        }
+        int ans = Integer.MAX_VALUE;
+        int[] sums = new int[n + 1]; 
+        // 为了方便计算，令 size = n + 1 
+        // sums[0] = 0 意味着前 0 个元素的前缀和为 0
+        // sums[1] = A[0] 前 1 个元素的前缀和为 A[0]
+        // 以此类推
+        for (int i = 1; i <= n; i++) {
+            sums[i] = sums[i - 1] + nums[i - 1];
+        }
+        for (int i = 1; i <= n; i++) {
+            int target = s + sums[i - 1];
+            int bound = Arrays.binarySearch(sums, target);
+            if (bound < 0) {//if not found, make it to 0
+                bound = -bound - 1;
+            }
+            if (bound <= n) {
+                ans = Math.min(ans, bound - (i - 1));
+            }
+        }
+        return ans == Integer.MAX_VALUE ? 0 : ans;
+    }
+}
+
+作者：LeetCode-Solution
+链接：https://leetcode-cn.com/problems/minimum-size-subarray-sum/solution/chang-du-zui-xiao-de-zi-shu-zu-by-leetcode-solutio/
+来源：力扣（LeetCode）
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+```
+
+*   Time complexity: $O(N \log N)$
+*   Space complexity: $O(N)$
