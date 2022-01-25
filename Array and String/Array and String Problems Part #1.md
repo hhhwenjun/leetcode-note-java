@@ -968,3 +968,370 @@ class Solution {
 
 *   Time complexity: $O(N \log N)$
 *   Space complexity: $O(N)$
+
+## Rotate Array(Medium #189)
+
+**Question**: Given an array, rotate the array to the right by `k` steps, where `k` is non-negative.
+
+**Example 1:**
+
+```
+Input: nums = [1,2,3,4,5,6,7], k = 3
+Output: [5,6,7,1,2,3,4]
+Explanation:
+rotate 1 steps to the right: [7,1,2,3,4,5,6]
+rotate 2 steps to the right: [6,7,1,2,3,4,5]
+rotate 3 steps to the right: [5,6,7,1,2,3,4]
+```
+
+**Example 2:**
+
+```
+Input: nums = [-1,-100,3,99], k = 2
+Output: [3,99,-1,-100]
+Explanation: 
+rotate 1 steps to the right: [99,-1,-100,3]
+rotate 2 steps to the right: [3,99,-1,-100]
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 105`
+-   `-231 <= nums[i] <= 231 - 1`
+-   `0 <= k <= 105`
+
+### My Solution
+
+```java
+public void rotate(int[] nums, int k){
+    k = k % nums.length; // in case the k is longer than the length of nums
+    int len = nums.length;
+    // add another array to store the value
+    int[] al = new int[nums.length];
+    for (int i = len - k, j = 0; i < len; i++, j++){
+        al[j] = nums[i];
+    }
+    for (int i = 0, j = k; i < len - k; i++, j++){
+        al[j] = nums[i];
+    }
+    for (int i = 0; i < len; i++){
+        nums[i] = al[i];
+    }
+}
+```
+
+*   Time complexity: $O(N)$. One pass is used to put the numbers in the new array.
+*   Space complexity: $O(N)$. Another array of the same size is used.
+
+### Standard Solution
+
+#### Solution #1 Using Extra Array
+
+*   Similar to my solution but a better way
+*   We can see that each element move k steps, the number at index i*i* in the original array is placed at the index $(i + k) \% \text{ length of array}$
+
+```java
+public void rotate(int[] nums, int k){
+    int[] a = new int[nums.length];
+    for (int i = 0; i < nums.length; i++){
+        a[(i + k) % nums.length] = nums[i];
+    }
+    for (int i = 0; i < nums.length; i++){
+        nums[i] = a[i];
+    }
+}
+```
+
+#### Solution #2 Using Reverse
+
+*   Reverse the elements, and reverse the range of $[0,k\% (n−1)]$ and $[k\% n, n-1]$ elements
+
+```
+Original List                   : 1 2 3 4 5 6 7
+After reversing all numbers     : 7 6 5 4 3 2 1
+After reversing first k numbers : 5 6 7 4 3 2 1
+After revering last n-k numbers : 5 6 7 1 2 3 4 --> Result
+```
+
+```java
+public void rotate(int[] nums, int k){
+    k %= nums.length;
+    reverse(nums, 0, nums.length - 1);
+    reverse(nums, 0, k - 1);
+    reverse(nums, k, nums.length - 1);
+}
+
+public void reverse(int[] nums, int start, int end){
+    while(start < end){
+        int temp = nums[start];
+        nums[start] = nums[end];
+        nums[end] = temp;
+        start += 1;
+        end -= 1;
+    }
+}
+```
+
+-   Time complexity: $\mathcal{O}(n)$. n elements are reversed a total of three times.
+-   Space complexity: $\mathcal{O}(1)$. No extra space is used.
+
+## Pascal's Triangle II(Easy #119)
+
+**Question**: Given an integer `rowIndex`, return the `rowIndexth` (**0-indexed**) row of the **Pascal's triangle**.
+
+In **Pascal's triangle**, each number is the sum of the two numbers directly above it as shown:
+
+![img](https://upload.wikimedia.org/wikipedia/commons/0/0d/PascalTriangleAnimated2.gif)
+
+ 
+
+**Example 1:**
+
+```
+Input: rowIndex = 3
+Output: [1,3,3,1]
+```
+
+**Example 2:**
+
+```
+Input: rowIndex = 0
+Output: [1]
+```
+
+**Example 3:**
+
+```
+Input: rowIndex = 1
+Output: [1,1]
+```
+
+**Constraints:**
+
+-   `0 <= rowIndex <= 33`
+
+### My Solution
+
+```java
+public List<Integer> getRow(int rowIndex){
+    int[][] triangle = new int[rowIndex + 1][rowIndex + 1];
+    triangle[0][0] = 1;
+    List<Integer> res = new ArrayList<>();
+    
+    for (int i = 1; i < rowIndex + 1; i++){
+        triangle[i][0] = 1;
+        for (int j = 1; j < rowIndex + 1; j++){
+            triangle[i][j] = triangle[i - 1][j] + triangle[i - 1][j - 1];
+        }
+    }
+    for (int k = 0; k < rowIndex + 1; k++){
+        res.add(triangle[rowIndex][k]);
+    }
+    return res;
+}
+```
+
+*   Use 2D array to store the value
+*   Time complexity: $O(k^2)$
+*   Space complexity: $O(k^2)$
+
+### Standard Solution
+
+#### Solution #1 Math Sum
+
+*   We can regard it as a permutation and combination, the $m^{th}$ number in the $n^{th}$ row is $C(n, m)$: choose m from n
+*   Every number is the sum of last row corresponding numbers, as in combination: $C_n^i=C_{n−1}^i+C_{n−1}^{i−1}$
+*   The implementation is similar to my solution but a better way
+
+```java
+class Solution {
+    public List<Integer> getRow(int rowIndex) {
+        List<Integer> pre = new ArrayList<Integer>();
+        for (int i = 0; i <= rowIndex; ++i) {
+            List<Integer> cur = new ArrayList<Integer>();
+            for (int j = 0; j <= i; ++j) {
+                if (j == 0 || j == i) {
+                    cur.add(1);
+                } else {
+                    cur.add(pre.get(j - 1) + pre.get(j));
+                }
+            }
+            pre = cur;
+        }
+        return pre;
+    }
+}
+
+作者：LeetCode-Solution
+链接：https://leetcode-cn.com/problems/pascals-triangle-ii/solution/yang-hui-san-jiao-ii-by-leetcode-solutio-shuk/
+来源：力扣（LeetCode）
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+```
+
+*   We can improve the code to only use 1 arraylist, make changes to the current array list
+
+```java
+public List<Integer> getRow(int rowIndex){
+    List<Integer> row = new ArrayList<Integer>();
+    row.add(1);
+    for (int i = 1; i <= rowIndex; i++){
+        row.add(0);
+        for (int j = i; j > 0; --j){
+            row.set(j, row.get(j) + row.get(j - 1));
+        }
+    }
+    return row;
+}
+```
+
+*   Time complexity: $O(k^2)$
+*   Space complexity: $O(1)$, we don't consider the space occupy by the return
+
+#### Solution #2 Linear Inference
+
+*   Apply math we can learn the relationship between values on the same row
+*   Since $C_n^m=\frac{m!(n−m)!}{n!}$, we can have $C_n^m=C_n^{m−1}×\frac{m}{n−m+1}$
+*   We can even improve the codes of the last solution, use linear time to find combination on the $n^{th}$ row
+
+```java
+public List<Integer> getRow(int rowIndex){
+    List<Integer> row = new ArrayList<Integer>();
+    row.add(1);
+    for (int i = 1; i <= rowIndex; i++){
+        row.add((int)((long) row.get(i - 1) * (rowIndex - i + 1) / i));
+    }
+    return row;
+}
+```
+
+*   Time complexity: $O(k)$
+*   Space complexity: $O(1)$
+
+## Reverse Words in a String(Medium #151)
+
+**Question**: Given an input string `s`, reverse the order of the **words**.
+
+A **word** is defined as a sequence of non-space characters. The **words** in `s` will be separated by at least one space.
+
+Return *a string of the words in reverse order concatenated by a single space.*
+
+**Note** that `s` may contain leading or trailing spaces or multiple spaces between two words. The returned string should only have a single space separating the words. Do not include any extra spaces.
+
+**Example 1:**
+
+```
+Input: s = "the sky is blue"
+Output: "blue is sky the"
+```
+
+**Example 2:**
+
+```
+Input: s = "  hello world  "
+Output: "world hello"
+Explanation: Your reversed string should not contain leading or trailing spaces.
+```
+
+**Example 3:**
+
+```
+Input: s = "a good   example"
+Output: "example good a"
+Explanation: You need to reduce multiple spaces between two words to a single space in the reversed string.
+```
+
+**Constraints:**
+
+-   `1 <= s.length <= 104`
+-   `s` contains English letters (upper-case and lower-case), digits, and spaces `' '`.
+-   There is **at least one** word in `s`.
+
+### My Solution
+
+```java
+public String reverseWords(String s){
+    public String reverseWords(String s) {
+        s = s.trim();//remove space at the beginning and end of the string
+        String[] words = s.split(" ");
+        int num = words.length;
+        StringBuilder reverse = new StringBuilder();
+        for (int i = num - 1; i >= 0; i--){
+            if (words[i].equals("")) {
+                continue;
+            }
+            else {
+                reverse.append(words[i]);
+                if (i != 0) reverse.append(" ");
+            }
+        }
+        return reverse.toString();
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Built-in Function
+
+*   Same idea as my solution but using built-in function
+
+```java
+public String reverseWords(String s){
+    // remove space at the start and end
+    s = s.trim();
+    // use empty char as the split
+    List<String> wordList = Arrays.asList(s.split("\\s+"));
+    Collections.reverse(wordList);
+    return String.join(" ", wordList);
+}
+```
+
+*   Time complexity: $O(N)$, n is the length of the string
+*   Space complexity: $O(N)$
+
+#### Solution #2 Deque
+
+*   Deque sipport that insert from head and tail
+
+<img src="https://pic.leetcode-cn.com/Figures/151/deque2.png" alt="fig" style="zoom: 33%;" />
+
+```java
+public String reverseWords(String s) {
+    int left = 0, right = s.length() - 1;
+    // 去掉字符串开头的空白字符
+    while (left <= right && s.charAt(left) == ' ') {
+        ++left;
+    }
+
+    // 去掉字符串末尾的空白字符
+    while (left <= right && s.charAt(right) == ' ') {
+        --right;
+    }
+
+    Deque<String> d = new ArrayDeque<String>();
+    StringBuilder word = new StringBuilder();
+
+    while (left <= right) {
+        char c = s.charAt(left);
+        if ((word.length() != 0) && (c == ' ')) {
+            // 将单词 push 到队列的头部
+            d.offerFirst(word.toString());
+            word.setLength(0);
+        } else if (c != ' ') {
+            word.append(c);
+        }
+        ++left;
+    }
+    d.offerFirst(word.toString());
+
+    return String.join(" ", d);
+}
+
+作者：LeetCode-Solution
+链接：https://leetcode-cn.com/problems/reverse-words-in-a-string/solution/fan-zhuan-zi-fu-chuan-li-de-dan-ci-by-leetcode-sol/
+来源：力扣（LeetCode）
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+```
+
+*   Time complexity: $O(N)$, n is the length of the string
+*   Space complexity: $O(N)$
