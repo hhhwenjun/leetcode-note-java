@@ -1335,3 +1335,258 @@ public String reverseWords(String s) {
 
 *   Time complexity: $O(N)$, n is the length of the string
 *   Space complexity: $O(N)$
+
+## Reverse Words in a String III(Easy #557)
+
+**Question**: Given a string `s`, reverse the order of characters in each word within a sentence while still preserving whitespace and initial word order.
+
+**Example 1:**
+
+```
+Input: s = "Let's take LeetCode contest"
+Output: "s'teL ekat edoCteeL tsetnoc"
+```
+
+**Example 2:**
+
+```
+Input: s = "God Ding"
+Output: "doG gniD"
+```
+
+**Constraints:**
+
+-   `1 <= s.length <= 5 * 104`
+-   `s` contains printable **ASCII** characters.
+-   `s` does not contain any leading or trailing spaces.
+-   There is **at least one** word in `s`.
+-   All the words in `s` are separated by a single space.
+
+### My Solution
+
+```java
+public String reverseWords(String s){
+    List<String> wordList = Arrays.asList(s.split("\\s+"));
+    Collections.reverse(wordList);
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < wordList.size(); i++){
+        sb.append(wordList.get(i));
+        if (i < wordList.size() - 1) sb.append(" ");
+    }
+    return sb.reverse().toString();
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Simple solution
+
+*   Similar to my solution
+
+```java
+public String reverseWords(String s){
+    String words[] = s.split(" ");
+    StringBuilder res = new StringBuilder();
+    for (String word : words){
+        res.append(new StringBuffer(word).reverse().toString() + " ");
+    }
+    return res.toString().trim();
+}
+```
+
+*   Time complexity : $O(n)$. where n is the length of the string.
+*   Space complexity : $O(n)$. res of size n is used.
+
+## Remove Duplicates from Sorted Array(Easy #26)
+
+**Question**: Given an integer array `nums` sorted in **non-decreasing order**, remove the duplicates **in-place** such that each unique element appears only **once**. The **relative order** of the elements should be kept the **same**.
+
+Since it is impossible to change the length of the array in some languages, you must instead have the result be placed in the **first part** of the array `nums`. More formally, if there are `k` elements after removing the duplicates, then the first `k` elements of `nums` should hold the final result. It does not matter what you leave beyond the first `k` elements.
+
+Return `k` *after placing the final result in the first* `k` *slots of* `nums`.
+
+Do **not** allocate extra space for another array. You must do this by **modifying the input array in-place** with O(1) extra memory.
+
+**Custom Judge:**
+
+The judge will test your solution with the following code:
+
+```
+int[] nums = [...]; // Input array
+int[] expectedNums = [...]; // The expected answer with correct length
+
+int k = removeDuplicates(nums); // Calls your implementation
+
+assert k == expectedNums.length;
+for (int i = 0; i < k; i++) {
+    assert nums[i] == expectedNums[i];
+}
+```
+
+If all assertions pass, then your solution will be **accepted**.
+
+**Example 1:**
+
+```
+Input: nums = [1,1,2]
+Output: 2, nums = [1,2,_]
+Explanation: Your function should return k = 2, with the first two elements of nums being 1 and 2 respectively.
+It does not matter what you leave beyond the returned k (hence they are underscores).
+```
+
+**Example 2:**
+
+```
+Input: nums = [0,0,1,1,1,2,2,3,3,4]
+Output: 5, nums = [0,1,2,3,4,_,_,_,_,_]
+Explanation: Your function should return k = 5, with the first five elements of nums being 0, 1, 2, 3, and 4 respectively.
+It does not matter what you leave beyond the returned k (hence they are underscores).
+```
+
+**Constraints:**
+
+-   `0 <= nums.length <= 3 * 104`
+-   `-100 <= nums[i] <= 100`
+-   `nums` is sorted in **non-decreasing** order.
+
+### My Solution
+
+```java
+public int removeDuplicates(int[] nums){
+    int slow = 0, fast; // we use two pointers to locate new number
+    if (nums.length == 0) return 0;
+    int prev = nums[slow];
+    for (fast = slow; fast < nums.length; fast++){
+        int current = nums[fast];
+        if (current != prev){
+            slow++;
+            nums[slow] = current;
+        }
+        prev = current;
+    }
+    return slow + 1;
+}
+```
+
+*   A pretty fast solution
+
+### Standard Solution
+
+#### Solution #1 Two Pointers
+
+*   Same as my solution but look cleaner
+
+```java
+public int removeDuplicates(int[] nums){
+    if (nums.length == 0) return 0;
+    int i = 0;
+    for (int j = 1; j < nums.length; j++){
+        if (nums[j] != nums[i]){
+            i++;
+            nums[i] = nums[j];
+        }
+    }
+    return i + 1;
+}
+```
+
+-   Time complextiy : $O(n)$. Assume that n is the length of array. Each of i and j traverses at most n*n* steps.
+-   Space complexity : $O(1)$.
+
+## Move Zeros(Easy #283)
+
+**Question**: Given an integer array `nums`, move all `0`'s to the end of it while maintaining the relative order of the non-zero elements.
+
+**Note** that you must do this in-place without making a copy of the array.
+
+**Example 1:**
+
+```
+Input: nums = [0,1,0,3,12]
+Output: [1,3,12,0,0]
+```
+
+**Example 2:**
+
+```
+Input: nums = [0]
+Output: [0]
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 104`
+-   `-231 <= nums[i] <= 231 - 1`
+
+### My Solution
+
+```java
+public void moveZeroes(int[] nums) {
+    // set up two slow and fast runners as two pointers
+    int slow = Integer.MAX_VALUE, fast;
+    for (fast = 0; fast < nums.length; fast++){
+        if (nums[fast] != 0 && slow != Integer.MAX_VALUE){
+            swap(nums, slow, fast);
+            slow++;
+        } else if (nums[fast] == 0 && slow == Integer.MAX_VALUE) slow = fast;
+    }
+}
+// swap the two number of the two pointers
+public void swap(int[] nums, int i, int j){
+    int temp = nums[i];
+    nums[i] = nums[j];
+    nums[j] = temp;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Replace Fast Runner Number with 0
+
+*   Similar to my solution but without swap, a faster one
+
+```java
+public void moveZeros(int[] nums){
+    int n = nums.length;
+    int j = -1;//slow runner
+    int i = 0;//fast runner
+    
+    while (i < n){
+        // first occurence of 0
+        if (nums[i] == 0 && j == -1) j = i;
+        // has zero in the array before a valid digit, hence swap
+        else if (nums[i] != 0 && j != -1){
+            nums[j] = nums[i];//move element to front
+            nums[i] = 0;
+            j++;
+        }
+        i++;
+    }
+}
+```
+
+#### Solution #2 Two Pointers
+
+*   Left of the left pointers are non-zeros
+*   Between left pointer and right pointer are all zeros
+
+```java
+public void moveZeros(int[] nums){
+    int n = nums.length, left = 0, right = 0;
+    while(right < n){
+        if (nums[right] != 0){
+            swap(nums, left, right);
+            left++;
+        }
+        right++;
+    }
+}
+public void swap(int[] nums, int left, int right){
+    int temp = nums[left];
+    nums[left] = nums[right];
+    nums[right] = temp;
+}
+```
+
+*   Time complexity: $O(N)$
+*   Space complexity: $O(1)$
