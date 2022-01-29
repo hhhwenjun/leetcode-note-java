@@ -31,6 +31,8 @@ Materials refer to: https://leetcode.com/explore/learn/card/recursion-i/
 
 *   Frequently come with **recursion and/or iteration** for code solution.
 
+*   To be cautious, the complexity might be different due to a different implementation. It is comparatively easy to do traversal recursively but when the depth of the tree is too large, we might suffer from `stack overflow` problem. That's one of the main reasons why we want to solve this problem iteratively sometimes. 
+
 ## Binary Tree Preorder Traversal(Easy #144)
 
 **Question**: Given the `root` of a binary tree, return *the preorder traversal of its nodes' values*.
@@ -421,3 +423,211 @@ class Solution {
 
 *   Time complexity and space complexity should be the same as previous problems 
 *   No given standard solution in leetcode but should be similar to previous problems
+
+# Level-order Traversal - Introduction
+
+*   Level-order traversal is to traverse the tree level by level.
+*   `Breadth-First Search` is an algorithm to traverse or search in data structures like a tree or a graph. 
+*   Typically, we use a **queue** to help us to do BFS.
+
+## Binary Tree Level Order Traversal(Medium 102)
+
+**Question**: Given the `root` of a binary tree, return *the level order traversal of its nodes' values*. (i.e., from left to right, level by level).
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/02/19/tree1.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: root = [3,9,20,null,null,15,7]
+Output: [[3],[9,20],[15,7]]
+```
+
+**Example 2:**
+
+```
+Input: root = [1]
+Output: [[1]]
+```
+
+**Example 3:**
+
+```
+Input: root = []
+Output: []
+```
+
+**Constraints:**
+
+-   The number of nodes in the tree is in the range `[0, 2000]`.
+-   `-1000 <= Node.val <= 1000`
+
+### My Solution
+
+*   Use a queue to store the value from left to right
+*   Use queue size to determine how many nodes in the same level and use array list to store the same level nodes
+*   Add the level nodes to `levels` which is the return list 
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+public List<List<Integer>> levelOrder(TreeNode root) {
+    Queue<TreeNode> treeQueue = new LinkedList<>();
+    List<List<Integer>> levels = new ArrayList<>();
+    if (root == null) return levels;
+    treeQueue.add(root);
+    while(!treeQueue.isEmpty()){
+        List<Integer> list = new ArrayList<>();
+        int level_length = treeQueue.size();
+        for (int i = 0; i < level_length; i++){
+            TreeNode node = treeQueue.remove();
+            list.add(node.val);
+            if (node.left != null){
+                treeQueue.add(node.left);
+            }
+            if (node.right != null){
+                treeQueue.add(node.right);
+            }
+        }
+        levels.add(list);
+    }
+    return levels;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Iteration
+
+*   Same as my solution
+*   Time complexity : $\mathcal{O}(N)$ since each node is processed exactly once.
+*   Space complexity : $\mathcal{O}(N)$ to keep the output structure which contains `N` node values.
+
+#### Solution #2 Recursion
+
+*   Call recursive helper function
+*   Same concept with the method 1 but using recursion
+
+```java
+class Solution {
+    List<List<Integer>> levels = new ArrayList<List<Integer>>();
+    public void helper(TreeNode node, int level) {
+        // start the current level
+        if (levels.size() == level)
+            levels.add(new ArrayList<Integer>());
+
+         // fulfil the current level
+         levels.get(level).add(node.val);
+
+         // process child nodes for the next level
+         if (node.left != null)
+            helper(node.left, level + 1);
+         if (node.right != null)
+            helper(node.right, level + 1);
+    }
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        if (root == null) return levels;
+        helper(root, 0);
+        return levels;
+    }
+}
+```
+
+*   Time complexity : $\mathcal{O}(N)$ since each node is processed exactly once.
+*   Space complexity : $\mathcal{O}(N)$ to keep the output structure which contains `N` node values.
+
+# Solve Tree Problem Recursively
+
+As we know, a tree can be defined recursively as a node(the root node) that includes a value and a list of references to children nodes. Recursion is one of the natural features of a tree. Therefore, many tree problems can be solved recursively. For each recursive function call, we only focus on the problem for the current node and call the function recursively to solve its children.
+
+Typically, we can solve a tree problem recursively using a top-down approach or using a bottom-up approach.
+
+## Top-down Solution
+
+*   "Top-down" means that in each recursive call, we will visit the node first to come up with some values, and pass these values to its children when calling the function recursively.
+
+*   So the "top-down" solution can be considered as a kind of **preorder** traversal. 
+
+*   To be specific, the recursive function `top_down(root, params)` works like this:
+
+    ```
+    1. return specific value for null node
+    2. update the answer if needed                      // answer <-- params
+    3. left_ans = top_down(root.left, left_params)      // left_params <-- root.val, params
+    4. right_ans = top_down(root.right, right_params)   // right_params <-- root.val, params
+    5. return the answer if needed                      // answer <-- left_ans, right_ans
+    ```
+
+*   Find maximum depth of a binary tree:
+
+    ```
+    1. return if root is null
+    2. if root is a leaf node:
+    3.     answer = max(answer, depth)         // update the answer if needed
+    4. maximum_depth(root.left, depth + 1)     // call the function recursively for left child
+    5. maximum_depth(root.right, depth + 1)    // call the function recursively for right child
+    ```
+
+    ```java
+    private int answer; // don't forget to initialize answer before call maximum_depth
+    private void maximum_depth(TreeNode root, int depth) {
+        if (root == null) {
+            return;
+        }
+        if (root.left == null && root.right == null) {
+            answer = Math.max(answer, depth);
+        }
+        maximum_depth(root.left, depth + 1);
+        maximum_depth(root.right, depth + 1);
+    }
+    ```
+
+## Bottom-up Solution
+
+*   In each recursive call, we will firstly call the function recursively for all the children nodes and then come up with the answer according to the returned values and the value of the current node itself. 
+
+*   This process can be regarded as a kind of **postorder** traversal. 
+
+*   Typically, a "bottom-up" recursive function `bottom_up(root)` will be something like this:
+
+    ```
+    1. return specific value for null node
+    2. left_ans = bottom_up(root.left)      // call function recursively for left child
+    3. right_ans = bottom_up(root.right)    // call function recursively for right child
+    4. return answers                       // answer <-- left_ans, right_ans, root.val
+    ```
+
+*   Maximum depth:
+
+    ```
+    1. return 0 if root is null                 // return 0 for null node
+    2. left_depth = maximum_depth(root.left)
+    3. right_depth = maximum_depth(root.right)
+    4. return max(left_depth, right_depth) + 1  // return depth of the subtree rooted at root
+    ```
+
+    ```java
+    public int maximum_depth(TreeNode root) {
+        if (root == null) {
+            return 0;                                   // return 0 for null node
+        }
+        int left_depth = maximum_depth(root.left);
+        int right_depth = maximum_depth(root.right);
+        return Math.max(left_depth, right_depth) + 1;   // return depth of the subtree rooted at root
+    }
+    ```
+
+    
