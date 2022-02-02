@@ -414,3 +414,273 @@ public class Solution{
 
 -   Time complexity : $O(N)$. Same as the previous approach.
 -   Space complexity : $O(H)$, with `H` being the height of the tree. Same as the previous approach.
+
+## Construct Binary Tree from Inorder and Postorder Traversal(Medium #106)
+
+**Question**: Given two integer arrays `inorder` and `postorder` where `inorder` is the inorder traversal of a binary tree and `postorder` is the postorder traversal of the same tree, construct and return *the binary tree*.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2021/02/19/tree.jpg)
+
+```
+Input: inorder = [9,3,15,20,7], postorder = [9,15,7,20,3]
+Output: [3,9,20,null,null,15,7]
+```
+
+**Example 2:**
+
+```
+Input: inorder = [-1], postorder = [-1]
+Output: [-1]
+```
+
+**Constraints:**
+
+-   `1 <= inorder.length <= 3000`
+-   `postorder.length == inorder.length`
+-   `-3000 <= inorder[i], postorder[i] <= 3000`
+-   `inorder` and `postorder` consist of **unique** values.
+-   Each value of `postorder` also appears in `inorder`.
+-   `inorder` is **guaranteed** to be the inorder traversal of the tree.
+-   `postorder` is **guaranteed** to be the postorder traversal of the tree.
+
+### Standard Solution
+
+#### Solution #1 Iteration (hard to understand)
+
+*   Reverse the inorder traversal, we visit the right -> root -> left
+*   Reverse the postorder traversal, we visit the root -> right -> left
+*   In postorder reverse situation, neighbor two nodes u and v only has the relationship
+    *   u is v 's right child
+    *   v does not have right child, and u is v's ancestor's left child. We go upward to traverse the ancestor until one of the ancestor root has left child.
+*   Use a stack to maintain the ancestor nodes that we haven't considered the left child
+*   Use a pointer point to the last node in the Inorder reverse
+
+```java
+public TreeNode buildTree(int[] inorder, int[] postorder){
+    if (postorder == null || postorder.length == 0){
+        return null;
+    }
+    TreeNode root = new TreeNode(postorder[postorder.length - 1]); //last node in postorder
+    Deque<TreeNode> stack = new LinkedList<TreeNode>();
+    stack.push(root);
+    int inorderIndex = inorder.length - 1;
+    for (int i = postorder.length - 2; i >= 0; i--){
+        int postorderVal = postorder[i];
+        TreeNode node = stack.peek();
+        if (node.val != inorder[inorderIndex]){ //it has right child
+            node.right = new TreeNode(postorderVal);
+            stack.push(node.right);
+        } else {
+            // it is a left child of ancestor
+            while(!stack.isEmpty() && stack.peek().val == inorder[inorderIndex]){
+                node = stack.pop();
+                inorderIndex--;
+            }
+            node.left = new TreeNode(postorderVal);
+            stack.push(node.left);
+        }
+    }
+    return root;
+}
+```
+
+*   Time complexity: $O(N)$, N is the number of tree node
+*   Space complexity: $O(N)$, we need $O(H)$ to store the stack. H is the height of the tree. The worst case would be $O(N)$.
+
+#### Solution #2 Recursion
+
+![bla](https://leetcode.com/problems/construct-binary-tree-from-inorder-and-postorder-traversal/Figures/106/recursion.png)
+
+*   Use a hash map to store the inorder traversal, buildup a (element, index) hash map
+*   Define a recursion method `helper(in_left, in_right)` to present the left and right bound of the inorder traversal
+    *   If `in_left > in_right`, the subtree is empty, return null
+    *   Use hash map to search the current index in the inorder traversal, the left subtree is `in_left` to `index - 1`. The right subtree is from `index + 1` to `in_right`
+    *   First create right subtree with `helper(index + 1, in_right)` and left subtree `helper(in_left, index - 1)`
+    *   Return root
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    int post_idx;
+    int[] postorder;
+    int[] inorder;
+    Map<Integer, Integer> idx_map = new HashMap<Integer, Integer>();
+    
+    public TreeNode helper(int in_left, int in_right){
+        // if no node to create binary tree, then it is ended
+        if (in_left > in_right){
+            return null;
+        }
+        // choose post_idx location's element as the current tree node
+        int root_val = postorder[post_idx];
+        TreeNode root = new TreeNode(root_val);
+        
+        // get the location of the root
+        int index = idx_map.get(root_val);
+        
+        post_idx--;
+        // construct the right subtree
+        root.right = helper(index + 1, in_right);
+        // construct the left subtree
+        root.left = helper(in_left, index - 1);
+        return root;
+    }
+    public TreeNode buildTree(int[] inorder, int[] postorder){
+    	this.postorder = postorder;
+        this.inorder = inorder;
+        // start from the last element of postorder
+        post_idx = postorder.length - 1;
+        
+        // build hashmap
+        int idx = 0;
+        for (Integer val : inorder){
+            idx_map.put(val, idx++);
+        }
+        return helper(0, inorder.length - 1);
+	}
+}
+
+```
+
+*   Time complexity: $O(N)$, N is the number of nodes in tree
+*   Space complexity: $O(N)$, we need $O(N)$ space for storing hashmap. And $O(H)$ for space of stack. But H < N. So the space complexity is $O(N)$.
+
+## Construct Binary Tree from Preorder and Inorder Traversal(Medium #105)
+
+**Question**: Given two integer arrays `preorder` and `inorder` where `preorder` is the preorder traversal of a binary tree and `inorder` is the inorder traversal of the same tree, construct and return *the binary tree*.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2021/02/19/tree.jpg)
+
+```
+Input: preorder = [3,9,20,15,7], inorder = [9,3,15,20,7]
+Output: [3,9,20,null,null,15,7]
+```
+
+**Example 2:**
+
+```
+Input: preorder = [-1], inorder = [-1]
+Output: [-1]
+```
+
+**Constraints:**
+
+-   `1 <= preorder.length <= 3000`
+-   `inorder.length == preorder.length`
+-   `-3000 <= preorder[i], inorder[i] <= 3000`
+-   `preorder` and `inorder` consist of **unique** values.
+-   Each value of `inorder` also appears in `preorder`.
+-   `preorder` is **guaranteed** to be the preorder traversal of the tree.
+-   `inorder` is **guaranteed** to be the inorder traversal of the tree.
+
+### My Solution
+
+```java
+class Solution {
+    int[] preorder;
+    int[] inorder;
+    int preorderIdx;
+    Map<Integer, Integer> treeMap;
+    public TreeNode helper(int left, int right){
+        if (left > right){
+            return null;
+        }
+        int value = preorder[preorderIdx++];
+        TreeNode root = new TreeNode(value);
+        int nodeIdx = (int)treeMap.get(value);
+        root.left = helper(left, nodeIdx - 1);
+        root.right = helper(nodeIdx + 1, right);
+        return root;
+    }
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        this.preorder = preorder;
+        this.inorder = inorder;
+        treeMap = new HashMap<Integer, Integer>();
+        preorderIdx = 0;
+        int inorderIdx = 0;
+        for (Integer digit : inorder){
+            treeMap.put(digit, inorderIdx);
+            inorderIdx++;
+        }
+        return helper(0, preorder.length - 1 - preorderIdx);
+    }
+}
+```
+
+*   Similar to last problem, but need to modify the traverse order
+*   Similar to the official answer
+*   Pur inorder traversal to a hashmap, use preorder to determine the root. Use the hashmap to determine left and right subtree since they are on the two sides of the root.
+
+### Standard Solution
+
+#### Solution #1 Recursion
+
+*   It will set the first element of `preorder` as the root, and then construct the entire tree. 
+*   To find the left and right subtrees, it will look for the root in `inorder`, so that everything on the left should be the left subtree, and everything on the right should be the right subtree. 
+*   Both subtrees can be constructed by making another recursion call.
+*   It is worth noting that, while we recursively construct the subtrees, we should choose the next element in `preorder` to initialize as the new roots. This is because the current one has already been initialized to a parent node for the subtrees.
+
+<img src="https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/Figures/105/105-Page-2.png" alt="Always use the next element in  to initialize a root." style="zoom: 50%;" />
+
+```java
+class Solution {
+    int preorderIndex;
+    Map<Integer, Integer> inorderIndexMap;
+    public TreeNode buildTree(int[] preorder, int[] inorder) {
+        preorderIndex = 0;
+        // build a hashmap to store value -> its index relations
+        inorderIndexMap = new HashMap<>();
+        for (int i = 0; i < inorder.length; i++) {
+            inorderIndexMap.put(inorder[i], i);
+        }
+
+        return arrayToTree(preorder, 0, preorder.length - 1);
+    }
+
+    private TreeNode arrayToTree(int[] preorder, int left, int right) {
+        // if there are no elements to construct the tree
+        if (left > right) return null;
+
+        // select the preorder_index element as the root and increment it
+        int rootValue = preorder[preorderIndex++];
+        TreeNode root = new TreeNode(rootValue);
+
+        // build left and right subtree
+        // excluding inorderIndexMap[rootValue] element because it's the root
+        root.left = arrayToTree(preorder, left, inorderIndexMap.get(rootValue) - 1);
+        root.right = arrayToTree(preorder, inorderIndexMap.get(rootValue) + 1, right);
+        return root;
+    }
+}
+```
+
+*   Time complexity : $O(N)$.
+
+    Building the hashmap takes $O(N)$ time, as there are N nodes to add, and adding items to a hashmap has a cost of $O(1)$, so we get $N \cdot O(1) = O(N)$.
+
+    Building the tree also takes $O(N)$ time. The recursive helper method has a cost of $O(1)$ for each call (it has no loops), and it is called *once* for each of the N nodes, giving a total of $O(N)$.
+
+    Taking both into consideration, the time complexity is $O(N)$.
+
+*   Space complexity : $O(N)$.
+
+    Building the hashmap and storing the entire tree each requires $O(N)$ memory. The size of the implicit system stack used by recursion calls depends on the height of the tree, which is $O(N)$ in the worst case and $O(\log N)$ on average. Taking both into consideration, the space complexity is $O(N)$.
+
