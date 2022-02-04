@@ -684,3 +684,382 @@ class Solution {
 
     Building the hashmap and storing the entire tree each requires $O(N)$ memory. The size of the implicit system stack used by recursion calls depends on the height of the tree, which is $O(N)$ in the worst case and $O(\log N)$ on average. Taking both into consideration, the space complexity is $O(N)$.
 
+## Populating Next Right Pointers in Each Node(Medium #116)
+
+**Question**: You are given a **perfect binary tree** where all leaves are on the same level, and every parent has two children. The binary tree has the following definition:
+
+```
+struct Node {
+  int val;
+  Node *left;
+  Node *right;
+  Node *next;
+}
+```
+
+Populate each next pointer to point to its next right node. If there is no next right node, the next pointer should be set to `NULL`.
+
+Initially, all next pointers are set to `NULL`.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2019/02/14/116_sample.png" alt="img" style="zoom:50%;" />
+
+```
+Input: root = [1,2,3,4,5,6,7]
+Output: [1,#,2,3,#,4,5,6,7,#]
+Explanation: Given the above perfect binary tree (Figure A), your function should populate each next pointer to point to its next right node, just like in Figure B. The serialized output is in level order as connected by the next pointers, with '#' signifying the end of each level.
+```
+
+**Example 2:**
+
+```
+Input: root = []
+Output: []
+```
+
+**Constraints:**
+
+-   The number of nodes in the tree is in the range `[0, 212 - 1]`.
+-   `-1000 <= Node.val <= 1000`
+
+**Follow-up:**
+
+-   You may only use constant extra space.
+-   The recursive approach is fine. You may assume implicit stack space does not count as extra space for this problem.
+
+### My Solution
+
+*   When encounter null, move to the next right node
+*   Otherwise, go to the parent node and to the right
+*   If already right node, go to the ancestor node
+*   The solution is a recursion version of the solution 1
+
+```java
+public Node connect(Node root){
+    // base case
+    if (root == null){
+        return root;
+    }
+    // not in the root
+    else {
+        helper(root);
+        connect(root.left);// go to the next level
+    }
+   return root;
+}
+public Node helper(Node head){
+    if (head == null) return head;
+    if (head != null && head.left != null){ // connect the childs of the next level
+        head.left.next = head.right;  
+        if (head.next != null){
+            head.right.next = head.next.left;
+        }
+    }
+    return helper(head.next);
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Using previously established next pointers
+
+<img src="https://leetcode.com/problems/populating-next-right-pointers-in-each-node/Figures/116/img7.png" alt="img" style="zoom:24%;" />
+
+*   Use a head pointer and a leftmost pointer: leftmost pointer is the beginning of a row, head pointer point to each node
+*   If a row is already traverse, we move to the next row, leftmost would be leftmost.left.
+
+```java
+/*
+// Definition for a Node.
+class Node {
+    public int val;
+    public Node left;
+    public Node right;
+    public Node next;
+
+    public Node() {}
+    
+    public Node(int _val) {
+        val = _val;
+    }
+
+    public Node(int _val, Node _left, Node _right, Node _next) {
+        val = _val;
+        left = _left;
+        right = _right;
+        next = _next;
+    }
+};
+*/
+public Node connect(Node root){
+    // base case
+    if (root == null){
+        return root;
+    }
+    // Start with the root node. There are no next pointers on first level
+    Node leftmost = root;
+    while (leftmost.left != null){// while not on the bottom level
+        // at the begining of the level
+        Node head = leftmost;
+        // while not at the end of the level
+        while (head != null){
+            // connection 1
+            head.left.next = head.right;
+            // connection 2
+            if (head.next != null){
+                head.right.next = head.next.left;
+            }
+            // progress along the level
+            head = head.next;
+        }
+        leftmost = leftmost.left;
+    }
+    return root;
+}
+```
+
+*   Time Complexity: $O(N)$ since we process each node exactly once.
+*   Space Complexity: $O(1)$ since we don't make use of any additional data structure for traversing nodes on a particular level like the previous approach does.
+
+#### Solution #2 Level Order Traversal
+
+*   A brute force method and easy to understand 
+*   Use a queue to store each level of the nodes, peek the top node to connect
+
+```java
+class Solution {
+    public Node connect(Node root) {   
+        if (root == null) {
+            return root;
+        }
+        // Initialize a queue data structure which contains
+        // just the root of the tree
+        Queue<Node> Q = new LinkedList<Node>(); 
+        Q.add(root);
+        // Outer while loop which iterates over 
+        // each level
+        while (Q.size() > 0) { 
+            // Note the size of the queue
+            int size = Q.size();
+            // Iterate over all the nodes on the current level
+            for(int i = 0; i < size; i++) {
+                
+                // Pop a node from the front of the queue
+                Node node = Q.poll();
+                // This check is important. We don't want to
+                // establish any wrong connections. The queue will
+                // contain nodes from 2 levels at most at any
+                // point in time. This check ensures we only 
+                // don't establish next pointers beyond the end
+                // of a level
+                if (i < size - 1) {
+                    node.next = Q.peek();
+                }
+                // Add the children, if any, to the back of
+                // the queue
+                if (node.left != null) {
+                    Q.add(node.left);
+                }
+                if (node.right != null) {
+                    Q.add(node.right);
+                }
+            }
+        }
+        // Since the tree has now been modified, return the root node
+        return root;
+    }
+}
+```
+
+*   Time Complexity: $O(N)$since we process each node exactly once. Note that processing a node in this context means popping the node from the queue and then establishing the next pointers.
+*   Space Complexity: $O(N)$. This is a perfect binary tree which means the last level contains $N/2$ nodes. The space complexity for breadth first traversal is the space occupied by the queue which is dependent upon the maximum number of nodes in particular level. So, in this case, the space complexity would be $O(N)$.
+
+## Populating Next Right Pointers in Each Node(Medium #117)
+
+**Question**: Given a binary tree
+
+```
+struct Node {
+  int val;
+  Node *left;
+  Node *right;
+  Node *next;
+}
+```
+
+Populate each next pointer to point to its next right node. If there is no next right node, the next pointer should be set to `NULL`.
+
+Initially, all next pointers are set to `NULL`.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2019/02/15/117_sample.png" alt="img" style="zoom:50%;" />
+
+```
+Input: root = [1,2,3,4,5,null,7]
+Output: [1,#,2,3,#,4,5,7,#]
+Explanation: Given the above binary tree (Figure A), your function should populate each next pointer to point to its next right node, just like in Figure B. The serialized output is in level order as connected by the next pointers, with '#' signifying the end of each level.
+```
+
+**Example 2:**
+
+```
+Input: root = []
+Output: []
+```
+
+**Constraints:**
+
+-   The number of nodes in the tree is in the range `[0, 6000]`.
+-   `-100 <= Node.val <= 100`
+
+### My Solution
+
+```java
+public Node connect(Node root){
+    // base case
+    if (root == null){
+        return root;
+    }
+    else {
+        connect(findNext(root)); // find the next node to connect
+    }
+    return root;
+}
+// connect the node in each level
+public Node findNext(Node root){
+    // base case
+    if (root == null){
+        return root;
+    }
+    if (root.left != null){
+        if (root.right != null){
+            root.left.next = root.right;
+            root.right.next = findNext(root.next);
+            // if not the same parent node, we find next one as the next
+        }
+        else { // right child is empty
+            root.left.next = findNext(root.next);
+        }
+    }
+    else if (root.right != null){
+        root.right.next = findNext(root.next);
+    }
+    else {// both left and right child is empty
+        return findNext(root.next);
+    }
+    return root.left != null ? root.left : root.right;// return the closet next node
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Level Order Traversal
+
+*   Use a queue to record the node and pop nodes out to connect
+*   This solution is the same as the last problem
+
+```java
+public Node connect(Node root){
+    if (root == null){
+        return root;
+    }
+    
+    // Initialize a queue data structure contains root 
+    Queue<Node> Q = new LinkedList<Node>();
+    Q.add(root);
+    
+    // Outer while loop which iterates over each level
+    while (Q.size() > 0){
+        int size = Q.size();
+        
+        // iterate over all the nodes on the current level
+        for (int i = 0; i < size; i++){
+            // pop a node from the front of the queue
+            Node node = Q.poll();
+            
+            // ensure we don't establish next pointers beyond the end of a level
+            if (i < size - 1){
+                node.next = Q.peek();
+            }
+            
+            // add the children, if any, to the back of queue
+            if (node.left != null){
+                Q.add(node.left);
+            }
+            if (node.right != null){
+                Q.add(node.right);
+            }
+        }
+    }
+    // since the tree has now been modified, return the root node
+    return root;
+}
+```
+
+*   Time complexity: $O(N)$ since we process each node once.
+*   Space complexity: $O(N)$. Depends on the queue.
+
+#### Solution #2 Using previously established next pointers
+
+```java
+class Solution { 
+    Node prev, leftmost;
+    public void processChild(Node childNode) {  
+        if (childNode != null) {
+            // If the "prev" pointer is alread set i.e. if we
+            // already found atleast one node on the next level,
+            // setup its next pointer
+            if (this.prev != null) {
+                this.prev.next = childNode;
+            } else {
+                // Else it means this child node is the first node
+                // we have encountered on the next level, so, we
+                // set the leftmost pointer
+                this.leftmost = childNode;
+            }    
+            this.prev = childNode; 
+        }
+    }
+    public Node connect(Node root) {
+        
+        if (root == null) {
+            return root;
+        }
+        // The root node is the only node on the first level
+        // and hence its the leftmost node for that level
+        this.leftmost = root;
+        // Variable to keep track of leading node on the "current" level
+        Node curr = leftmost;
+        // We have no idea about the structure of the tree,
+        // so, we keep going until we do find the last level.
+        // the nodes on the last level won't have any children
+        while (this.leftmost != null) {
+            // "prev" tracks the latest node on the "next" level
+            // while "curr" tracks the latest node on the current
+            // level.
+            this.prev = null;
+            curr = this.leftmost;
+            // We reset this so that we can re-assign it to the leftmost
+            // node of the next level. Also, if there isn't one, this
+            // would help break us out of the outermost loop.
+            this.leftmost = null;
+            // Iterate on the nodes in the current level using
+            // the next pointers already established.
+            while (curr != null) {
+                // Process both the children and update the prev
+                // and leftmost pointers as necessary.
+                this.processChild(curr.left);
+                this.processChild(curr.right);
+                // Move onto the next node.
+                curr = curr.next;
+            }
+        }
+        return root ;
+    }
+}
+```
+
+-   Time Complexity: $O(N)$ since we process each node exactly once.
+-   Space Complexity: $O(1)$ since we don't make use of any additional data structure for traversing nodes on a particular level like the previous approach does.
