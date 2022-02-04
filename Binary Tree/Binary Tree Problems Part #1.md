@@ -1063,3 +1063,237 @@ class Solution {
 
 -   Time Complexity: $O(N)$ since we process each node exactly once.
 -   Space Complexity: $O(1)$ since we don't make use of any additional data structure for traversing nodes on a particular level like the previous approach does.
+
+## Lowest Common Ancestor of a Binary Tree(Medium #236)
+
+**Question**: Given a binary tree, find the lowest common ancestor (LCA) of two given nodes in the tree.
+
+According to the [definition of LCA on Wikipedia](https://en.wikipedia.org/wiki/Lowest_common_ancestor): “The lowest common ancestor is defined between two nodes `p` and `q` as the lowest node in `T` that has both `p` and `q` as descendants (where we allow **a node to be a descendant of itself**).”
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2018/12/14/binarytree.png)
+
+```
+Input: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1
+Output: 3
+Explanation: The LCA of nodes 5 and 1 is 3.
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2018/12/14/binarytree.png)
+
+```
+Input: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 4
+Output: 5
+Explanation: The LCA of nodes 5 and 4 is 5, since a node can be a descendant of itself according to the LCA definition.
+```
+
+**Example 3:**
+
+```
+Input: root = [1,2], p = 1, q = 2
+Output: 1
+```
+
+**Constraints:**
+
+-   The number of nodes in the tree is in the range `[2, 105]`.
+-   `-109 <= Node.val <= 109`
+-   All `Node.val` are **unique**.
+-   `p != q`
+-   `p` and `q` will exist in the tree.
+
+### Standard Solution 
+
+#### Solution #1 Recursion
+
+*   The moment you encounter either of the nodes `p` or `q`, return some boolean flag. 
+*   Use integer to count how many true you have already met
+*    The least common ancestor would then be the node for which both the subtree recursions return a `True` flag.
+*   If the current node itself is one of `p` or `q`, we would mark a variable `mid` as `True` and continue the search for the other node in the left and right branches.
+
+```java
+TreeNode target;
+public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q){
+    if (root == null){
+        return root;
+    }
+    else {
+        findChild(root, p, q);
+    }
+    return target;
+}
+// at least two of the branch we find then it is the lowest common
+public boolean findChild(TreeNode root, TreeNode p, TreeNode q){
+    int sum = 0;
+    if (root == null){
+        return false;
+    }
+    else {
+        int left = findChild(root.left, p, q) ? 1 : 0;
+        int right = findChild(root.right, p, q) ? 1 : 0;
+        // If the current node is one of p or q
+        int mid = (root == p || root == q) ? 1 : 0;
+        sum = mid + right + left;
+        if (sum >= 2) target = root; // two of the branches should include the nodes
+    }
+	return (sum > 0); // return if we find at least one of the node
+}
+```
+
+*   Time Complexity: $O(N)$, where N is the number of nodes in the binary tree. In the worst case we might be visiting all the nodes of the binary tree.
+*   Space Complexity: $O(N)$. This is because the maximum amount of space utilized by the recursion stack would be N since the height of a skewed binary tree could be N.
+
+#### Solution #2 Iteration
+
+*   Start from the root node and traverse the tree.
+*   Until we find `p` and `q` both, keep storing the parent pointers in a dictionary.
+*   Once we have found both `p` and `q`, we get all the ancestors for `p` using the parent dictionary and add to a set called `ancestors`.
+*   Similarly, we traverse through ancestors for node `q`. If the ancestor is present in the ancestors set for `p`, this means this is the first ancestor common between `p` and `q` (while traversing upwards) and hence this is the LCA node.
+
+```java
+public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q){
+    // stack for tree traversal
+    Deque<TreeNode> stack = new ArrayDeque<>();
+    
+    // hashmap for parent pointers
+    Map<TreeNode, TreeNode> parent = new HashMap<>();
+    parent.put(root, null);
+    stack.push(root);
+    
+    // Iterate untill we find both the bodes p and q
+    while(!parent.containsKey(p) || !parent.containsKey(q)){
+        TreeNode node = stack.pop();
+        
+        // while traversing the tree, keep saving the parent pointers
+        if (node.left != null){
+            parent.put(node.left, node);
+            stack.push(node.left);
+        }
+        if (node.right != null){
+            parent.put(node.right, node);
+            stack.push(node.right);
+        }
+    }
+    // Ancestors set() for node p.
+    Set<TreeNode> ancestors = new HashSet<>();
+    // Process all ancestors for node p using parent pointers.
+    while (p != null){
+        ancestors.add(p);
+        p = parent.get(p);
+    }
+    // The first ancestor of q which appears in p's ancestor set() is their lowest common ancestor
+    while (!ancestors.contains(q)){
+        q = parent.get(q);
+    }
+    return q;
+}
+```
+
+*   Time Complexity: $O(N)$, where N is the number of nodes in the binary tree. In the worst case we might be visiting all the nodes of the binary tree.
+*   Space Complexity: $O(N)$. This is because the maximum amount of space utilized by the recursion stack would be N since the height of a skewed binary tree could be N.
+
+## Serialize and Deserialize Binary Tree(Hard #297)
+
+**Question**: Serialization is the process of converting a data structure or object into a sequence of bits so that it can be stored in a file or memory buffer, or transmitted across a network connection link to be reconstructed later in the same or another computer environment.
+
+Design an algorithm to serialize and deserialize a binary tree. There is no restriction on how your serialization/deserialization algorithm should work. You just need to ensure that a binary tree can be serialized to a string and this string can be deserialized to the original tree structure.
+
+**Clarification:** The input/output format is the same as [how LeetCode serializes a binary tree](https://leetcode.com/faq/#binary-tree). You do not necessarily need to follow this format, so please be creative and come up with different approaches yourself.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2020/09/15/serdeser.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: root = [1,2,3,null,null,4,5]
+Output: [1,2,3,null,null,4,5]
+```
+
+**Example 2:**
+
+```
+Input: root = []
+Output: []
+```
+
+**Constraints:**
+
+-   The number of nodes in the tree is in the range `[0, 104]`.
+-   `-1000 <= Node.val <= 1000`
+
+### My Solution
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+public class Codec {
+
+    	String nullString = "null";
+    
+    // Encodes a tree to a single string.
+    public String serialize(TreeNode root) {
+        String result = "";
+        return helperSerialize(root, result);
+    }
+    
+    public String helperSerialize(TreeNode root, String result){
+        if (root == null){
+            result += nullString;
+            result += ",";
+        } else {
+            String value = String.valueOf(root.val);
+            result += value;
+            result += ",";
+            result = helperSerialize(root.left, result);
+            result = helperSerialize(root.right, result);
+        }
+        return result;
+    }
+
+    public TreeNode helperDeserialize(List<String> data){
+        if (data.get(0).equals("null")){
+            data.remove(0);
+            return null;
+        } else {
+            TreeNode node = new TreeNode(Integer.parseInt(data.get(0)));
+            data.remove(0);
+            node.left = helperDeserialize(data);
+            node.right = helperDeserialize(data);
+            return node;
+        }
+        
+    }
+    // Decodes your encoded data to tree.
+    public TreeNode deserialize(String data) {
+        String[] dataArry = data.split(",");
+        List<String> dataQueue = new LinkedList<String>(Arrays.asList(dataArry));
+        return helperDeserialize(dataQueue);
+    }
+}
+
+// Your Codec object will be instantiated and called as such:
+// Codec ser = new Codec();
+// Codec deser = new Codec();
+// TreeNode ans = deser.deserialize(ser.serialize(root));
+```
+
+*   Need to carefully observe the features of the input, remember to add "," to separate the nodes.
+*   When leetcode run the test, it first serialize then deserialize, so you need to debug the two methods.
+*   Middle - Left - right, recursion to continuously add to the string
+*   Use a list to store the string array and delete the top one (pop element from a queue)
+
+### Standard Solution 
+
+*   Same as my solution
+*   Time complexity : in both serialization and deserialization functions, we visit each node exactly once, thus the time complexity is $O(N)$, where N is the number of nodes, *i.e.* the size of tree.
+*   Space complexity : in both serialization and deserialization functions, we keep the entire tree, either at the beginning or at the end, therefore, the space complexity is $O(N)$.
