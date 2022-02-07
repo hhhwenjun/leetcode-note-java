@@ -213,3 +213,150 @@ public char findTheDifference(String s, String t){
 
 *   Time Complexity: $O(N)$, where N is length of the strings. Since, we iterate through both the strings once.
 *   Space Complexity: $O(1)$. The problem states string `s` and string `t` have lowercase letters. Thus, the total number of unique characters and eventually buckets in the hash map possible are just 26.
+
+## Zigzag Conversion (Medium #6)
+
+**Qestion**: The string `"PAYPALISHIRING"` is written in a zigzag pattern on a given number of rows like this: (you may want to display this pattern in a fixed font for better legibility)
+
+```
+P   A   H   N
+A P L S I I G
+Y   I   R
+```
+
+And then read line by line: `"PAHNAPLSIIGYIR"`
+
+Write the code that will take a string and make this conversion given a number of rows:
+
+```
+string convert(string s, int numRows);
+```
+
+**Example 1:**
+
+```
+Input: s = "PAYPALISHIRING", numRows = 3
+Output: "PAHNAPLSIIGYIR"
+```
+
+**Example 2:**
+
+```
+Input: s = "PAYPALISHIRING", numRows = 4
+Output: "PINALSIGYAHRPI"
+Explanation:
+P     I    N
+A   L S  I G
+Y A   H R
+P     I
+```
+
+**Example 3:**
+
+```
+Input: s = "A", numRows = 1
+Output: "A"
+```
+
+**Constraints:**
+
+-   `1 <= s.length <= 1000`
+-   `s` consists of English letters (lower-case and upper-case), `','` and `'.'`.
+-   `1 <= numRows <= 1000`
+
+### My Solution
+
+```java
+ public String convert(String s, int numRows) {
+    // use list to store the value into List<List<String>>, depends on (n - 4) % numRows
+    if (s == null || s.length() < 2 || numRows < 2) return s;
+    List<List<String>> stringList = new ArrayList<>();
+
+    // create lists based on the numRows
+    for (int i = 0; i < numRows; i++){
+        stringList.add(new ArrayList<>());
+    }
+    int round = (numRows - 1)*2; // from 0 level round back to 0 level
+    int maxLevel = numRows - 1;
+    int divideNum = 0;
+    // loop through the string s and store the string letter in different lists
+    for (int i = 0; i < s.length(); i++){
+        char letter = s.charAt(i);
+        divideNum = i % round;
+        // go backward
+        if (divideNum > maxLevel){
+            stringList.get(round - divideNum).add(Character.toString(letter));
+        }
+        else {
+            stringList.get(divideNum).add(Character.toString(letter));
+        }
+    }
+    // now we get all the string and concat them together
+    String res = "";
+    for (int i = 0; i < numRows; i++){
+        for (String item : stringList.get(i)){
+            res += item;
+        }
+    }
+    return res;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Sort by Row
+
+*   Iterate through s*s* from left to right, appending each character to the appropriate row. The appropriate row can be tracked using two variables: the current row and the current direction.
+*   The current direction changes only when we moved up to the topmost row or move down to the bottommost row.
+*   Use `curRow` to check the current row number and `goingDown` to keep track of the direction
+
+```java
+public String convert(String s, int numRows){
+    if (numRows == 1) return s;
+    List<StringBuilder> rows = new ArrayList<>();
+    for (int i = 0; i < Math.min(numRows, s.length()); i++){
+        rows.add(new Stringbuilder());
+    }
+    int curRow = 0;
+    boolean goingDown = false;
+    for (char c : s.toCharArray()){
+        rows.get(curRow).append(c);
+        if (curRow == 0 || curRow == numRows - 1) goingDown = !goingDown;
+        curRow += goingDown ? 1 : -1;
+    }
+    StringBuilder ret = new StringBuilder();
+    for (StringBuilder row : rows) ret.append(row);
+    return ret.toString();
+}
+```
+
+*   Time Complexity: $O(n)$, where $n == \text{len}$
+*   Space Complexity: $O(n)$
+
+#### Solution #2 Visit by Row
+
+*   Similar to my solution but less space complexity
+*   Visit all rows 1 by 1
+*   Use the cycle length and condition to record string row by row
+
+```java
+public String convert(String s, int numRows){
+    if (numRows == 1) return s;
+    
+    StringBuilder ret = new StringBuilder();
+    int n = s.length();
+    int cycleLen = 2 * numRows - 2;
+    for (int i = 0; i < numRows; i++){
+        for (int j = 0; j + i < n; j += cycleLen){
+            ret.append(s.charAt(j + i));
+            if (i != 0 && i != numRows - 1 && j + cycleLen - i < n){
+                ret.append(s.charAt(j + cycleLen - i));
+            }
+        }
+    }
+    return ret.toString();
+}
+```
+
+*   Time Complexity: $O(n)$, where $n == \text{len}(s)$. Each index is visited once.
+*   Space Complexity: $O(n)$. For the cpp implementation, $O(1)$ if return string is not considered extra space.

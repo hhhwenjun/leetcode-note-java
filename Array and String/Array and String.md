@@ -1196,6 +1196,24 @@ Output: ["h","a","n","n","a","H"]
 ### My Solution
 
 ```java
+// second attempt, for recursion practice
+public void reverseString(char[] s){
+    helper(0, s.length - 1, s);
+}
+
+public void helper(int start, int end, char[] string){
+    if (string == null || start > end){
+        return;
+    }
+    char temp = string[start];
+    string[start] = string[end];
+    string[end] = temp;
+    helper(start + 1, end - 1, string);
+}
+// slower method, both complexity should be O(N)
+```
+
+```java
 public void reverseString(char[] s){
     int front = 0, end = s.length - 1;
     while(front < end){
