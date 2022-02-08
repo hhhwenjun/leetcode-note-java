@@ -207,3 +207,85 @@ public int reverse(int x) {
 }
 ```
 
+## Container With Most Water(Medium #11)
+
+**Question**: You are given an integer array `height` of length `n`. There are `n` vertical lines drawn such that the two endpoints of the `ith` line are `(i, 0)` and `(i, height[i])`.
+
+Find two lines that together with the x-axis form a container, such that the container contains the most water.
+
+Return *the maximum amount of water a container can store*.
+
+**Notice** that you may not slant the container.
+
+**Example 1:**
+
+<img src="https://s3-lc-upload.s3.amazonaws.com/uploads/2018/07/17/question_11.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: height = [1,8,6,2,5,4,8,3,7]
+Output: 49
+Explanation: The above vertical lines are represented by array [1,8,6,2,5,4,8,3,7]. In this case, the max area of water (blue section) the container can contain is 49.
+```
+
+**Example 2:**
+
+```
+Input: height = [1,1]
+Output: 1
+```
+
+**Constraints:**
+
+-   `n == height.length`
+-   `2 <= n <= 105`
+-   `0 <= height[i] <= 104`
+
+### My Solution
+
+```java
+// a brute-force method, but exceed limited time
+public int maxArea(int[] height) {
+    int max = 0;
+    int area = 0;
+    for (int i = 0; i < height.length; i++){
+        for (int j = i; j < height.length; j++){
+            area = (j - i) * Math.min(height[i], height[j]);
+            max = Math.max(max, area);
+        }
+    }
+    return max;
+}
+```
+
+-   Time complexity : $O(n^2)$. Calculating area for all $\dfrac{n(n-1)}{2}$ height pairs.
+-   Space complexity : $O(1)$. Constant extra space is used.
+
+### Standard Solution
+
+#### Solution #1 Two Pointer Approach
+
+*   We take two pointers, one at the beginning and one at the end of the array constituting the length of the lines.
+*   Further, we maintain a variable $\text{maxarea}$ to store the maximum area obtained till now.
+*   At every step, we find out the area formed between them, update $\text{maxarea}$ and move the pointer pointing to the shorter line towards the other end by one step.
+
+```java
+public int maxArea(int[] height) {
+    int max = 0;
+    int area = 0;
+    int low = 0, high = height.length - 1;
+    while (low < high){
+        area = (high - low) * Math.min(height[low], height[high]);
+        max = Math.max(max, area);
+        if (height[low] < height[high]){
+            low++;
+        } else {
+            high--;
+        }
+    }
+    return max;
+}
+```
+
+-   Time complexity : $O(n)$. Single-pass.
+-   Space complexity : $O(1)$. Constant space is used.
+
