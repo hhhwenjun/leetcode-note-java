@@ -352,3 +352,401 @@ public TreeNode searchBST(TreeNode root, int val){
 
 *   Time complexity is the same as recursion, but the space complexity is $O(1)$
 
+## Duplicate Calculation in Recursion
+
+*   Duplicate calculations problem that could happen with recursion
+
+*   **Memoization**:
+
+    *   To eliminate the duplicate calculation in the above case, as many of you would have figured out, one of the ideas would be to **store** the intermediate results in the cache so that we could reuse them later without re-calculation.
+
+    *   Memoization is an optimization technique used primarily to **speed up** computer programs by **storing** the results of expensive function calls and returning the cached result when the same inputs occur again.
+
+    *   **Example of Fibonacci number**
+
+        ```java
+        import java.util.HashMap;
+        public class Main {
+        
+          HashMap<Integer, Integer> cache = new HashMap<Integer, Integer>();
+          private int fib(int N) {
+            if (cache.containsKey(N)) {
+              return cache.get(N);
+            }
+            int result;
+            if (N < 2) {
+              result = N;
+            } else {
+              result = fib(N-1) + fib(N-2);
+            }
+            // keep the result in cache.
+            cache.put(N, result);
+            return result;
+          }
+        }
+        ```
+
+## Fibonacci Number(Easy #509)
+
+**Question**: The **Fibonacci numbers**, commonly denoted `F(n)` form a sequence, called the **Fibonacci sequence**, such that each number is the sum of the two preceding ones, starting from `0` and `1`. That is,
+
+```
+F(0) = 0, F(1) = 1
+F(n) = F(n - 1) + F(n - 2), for n > 1.
+```
+
+Given `n`, calculate `F(n)`.
+
+**Example 1:**
+
+```
+Input: n = 2
+Output: 1
+Explanation: F(2) = F(1) + F(0) = 1 + 0 = 1.
+```
+
+**Example 2:**
+
+```
+Input: n = 3
+Output: 2
+Explanation: F(3) = F(2) + F(1) = 1 + 1 = 2.
+```
+
+**Example 3:**
+
+```
+Input: n = 4
+Output: 3
+Explanation: F(4) = F(3) + F(2) = 2 + 1 = 3.
+```
+
+**Constraints:**
+
+-   `0 <= n <= 30`
+
+### My Solution
+
+```java
+Map<Integer, Integer> fibMap = new HashMap<>();
+public int fib(int n) {
+    int result = 0;
+    if (fibMap.containsKey(n)) return fibMap.get(n);
+    if (n < 2){
+        result = n;
+    }
+    else {
+        result = fib(n - 1) + fib(n - 2);
+    }
+    fibMap.put(n, result);
+    return result;
+}
+```
+
+*   If only directly use recursion, the time complexity is $O(2^N)$, space complexity is $O(N)$. The running time is extremely slow.
+*   We can use a hashmap to store the values to avoid duplicate calculations.
+
+### Standard Solution
+
+#### Solution #1 Top-Down Approach using Memoization
+
+*   Similar to my solution
+*   Store all the pre-computed answers, then return the answer for N
+
+```java
+class Solution {
+    // Creating a hash map with 0 -> 0 and 1 -> 1 pairs
+    private Map<Integer, Integer> cache = new HashMap<>(Map.of(0, 0, 1, 1));
+
+    public int fib(int N) {
+        if (cache.containsKey(N)) {
+            return cache.get(N);
+        }
+        cache.put(N, fib(N - 1) + fib(N - 2));
+        return cache.get(N);
+    }
+}
+```
+
+*   Time complexity: $O(N)$. Each number, starting at 2 up to and including `N`, is visited, computed, and then stored for $O(1)$ access later on.
+*   Space complexity: $O(N)$. The size of the stack in memory is proportional to `N`. Also, the memoization hash table is used, which occupies $O(N)$ space.
+
+#### Solution #2 Iterative Bottom-up Approach
+
+*   Use two pointers to take the N - 1 and N - 2 values, continuously change two pointers
+*   Use for loop to calculate the result
+
+```java
+public int fib(int N){
+    if (N <= 1){
+        return N;
+    }
+    int current = 0;
+    int prev1 = 0;
+    int prev2 = 0;
+    
+    for (int i = 2; i <= N; i++){
+        current = prev1 + prev2;
+        prev2 = prev1;
+        prev1 = current;
+    }
+    return current;
+}
+```
+
+*   Time complexity: $O(N)$. Each value from `2` to `N` is computed once. Thus, the time it takes to find the answer is directly proportional to `N` where `N` is the Fibonacci Number we are looking to compute.
+
+*   Space complexity: $O(1)$. This requires 1 unit of space for the integer `N` and 3 units of space to store the computed values (`current`, `prev1`, and `prev2`) for every loop iteration. The amount of space used is independent of N, so this approach uses a constant amount of space.
+
+## Climbing Stairs(Easy #70)
+
+**Question**: You are climbing a staircase. It takes `n` steps to reach the top.
+
+Each time you can either climb `1` or `2` steps. In how many distinct ways can you climb to the top?
+
+**Example 1:**
+
+```
+Input: n = 2
+Output: 2
+Explanation: There are two ways to climb to the top.
+1. 1 step + 1 step
+2. 2 steps
+```
+
+**Example 2:**
+
+```
+Input: n = 3
+Output: 3
+Explanation: There are three ways to climb to the top.
+1. 1 step + 1 step + 1 step
+2. 1 step + 2 steps
+3. 2 steps + 1 step
+```
+
+**Constraints:**
+
+-   `1 <= n <= 45`
+
+### My Solution
+
+```java
+// dynamic programming
+public int climbStairs(int n) {
+    // a later step has combinations of the previous possible steps sum
+    if (n == 1) return n;
+    int[] map = new int[n + 1];
+    map[1] = 1; // 1 step has 1 method
+    map[2] = 2; // 2 steps has 2 methods
+    for (int i = 3; i <= n; i++){ // each step has sum of previous steps
+        map[i] = map[i - 1] + map[i - 2];
+    }
+    return map[n];
+}
+```
+
+*   In fact, it is almost the same as the fibonacci number question
+
+### Standard Soltuion
+
+#### Solution #1 Dynamic Programming
+
+*   Same as my solution
+*   Time complexity : $O(n)$. Single loop upto n*n*.
+*   Space complexity : $O(n)$. dp array of size n is used.
+
+#### Solution #2 Fibonacci Number
+
+*   We can summarize the above solution and improve it to a iterative bottom-up approach
+
+```java
+public int climbStairs(int n){
+    if (n == 1){
+        return 1;
+    }
+    int first = 1;
+    int second = 2;
+    for (int i = 3; i <= n; i++){
+        int third = first + second;
+        first = second;
+        second = third;
+    }
+    return second;
+}
+```
+
+*   Time complexity : $O(n)$. Single loop upto n is required to calculate $n^{th}$ fibonacci number.
+*   Space complexity : $O(1)$. Constant space is used.
+
+## K-diff Pairs in an Array(Medium #532)
+
+**Question**: Given an array of integers `nums` and an integer `k`, return *the number of **unique** k-diff pairs in the array*.
+
+A **k-diff** pair is an integer pair `(nums[i], nums[j])`, where the following are true:
+
+-   `0 <= i < j < nums.length`
+-   `|nums[i] - nums[j]| == k`
+
+**Notice** that `|val|` denotes the absolute value of `val`.
+
+**Example 1:**
+
+```
+Input: nums = [3,1,4,1,5], k = 2
+Output: 2
+Explanation: There are two 2-diff pairs in the array, (1, 3) and (3, 5).
+Although we have two 1s in the input, we should only return the number of unique pairs.
+```
+
+**Example 2:**
+
+```
+Input: nums = [1,2,3,4,5], k = 1
+Output: 4
+Explanation: There are four 1-diff pairs in the array, (1, 2), (2, 3), (3, 4) and (4, 5).
+```
+
+**Example 3:**
+
+```
+Input: nums = [1,3,1,5,4], k = 0
+Output: 1
+Explanation: There is one 0-diff pair in the array, (1, 1). 
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 104`
+-   `-107 <= nums[i] <= 107`
+-   `0 <= k <= 107`
+
+### My Solution
+
+*   When encouter array problem that has an order, sort it first.
+*   A brute force method with two pointers
+
+```java
+public int findPairs(int[] nums, int k) {
+    Arrays.sort(nums);
+    int current = 0;
+    int prev = Integer.MAX_VALUE;
+    int pair = 0;
+    for(int i = 0; i < nums.length; i++){
+        current = nums[i];
+        if (current == prev) continue; // if same value, continue
+        for (int j = i + 1; j < nums.length; j++){ // loop to find the pair
+            if (nums[j] - nums[i] == k){
+                pair++; // find a pair
+                prev = current;
+                break;
+            }
+            else if (nums[j] - nums[i] > k){
+                prev = current; // out of range, move to next number and record it as prev
+                break;
+            }
+        }
+    }
+    return pair;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Brute Force(not recommend)
+
+*   Similar to my solution but it should be slower since my solution will break if out of range
+*   Actually no need to use absolute value since it is sorted
+
+```java
+public int findPairs(int[] nums, int k){
+    Arrays.sort(nums);
+    int result = 0;
+    for (int i = 0; i < nums.length; i++){
+        if (i > 0 && nums[i] == nums[i - 1]){ // i don't think we need to check i
+            continue;
+        }
+        for (int j = i + 1; j < nums.length; j++){
+            if (j > i + 1 && nums[j] == nums[j - 1]){
+                continue;
+            }
+            if (Math.abs(nums[j] - nums[i]) == k){
+                result++;
+            }
+        }
+    }
+    return result;
+}
+```
+
+*   Time complexity : $O(N^2)$ where N is the size of `nums`. The time complexity for sorting is $O(N \log N)$ while the time complexity for going through ever pair in the `nums` is $O(N^2)$. Therefore, the final time complexity is $O(N \log N) + O(N^2) \approx O(N^2)$.
+*   Space complexity : $O(N)$ where N is the size of `nums`. This space complexity is incurred by the sorting algorithm. Space complexity is bound to change depending on the sorting algorithm you use. There is no additional space required for the part with two `for` loops, apart from a single variable `result`. Therefore, the final space complexity is $O(N) + O(1) \approx O(N)$.
+
+#### Solution #2 Two Pointers
+
+*   Rather than checking for every possible pair, we can have two pointers to point the left number and right number that should be checked in a sorted array.
+*   Take the difference between the numbers which left and right pointers point.
+    *   If it is less than k, we increment the right pointer.
+        -   If left and right pointers are pointing to the same number, we increment the right pointer too.
+    *   If it is greater than `k`, we increment the left pointer.
+    *   If it is exactly `k`, we have found our pair, we increment our placeholder `result` and increment left pointer.
+
+```java
+public int findPairs(int[] nums, int k){
+    Arrays.sort(nums);
+    int left = 0, right = 1;
+    int result = 0;
+    
+    while(left < nums.length && right < nums.length){
+        if (left == right || nums[right] - nums[left] < k){
+            // continue to move on
+            right++;
+        } else if (nums[right] - nums[left] > k){
+            // exceed the range, move left pointer
+            left++;
+        } else {
+            // find the target
+            left++;
+            result++;
+            while (left < nums.length && nums[left] == nums[left - 1]){
+                left++; // loop until meet a new number
+            }
+        }
+    }
+    return result;
+}
+```
+
+*   Time complexity : $O(N \log N)$ where N is the size of `nums`. The time complexity for sorting is $O(N \log N)$ while the time complexity for going through `nums` is $O(N)$. One might mistakenly think that it should be $O(N^2)$ since there is another `while` loop inside the first `while` loop. The `while` loop inside is just incrementing the pointer to skip numbers which are the same as the previous number. The animation should explain this behavior clearer. Therefore, the final time complexity is $O(N \log N) + O(N) \approx O(N \log N)$.
+*   Space complexity : O(N) where N is the size of `nums`. Similar to approach 1, this space complexity is incurred by the sorting algorithm. Space complexity is bound to change depending on the sorting algorithm you use. There is no additional space required for the part where two pointers are being incremented, apart from a single variable `result`. Therefore, the final space complexity is $O(N) + O(1) \approx O(N)$.
+
+#### Solution #3 HashMap
+
+*   Removes the sort algorithm but use hashmap to store the counts
+*   Compare the key and add to the pairs
+*   If k = 0, then each pair should count
+
+```java
+public int findPairs(int[] nums, int k){
+    int result = 0;
+    HashMap<Integer, Integer> counter = new HashMap<>();
+    for (int n : nums){
+        counter.put(n, counter.getOrDefault(n, 0) + 1);
+    }
+    for (Map.Entry<Integer, Integer> entry : counter.entrySet()){
+        int x = entry.getKey();
+        int val = entry.getValue();
+        if (k > 0 && counter.containsKey(x + k)){
+            result++;
+        } else if (k == 0 && val > 1){
+            result++;
+        }
+    }
+    return result;
+}
+```
+
+*   Time complexity : $O(N)$.
+    -   It takes $O(N)$ to create an initial frequency hash map and another $O(N)$ to traverse the keys of that hash map. One thing to note about is the hash key lookup. The time complexity for hash key lookup is $O(1)$ but if there are hash key collisions, the time complexity will become $O(N)$. However those cases are rare and thus, the amortized time complexity is $O(2N) \approx O(N)$.
+*   Space complexity : $O(N)$
+    -   We keep a table to count the frequency of each unique number in the input. In the worst case, all numbers are unique in the array. As a result, the maximum size of our table would be $O(N)$.
