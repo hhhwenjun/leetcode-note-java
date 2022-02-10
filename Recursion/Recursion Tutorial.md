@@ -750,3 +750,168 @@ public int findPairs(int[] nums, int k){
     -   It takes $O(N)$ to create an initial frequency hash map and another $O(N)$ to traverse the keys of that hash map. One thing to note about is the hash key lookup. The time complexity for hash key lookup is $O(1)$ but if there are hash key collisions, the time complexity will become $O(N)$. However those cases are rare and thus, the amortized time complexity is $O(2N) \approx O(N)$.
 *   Space complexity : $O(N)$
     -   We keep a table to count the frequency of each unique number in the input. In the worst case, all numbers are unique in the array. As a result, the maximum size of our table would be $O(N)$.
+
+## Pow(x, n)(Medium #50)
+
+**Question**: Implement [pow(x, n)](http://www.cplusplus.com/reference/valarray/pow/), which calculates `x` raised to the power `n` (i.e., `xn`).
+
+**Example 1:**
+
+```
+Input: x = 2.00000, n = 10
+Output: 1024.00000
+```
+
+**Example 2:**
+
+```
+Input: x = 2.10000, n = 3
+Output: 9.26100
+```
+
+**Example 3:**
+
+```
+Input: x = 2.00000, n = -2
+Output: 0.25000
+Explanation: 2-2 = 1/22 = 1/4 = 0.25 
+```
+
+**Constraints:**
+
+-   `-100.0 < x < 100.0`
+-   `-231 <= n <= 231-1`
+-   `-104 <= xn <= 104`
+
+### My Solution
+
+```java
+public double myPow(double x, int n){
+    if (n == 0){
+        return 1;
+    }
+    if (n == 1){
+        return x;
+    }
+    if (n > 0){
+        return myPow(x, n - 1); // this works in theory, but encounter stackoverflow exception
+    } else {
+        return 1 / myPow(x, (-n) - 1);
+    }
+}
+```
+
+### Standard Solution
+
+*   In this case, recursion is more space complicated since it might cause stack overflow
+
+#### Solution #1 Brute Force
+
+*   If $n < 0$, we can substitute $x$, $n$ with $\dfrac{1}{x}$, $-n$ to make sure $n \ge 0$. This restriction can simplify our further discussion.
+
+```java
+public double myPow(double x, int n) {
+    long N = n;
+    if (N < 0) {
+        x = 1 / x;
+        N = -N;
+    }
+    double ans = 1;
+    for (long i = 0; i < N; i++)
+        ans = ans * x;
+    return ans;
+}
+```
+
+*   Time complexity : $O(n)$. We will multiply `x` for `n` times.
+*   Space complexity : $O(1)$. We only need one variable to store the final product of `x`.
+
+#### Solution #2 Fast Power Algorithm Recursive
+
+*   Using recursion, but split the n into half, it could help release half of the calculation.
+*   Then we would need to consider cases for n is even or odd
+
+```java
+private double fastPow(double x, long n){
+    if (n == 0){
+        return 1.0;
+    }
+    double half = fastPow(x, n / 2);
+    // split into half and half, reduce calculations
+    if (n % 2 == 0){
+        return half * half;
+    } else {
+        return half * half * x;
+    }
+}
+public double myPow(double x, int n){
+    long N = n;
+    // handle the negative situation
+    if (N < 0){
+        x = 1 / x;
+        N = -N;
+    }
+    return fastPow(x, N);
+}
+```
+
+*   Time complexity : $O(\log n)$. Each time we apply the formula $(x ^ n) ^ 2 = x ^ {2 * n}$, n is reduced by half. Thus we need at most $O(\log n)$ computations to get the result.
+*   Space complexity : $O(\log n)$. For each computation, we need to store the result of $x ^ {n / 2}$. We need to do the computation for $O(\log n)$ times, so the space complexity is $O(\log n)$.
+
+## Super Pow(Medium #372)
+
+**Question**: Your task is to calculate  $a^b$  mod `1337`  where `a` is a positive integer and `b` is an extremely large positive integer given in the form of an array.
+
+**Example 1:**
+
+```
+Input: a = 2, b = [3]
+Output: 8
+```
+
+**Example 2:**
+
+```
+Input: a = 2, b = [1,0]
+Output: 1024
+```
+
+**Example 3:**
+
+```
+Input: a = 1, b = [4,3,3,8,5,2]
+Output: 1
+```
+
+**Constraints:**
+
+-   `1 <= a <= 231 - 1`
+-   `1 <= b.length <= 2000`
+-   `0 <= b[i] <= 9`
+-   `b` does not contain leading zeros.
+
+### My Solution
+
+```java
+public int superPow(int a, int[] b) {
+    int ans = 1;
+    int length = b.length;
+    a %= 1337;
+    for (int i = 0; i < length; i++){
+        ans = (pow(ans,10)) * (pow(a,b[i])) % 1337; // previous ^ 10 * next exp
+    }
+    return ans;
+}
+
+public int pow(int a, int b){ // a and b are both positive
+    if (b == 0) return 1;
+    if (b == 1) return a;
+    int half = pow(a, b / 2);
+    int res = (half * half) % 1337; // be carefull here for exceeding limit
+    if (b % 2 == 1) {
+        res = (res * a) % 1337;
+    }
+    return res;
+}
+```
+
