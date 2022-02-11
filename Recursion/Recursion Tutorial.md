@@ -915,3 +915,229 @@ public int pow(int a, int b){ // a and b are both positive
 }
 ```
 
+## Merge Two Sorted Lists(Easy #21)
+
+**Question**: You are given the heads of two sorted linked lists `list1` and `list2`.
+
+Merge the two lists in a one **sorted** list. The list should be made by splicing together the nodes of the first two lists.
+
+Return *the head of the merged linked list*. 
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2020/10/03/merge_ex1.jpg)
+
+```
+Input: list1 = [1,2,4], list2 = [1,3,4]
+Output: [1,1,2,3,4,4]
+```
+
+**Example 2:**
+
+```
+Input: list1 = [], list2 = []
+Output: []
+```
+
+**Example 3:**
+
+```
+Input: list1 = [], list2 = [0]
+Output: [0] 
+```
+
+**Constraints:**
+
+-   The number of nodes in both lists is in the range `[0, 50]`.
+-   `-100 <= Node.val <= 100`
+-   Both `list1` and `list2` are sorted in **non-decreasing** order.
+
+### My Solution
+
+```java
+// tail recursion
+public ListNode mergeTwoLists(ListNode list1, ListNode list2) {
+    if (list1 == null) return list2;
+    if (list2 == null) return list1;
+    if (list1.val > list2.val){
+        list2.next = mergeTwoLists(list1, list2.next);
+        return list2;
+    } else {
+        list1.next = mergeTwoLists(list1.next, list2);
+        return list1;
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Recursion
+
+*   If either is initially null, no merge to perform.
+
+*   If there is no merge to perform, simply return the null list.
+
+*   Same as my solution part.
+
+*   Time complexity : $O(n + m)$
+
+    Because each recursive call increments the pointer to `l1` or `l2` by one (approaching the dangling `null` at the end of each list), there will be exactly one call to `mergeTwoLists` per element in each list. Therefore, the time complexity is linear in the combined size of the lists.
+
+*   Space complexity : $O(n + m)$
+
+    The first call to `mergeTwoLists` does not return until the ends of both `l1` and `l2` have been reached, so $n + m$ stack frames consume $O(n + m)$ space.
+
+#### Solution #2 Iteration
+
+*   Create a false prehead and give it a random value
+*   Use while loop to continuously compare two list nodes value
+
+```java
+public ListNode mergeTwoLists(ListNode l1, ListNode l2){
+    // maintain an unchanging refernce to node ahead of the return node.
+    ListNode prehead = new ListNode(-1);
+    
+    ListNode prev = prehead;
+    while(l1 != null && l2 != null){
+        if (l1.val <= l2.val){
+            prev.next = l1;
+            l1 = l1.next;
+        } else {
+            prev.next = l2;
+            l2 = l2.next;
+        }
+        prev = prev.next;
+        
+        // merge the rest of the nodes to the end
+        prev.next = l1 == null ? l2 : l1;
+        return prehead.next;
+    }
+}
+```
+
+*   Time complexity : $O(n + m)$
+
+    Because exactly one of `l1` and `l2` is incremented on each loop iteration, the `while` loop runs for a number of iterations equal to the sum of the lengths of the two lists. All other work is constant, so the overall complexity is linear.
+
+*   Space complexity : $O(1)$
+
+    The iterative approach only allocates a few pointers, so it has a constant overall memory footprint.
+
+## K-th Symbol in Grammar(Medium #779)
+
+**Question**: We build a table of `n` rows (**1-indexed**). We start by writing `0` in the `1st` row. Now in every subsequent row, we look at the previous row and replace each occurrence of `0` with `01`, and each occurrence of `1` with `10`.
+
+-   For example, for `n = 3`, the `1st` row is `0`, the `2nd` row is `01`, and the `3rd` row is `0110`.
+
+Given two integer `n` and `k`, return the `kth` (**1-indexed**) symbol in the `nth` row of a table of `n` rows.
+
+**Example 1:**
+
+```
+Input: n = 1, k = 1
+Output: 0
+Explanation: row 1: 0
+```
+
+**Example 2:**
+
+```
+Input: n = 2, k = 1
+Output: 0
+Explanation: 
+row 1: 0
+row 2: 01
+```
+
+**Example 3:**
+
+```
+Input: n = 2, k = 2
+Output: 1
+Explanation: 
+row 1: 0
+row 2: 01 
+```
+
+**Constraints:**
+
+-   `1 <= n <= 30`
+-   `1 <= k <= 2n - 1`
+
+### My Solution
+
+*   We can find a pattern that each row has two parts:
+    *   First-half : the copy of last row
+    *   Second-half: the complement of last row
+
+```
+1th 0
+2nd 01
+3rd 0110
+4th 01101001
+5th 0110100110010110
+```
+
+*   So we can conclude the following
+
+```java
+ public int kthGrammar(int n, int k) {
+    // so the int array would be length of 2 ^ n
+    int length = (int)Math.pow(2, n);
+    int[] data = new int[length];
+    data[0] = 0;
+    data[1] = 1;
+    int round = 2;
+    int innerLength = 2;
+    int complement = 0;
+    for(int i = 2; i < length; i++){
+        if (i == innerLength){
+            innerLength *= 2;
+        }
+        complement = i - (innerLength / 2);
+        data[i] = 1 - data[complement];
+    }
+    return data[k - 1];
+}
+// but it exceed the memory limit though it works
+```
+
+### Standard Solution
+
+#### Solution #1 Recursion
+
+```java
+public int kthGrammar(int n, int k) {
+    if(n==1){
+        return 0;
+    }
+    return Integer.parseInt(kthGrammarMain(n,k));
+}
+public static String kthGrammarMain(int n, long k) {
+    if(n==2){
+        if(k%2==0){
+            return "1";
+        }else{
+            return "0";
+        }
+    }
+
+    String prevStr=kthGrammarMain(n-1,Math.round(((double)k)/2));
+    if(prevStr.equals("0")){
+        if(k%2==0){
+            return "1";
+        }else{
+            return "0";
+        }
+    }else {
+        if(k%2==0){
+            return "0";
+        }else{
+            return "1";
+        }
+    }
+}
+```
+
+*   We can find that the element is the complement of element in half round before
+*   We use string so it could reduce space
