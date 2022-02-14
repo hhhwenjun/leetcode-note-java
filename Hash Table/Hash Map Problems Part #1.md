@@ -260,6 +260,23 @@ public boolean isIsomorphic(String s, String t) {
 * Length of string using `str.length()`
 * Map character to character
 
+```java
+// second attempt
+public boolean isIsomorphic(String s, String t) {
+    if (s.length() != t.length()) return false;
+    Map<Character, Integer> wordMapS = new HashMap<>();
+    Map<Character, Integer> wordMapT = new HashMap<>();
+    for(int i = 0; i < s.length(); i++){
+        wordMapS.putIfAbsent(s.charAt(i), i);
+        wordMapT.putIfAbsent(t.charAt(i), i);
+        if (wordMapS.get(s.charAt(i)) != wordMapT.get(t.charAt(i))){
+            return false;
+        }
+    }
+    return true;
+}
+```
+
 ### Standard Solution 
 
 #### Solution #1 Character Mapping with Dictionary
