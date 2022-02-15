@@ -1141,3 +1141,27 @@ public static String kthGrammarMain(int n, long k) {
 
 *   We can find that the element is the complement of element in half round before
 *   We use string so it could reduce space
+
+## Unique Binary Search Trees II(Medium #95)
+
+**Question**: Given an integer `n`, return *all the structurally unique **BST'**s (binary search trees), which has exactly* `n` *nodes of unique values from* `1` *to* `n`. Return the answer in **any order**.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2021/01/18/uniquebstn3.jpg)
+
+```
+Input: n = 3
+Output: [[1,null,2,null,3],[1,null,3,2],[2,1,3],[3,1,null,null,2],[3,2,null,1]]
+```
+
+**Example 2:**
+
+```
+Input: n = 1
+Output: [[1]]
+```
+
+**Constraints:**
+
+-   `1 <= n <= 8`
