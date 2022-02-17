@@ -1165,3 +1165,55 @@ Output: [[1]]
 **Constraints:**
 
 -   `1 <= n <= 8`
+
+### Standard Solution
+
+#### Solution #1 Recursion
+
+*   Let's pick up number $i$ out of the sequence $1 ..n$ and use it as the root of the current tree. 
+*   Then there are $i - 1$ elements available for the construction of the left subtree and $n - i$ elements available for the right subtree. As we already discussed that results in $G(i - 1)$ different left subtrees and $G(n - i)$ different right subtrees, where G is a Catalan number.
+
+<img src="https://leetcode.com/problems/unique-binary-search-trees-ii/Figures/96_BST.png" alt="BST" style="zoom:50%;" />
+
+*   Now let's repeat the step above for the sequence `1 ... i - 1` to construct all left subtrees, and then for the sequence `i + 1 ... n` to construct all right subtrees.
+*   This way we have a root `i` and two lists for the possible left and right subtrees. The final step is to loop over both lists to link left and right subtrees to the root.
+
+```java
+public LinkedList<TreeNode> generate_trees(int start, int end){
+    LinkedList<TreeNode> all_trees = new LinkedList<TreeNode>();
+    if (start > end){
+        all_trees.add(null);
+        return all_trees;
+    }
+    
+    // pick up a root
+    for (int i = start; i <= end; i++){
+        // all possible left subtrees if i is chosen to be a root
+        LinkedList<TreeNode> left_trees = generate_trees(start, i - 1);
+        
+        // all possible right subtrees if i is chosen to be a root
+        LinkedList<TreeNode> right_trees = generate_trees(i + 1, end);
+        
+        // connect left and right trees to the root i
+        for (TreeNode l : left_trees){
+            for (TreeNode r : right_trees){
+                TreeNode current_tree = new TreeNode(i);
+                current_tree.left = l;
+                current_tree.right = r;
+                all_trees.add(current_tree);
+            }
+        }
+    }
+    return all_trees;
+}
+
+public List<TreeNode> generateTrees(int n){
+    if (n == 0){
+        return new LinkedList<TreeNode>();
+    }
+    return generate_trees(1, n);
+}
+```
+
+-   Time complexity : The main computations are to construct all possible trees with a given root, that is actually Catalan number $G_n$ as was discussed above. This is done `n` times, that results in time complexity $n G_n$. Catalan numbers grow as $\frac{4^n}{n^{3/2}}$ that gives the final complexity $\mathcal{O}(\frac{4^n}{n^{1/2}})$. Seems to be large but let's not forget that here we're asked to generate $G_n \sim \frac{4^n}{n^{3/2}}$ tree objects as output.
+-   Space complexity : n G_n as we keep G_n trees with `n` elements each, that results in $\mathcal{O}(\frac{4^n}{n^{1/2}}) $ complexity.
