@@ -144,3 +144,366 @@ public int[] mergeSort(int[] leftArry, int[] rightArry){
 }
 ```
 
+## Validate Binary Search Tree(Medium #98)
+
+**Question**: Given the `root` of a binary tree, *determine if it is a valid binary search tree (BST)*.
+
+A **valid BST** is defined as follows:
+
+-   The left subtree of a node contains only nodes with keys **less than** the node's key.
+-   The right subtree of a node contains only nodes with keys **greater than** the node's key.
+-   Both the left and right subtrees must also be binary search trees.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2020/12/01/tree1.jpg)
+
+```
+Input: root = [2,1,3]
+Output: true
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2020/12/01/tree2.jpg)
+
+```
+Input: root = [5,1,4,null,null,3,6]
+Output: false
+Explanation: The root node's value is 5 but its right child's value is 4.
+```
+
+**Constraints:**
+
+-   The number of nodes in the tree is in the range `[1, 104]`.
+-   `-231 <= Node.val <= 231 - 1`
+
+### My Solution
+
+```java
+// not working for all cases
+public boolean isValidBST(TreeNode root){
+    if (root == null){
+        return true;
+    }
+    return helperValid(root, root.left, 0) && helperValid(root, root.right, 1) &&
+        isValidBST(root.left) && isValidBST(root.right);
+}
+
+public boolean helperValid(TreeNode parent, TreeNode root, int direction){
+    // direction 0 - left, 1 - right
+    if (direction == 0){
+        if (root.val < parent.val){
+            return true && helperValid(root.right, root.left, 0);
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if (root.val > parent.val){
+            return true && helperValid(root.left, root.right, 1);
+        }
+        else {
+            return false;
+        }
+    }
+}
+```
+
+*   Cannot only compare the parent and child, also need to compare to other branches
+
+*   This is not working for all cases because:
+
+    ![compute](https://leetcode.com/problems/validate-binary-search-tree/Figures/98/98_not_bst_3.png)
+
+### Standard Solution
+
+#### Solution #1 Recursion
+
+*   Need to define the low and high value of the cases, current node value should be between low and high
+
+```java
+public boolean validate(TreeNode root, Integer low, Integer high){
+    // empty trees are valid BSTs
+    if (root == null){
+        return true;
+    }
+    // The current node's value must be between low and high.
+    if ((low != null && root.val <= low) || (high != null && root.val >= high)){
+        return false;
+    }
+    // The left and right subtree must also be valid.
+    return validate(root.right, root.val, high) && validate(root.left, low, root.val);
+}
+public boolean isValidBST(TreeNode root){
+    return validate(root, null, null);
+}
+```
+
+-   Time complexity: $\mathcal{O}(N)$ since we visit each node exactly once.
+-   Space complexity: $\mathcal{O}(N)$ since we keep up to the entire tree.
+
+#### Solution #2 Iterative Traversal with Valid Range
+
+*   Same solution as the first one, but with the help of an explicit stack. DFS would be better than BFS since it works faster here.
+
+```java
+private Deque<TreeNode> stack = new LinkedList();
+private Deque<Integer> upperLimits = new LinkedList();
+private Deque<Integer> lowerLimits = new LinkedList();
+
+public void update(TreeNode root, Integer low, Integer high){
+    stack.add(root);
+    lowerLimits.add(low);
+    upperLimits.add(high);
+}
+
+public boolean isValidBST(TreeNode root){
+    Integer low = null, high = null, val;
+    update(root, low, high);
+    
+    while(!stack.isEmpty()){
+        root = stack.poll();
+        low = lowerLimits.poll();
+        high = upperLimits.poll();
+        
+        if (root == null) continue;
+        val = root.val;
+        if (low != null && val <= low){
+            return false;
+        }
+        if (high != null && val >= high){
+            return false;
+        }
+        update(root.right, val, high);
+        update(root.left, low, val);
+    }
+    return true;
+}
+```
+
+*   Time complexity: $\mathcal{O}(N)$ since we visit each node exactly once.
+*   Space complexity: $\mathcal{O}(N)$ since we keep up to the entire tree.
+
+#### Solution #3 Inorder Traversal
+
+```java
+class Solution {
+    // We use Integer instead of int as it supports a null value.
+    private Integer prev;
+
+    public boolean isValidBST(TreeNode root) {
+        prev = null;
+        return inorder(root);
+    }
+
+    private boolean inorder(TreeNode root) {
+        if (root == null) {
+            return true;
+        }
+        if (!inorder(root.left)) {
+            return false;
+        }
+        if (prev != null && root.val <= prev) {
+            return false;
+        }
+        prev = root.val;
+        return inorder(root.right);
+    }
+}
+```
+
+```java
+class Solution {
+    public boolean isValidBST(TreeNode root) {
+        Deque<TreeNode> stack = new ArrayDeque<>();
+        Integer prev = null;
+
+        while (!stack.isEmpty() || root != null) {
+            while (root != null) {
+                stack.push(root);
+                root = root.left;
+            }
+            root = stack.pop();
+            // If next element in inorder traversal
+            // is smaller than the previous one
+            // that's not BST.
+            if (prev != null && root.val <= prev) {
+                return false;
+            }
+            prev = root.val;
+            root = root.right;
+        }
+        return true;
+    }
+}
+```
+
+-   Time complexity: $\mathcal{O}(N)$ in the worst case when the tree is BST or the "bad" element is the rightmost leaf.
+-   Space complexity: $\mathcal{O}(N)$ to keep `stack`.
+
+## Search a 2D Matrix II(Medium #240)
+
+**Question**: Write an efficient algorithm that searches for a value `target` in an `m x n` integer matrix `matrix`. This matrix has the following properties:
+
+-   Integers in each row are sorted in ascending from left to right.
+-   Integers in each column are sorted in ascending from top to bottom.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2020/11/24/searchgrid2.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: matrix = [[1,4,7,11,15],[2,5,8,12,19],[3,6,9,16,22],[10,13,14,17,24],[18,21,23,26,30]], target = 5
+Output: true
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2020/11/24/searchgrid.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: matrix = [[1,4,7,11,15],[2,5,8,12,19],[3,6,9,16,22],[10,13,14,17,24],[18,21,23,26,30]], target = 20
+Output: false
+```
+
+**Constraints:**
+
+-   `m == matrix.length`
+-   `n == matrix[i].length`
+-   `1 <= n, m <= 300`
+-   `-109 <= matrix[i][j] <= 109`
+-   All the integers in each row are **sorted** in ascending order.
+-   All the integers in each column are **sorted** in ascending order.
+-   `-109 <= target <= 109`
+
+### My Solution
+
+```java
+// does not work for all the situations
+public boolean searchMatrix(int[][] matrix, int target){
+    int m = matrix.length;
+    int n = matrix[0].length;
+    int largest = matrix[m - 1][n - 1];
+    while(target < largest && m >= 0 && n >= 0){
+        largest = matrix[m - 1][n - 1];
+        m -= 1;
+        n -= 1;
+    }
+    return helper(matrix, target, m, n, 0) || helper(matrix, target, m, n, 1);
+}
+
+public boolean helper(int[][] matrix, int target, int m, int n, int direction){
+    // horizonal
+    if (direction == 0){
+        while(n >= 0){
+            if (target == matrix[m][n]){
+                return true;
+            }
+            n-= 1;
+        }
+        return false;
+    }
+    // direction = 1, vertical
+    else {
+        while(m >= 0){
+            if (target == matrix[m][n]){
+                return true;
+            }
+            m-= 1;
+        }
+        return false; 
+    }
+}
+```
+
+### Standard Solution
+
+*   You can also use brute force to find the solution but not recommended
+
+#### Solution #1 Search Space Reduction
+
+*   More like a dynamic programming solution, start from the bottom left, then go up
+
+```java
+public boolean searchMatrix(int[][] matrix, int target){
+    // start our pointer in the bottom-left
+    int row = matrix.length - 1;
+    int col = 0;
+    
+    while (row >= 0 && col < matrix[0].length){
+        if (matrix[row][col] > target){
+            row--;
+        } else if (matrix[row][col] < target){
+            col++;
+        } else {
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+*   Time complexity: $O(n+m)$
+    *   The key to the time complexity analysis is noticing that, on every iteration (during which we do not return `true`) either `row` or `col` is decremented/incremented exactly once. Because `row` can only be decremented m*m* times and `col` can only be incremented n times before causing the `while` loop to terminate, the loop cannot run for more than n+m iterations. Because all other work is constant, the overall time complexity is linear in the sum of the dimensions of the matrix.
+*   Space complexity: $O(1)$
+    *   Because this approach only manipulates a few pointers, its memory footprint is constant
+
+#### Solution #2 Binary Search
+
+*   Loop through the shortest dimension(col or row) and apply binary search on row or column
+
+```java
+private boolean binarySearch(int[][] matrix, int target, int start, boolean vertical) {
+    int lo = start;
+    int hi = vertical ? matrix[0].length-1 : matrix.length-1;
+
+    while (hi >= lo) {
+        int mid = (lo + hi)/2;
+        if (vertical) { // searching a column
+            if (matrix[start][mid] < target) {
+                lo = mid + 1;
+            } else if (matrix[start][mid] > target) {
+                hi = mid - 1;
+            } else {
+                return true;
+            }
+        } else { // searching a row
+            if (matrix[mid][start] < target) {
+                lo = mid + 1;
+            } else if (matrix[mid][start] > target) {
+                hi = mid - 1;
+            } else {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+public boolean searchMatrix(int[][] matrix, int target) {
+    // an empty matrix obviously does not contain `target`
+    if (matrix == null || matrix.length == 0) {
+        return false;
+    }
+
+    // iterate over matrix diagonals
+    int shorterDim = Math.min(matrix.length, matrix[0].length);
+    for (int i = 0; i < shorterDim; i++) {
+        boolean verticalFound = binarySearch(matrix, target, i, true);
+        boolean horizontalFound = binarySearch(matrix, target, i, false);
+        if (verticalFound || horizontalFound) {
+            return true;
+        }
+    }
+
+    return false; 
+}
+```
+
+*   Time complexity : $\mathcal{O}(\log(n!))$
+
+*   Space complexity : $\mathcal{O}(1)$
+
+    Because our binary search implementation does not literally slice out copies of rows and columns from `matrix`, we can avoid allocating greater-than-constant memory.
