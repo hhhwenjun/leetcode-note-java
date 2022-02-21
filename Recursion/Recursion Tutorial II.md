@@ -507,3 +507,59 @@ public boolean searchMatrix(int[][] matrix, int target) {
 *   Space complexity : $\mathcal{O}(1)$
 
     Because our binary search implementation does not literally slice out copies of rows and columns from `matrix`, we can avoid allocating greater-than-constant memory.
+
+## Quick Sort
+
+Following the pseudocode template of the divide-and-conquer algorithm, as we presented before, the quick sort algorithm can be implemented in three steps, namely dividing the problem, solving the subproblems, and combining the results of subproblems.
+
+*   First, it selects a value from the list, which serves as a ***pivot*** value to divide the list into two sublists. One sublist contains all the values that are less than the pivot value, while the other sublist contains the values that are greater than or equal to the pivot value. This process is also called ***partitioning\***. The strategy of choosing a pivot value can vary. Typically, one can choose the first element in the list as the pivot, or randomly pick an element from the list.
+
+*   After the partitioning process, the original list is then reduced into two smaller sublists. We then ***recursively*** sort the two sublists.
+
+    *   Either when the input list is empty or the empty list contains only a single element. In either case, the input list can be considered as sorted already.
+
+*   After the partitioning process, we are sure that all elements in one sublist are less or equal than any element in another sublist. Therefore, we can simply ***concatenate*** the two sorted sublists that we obtain in step [2] to obtain the final sorted list. 
+
+*   **Sample Implementation**
+
+    ```java
+    public class Solution {
+    
+      public void quickSort(int [] lst) {
+       /* Sorts an array in the ascending order in O(n log n) time */
+        int n = lst.length;
+        qSort(lst, 0, n - 1);
+      }
+    
+      private void qSort(int [] lst, int lo, int hi) {
+        if (lo < hi) {
+          int p = partition(lst, lo, hi);
+          qSort(lst, lo, p - 1);
+          qSort(lst, p + 1, hi);
+        }
+      }
+    
+      private int partition(int [] lst, int lo, int hi) {
+        /*
+          Picks the last element hi as a pivot
+          and returns the index of pivot value in the sorted array */
+        int pivot = lst[hi];
+        int i = lo;
+        for (int j = lo; j < hi; ++j) {
+          if (lst[j] < pivot) {
+            int tmp = lst[i];
+            lst[i] = lst[j];
+            lst[j] = tmp;
+            i++;
+          }
+        }
+        int tmp = lst[i];
+        lst[i] = lst[hi];
+        lst[hi] = tmp;
+        return i;
+      }
+    
+    }
+    ```
+
+    *   Depending on the pivot values, the time complexity of the quick sort algorithm can vary from $O\big(N \log_2{N}\big)$ in the best case and $O(N^2)$ in the worst case, with N as the length of the list.
