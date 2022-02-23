@@ -209,3 +209,176 @@ public void backtrack(int row, Set<Integer> diagonals, Set<Integer> antiDiagonal
 
     Extra memory used includes the 3 sets used to store board state, as well as the recursion call stack. All of this scales linearly with the number of queens. However, to keep the board state costs $O(N^2)$, since the board is of size `N * N`. Space used for the output does not count towards space complexity.
 
+## Backtracking Template
+
+```python
+def backtrack(candidate):
+    if find_solution(candidate):
+        output(candidate)
+        return
+    
+    # iterate all possible candidates.
+    for next_candidate in list_of_candidates:
+        if is_valid(next_candidate):
+            # try this partial candidate solution
+            place(next_candidate)
+            # given the candidate, explore further.
+            backtrack(next_candidate)
+            # backtrack
+            remove(next_candidate)
+```
+
+*   At the first level, the function is implemented as recursion. At each occurrence of recursion, the function is one step further to the final solution. 
+*   As the second level, within the recursion, we have an iteration that allows us to explore all the candidates that are of the same progress to the final solution.
+*   Unlike brute-force search, in backtracking algorithms, we are often able to determine if a partial solution candidate is worth exploring further.
+
+### Robot Room Cleaner(Example)
+
+*   Given a room that is represented as a grid of cells, where each cell contains a value that indicates whether it is an obstacle or not, we are asked to clean the room with a robot cleaner which can turn in four directions and move one step at a time
+
+<img src="https://assets.leetcode.com/uploads/2019/04/06/robot_room_cleaner.png" alt="img" style="zoom: 50%;" />
+
+*   Implementation
+    *   One can model each step of the robot as a recursive function (*i.e.* `backtrack()`).
+    *   At each step, technically the robot would have four candidates of direction to explore, *e.g.* the robot located at the coordinate of `(0, 0)`. Since not each direction is available though, one should check if the cell in the given direction is an obstacle or it has been cleaned before, *i.e.* `is_valid(candidate)`. Another benefit of the check is that it would greatly reduce the number of possible paths that one needs to explore.
+    *   Once the robot decides to explore the cell in a certain direction, the robot should mark its decision (*i.e.* `place(candidate)`). More importantly, later the robot should be able to revert the previous decision (*i.e.* `remove(candidate)`), by going back to the cell and restoring its original direction.
+    *   The robot conducts the cleaning step by step, in the form of recursion of the `backtrack()` function. The backtracking would be triggered whenever the robot reaches a point that it is surrounded either by the obstacles (*e.g.* cell at row `1` and column `-3`) or the cleaned cells. At the end of the backtracking, the robot would get back to its starting point, and each cell in the grid would be traversed at least once. As a result, the room is cleaned at the end.
+
+### Sudoku Solver(Example)
+
+*   Sudoku is a popular game that many of you are familiar with. The main idea of the game is to fill a grid with only the numbers from 1 to 9 while ensuring that each row and each column as well as each sub-grid of 9 elements does not contain duplicate numbers.
+*   Implementation
+    *   Given a grid with some pre-filled numbers, the task is to fill the empty cells with the numbers that meet the constraint of the Sudoku game. We could model each step to fill an empty cell as a recursion function (*i.e.* our famous `backtrack()` function).
+    *   At each step, technically we have 9 candidates at hand to fill the empty cell. Yet, we could filter out the candidates by examining if they meet the rules of the Sudoku game, (*i.e.* `is_valid(candidate)`).
+    *   Then, among all the suitable candidates, we can try out one by one by filling the cell (i.e. `place(candidate)`). Later we can revert our decision (*i.e.* `remove(candidate)`) so that we could try out the other candidates.
+    *   The solver would carry on one step after another, in the form of recursion by the `backtrack` function. The backtracking would be triggered at the points where either the solver cannot find any suitable candidate (as shown in the above figure), or the solver finds a solution to the problem. At the end of the backtracking, we would enumerate all the possible solutions to the Sudoku game. 
+
+## Robot Room Cleaner(Hard #489)
+
+**Question**: You are controlling a robot that is located somewhere in a room. The room is modeled as an `m x n` binary grid where `0` represents a wall and `1` represents an empty slot.
+
+The robot starts at an unknown location in the room that is guaranteed to be empty, and you do not have access to the grid, but you can move the robot using the given API `Robot`.
+
+You are tasked to use the robot to clean the entire room (i.e., clean every empty cell in the room). The robot with the four given APIs can move forward, turn left, or turn right. Each turn is `90` degrees.
+
+When the robot tries to move into a wall cell, its bumper sensor detects the obstacle, and it stays on the current cell.
+
+Design an algorithm to clean the entire room using the following APIs:
+
+```
+interface Robot {
+  // returns true if next cell is open and robot moves into the cell.
+  // returns false if next cell is obstacle and robot stays on the current cell.
+  boolean move();
+
+  // Robot will stay on the same cell after calling turnLeft/turnRight.
+  // Each turn will be 90 degrees.
+  void turnLeft();
+  void turnRight();
+
+  // Clean the current cell.
+  void clean();
+}
+```
+
+**Note** that the initial direction of the robot will be facing up. You can assume all four edges of the grid are all surrounded by a wall.
+
+**Custom testing:**
+
+The input is only given to initialize the room and the robot's position internally. You must solve this problem "blindfolded". In other words, you must control the robot using only the four mentioned APIs without knowing the room layout and the initial robot's position.
+
+ 
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2021/07/17/lc-grid.jpg)
+
+```
+Input: room = [[1,1,1,1,1,0,1,1],[1,1,1,1,1,0,1,1],[1,0,1,1,1,1,1,1],[0,0,0,1,0,0,0,0],[1,1,1,1,1,1,1,1]], row = 1, col = 3
+Output: Robot cleaned all rooms.
+Explanation: All grids in the room are marked by either 0 or 1.
+0 means the cell is blocked, while 1 means the cell is accessible.
+The robot initially starts at the position of row=1, col=3.
+From the top left corner, its position is one row below and three columns right.
+```
+
+**Example 2:**
+
+```
+Input: room = [[1]], row = 0, col = 0
+Output: Robot cleaned all rooms.
+```
+
+**Constraints:**
+
+-   `m == room.length`
+-   `n == room[i].length`
+-   `1 <= m <= 100`
+-   `1 <= n <= 200`
+-   `room[i][j]` is either `0` or `1`.
+-   `0 <= row < m`
+-   `0 <= col < n`
+-   `room[row][col] == 1`
+-   All the empty cells can be visited from the starting position.
+
+### Standard Solution
+
+#### Solution #1 Spiral Backtracking
+
+*   Go forward, cleaning and marking all the cells on the way as visited. 
+*   At the obstacle *turn right*, again go forward, *etc*. Always *turn right* at the obstacles and then go forward. Consider already visited cells as virtual obstacles.
+*   **Algorithm**: Time to write down the algorithm for the backtrack function `backtrack(cell = (0, 0), direction = 0)`.
+    *   Mark the cell as visited and clean it up.
+    *   Explore `4` directions: `up`, `right`, `down`, and `left` (the order is important since the idea is always to turn right) :
+        -   Check the next cell in the chosen direction:
+            -   If it's not visited yet and there are no obstacles:
+                -   Move forward.
+                -   Explore next cells `backtrack(new_cell, new_direction)`.
+                -   Backtrack, *i.e.* go back to the previous cell.
+            -   Turn right because now there is an obstacle (or a virtual obstacle) just in front.
+
+![bla](https://leetcode.com/problems/robot-room-cleaner/Figures/489/489_implementation.png)
+
+```java
+// going clockwise : 0: 'up', 1: 'right', 2: 'down', 3: 'left'
+  int[][] directions = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
+  Set<Pair<Integer, Integer>> visited = new HashSet();
+  Robot robot;
+
+  public void goBack() {
+    robot.turnRight();
+    robot.turnRight();
+    robot.move();
+    robot.turnRight();
+    robot.turnRight();
+  }
+
+  public void backtrack(int row, int col, int d) {
+    visited.add(new Pair(row, col));
+    robot.clean();
+    // going clockwise : 0: 'up', 1: 'right', 2: 'down', 3: 'left'
+    for (int i = 0; i < 4; ++i) {
+      int newD = (d + i) % 4;
+      int newRow = row + directions[newD][0];
+      int newCol = col + directions[newD][1];
+
+      if (!visited.contains(new Pair(newRow, newCol)) && robot.move()) {
+        backtrack(newRow, newCol, newD);
+        goBack();
+      }
+      // turn the robot following chosen direction : clockwise
+      robot.turnRight();
+    }
+  }
+
+  public void cleanRoom(Robot robot) {
+    this.robot = robot;
+    backtrack(0, 0, 0);
+  }
+```
+
+-   Time complexity: $\mathcal{O}(N - M)$, where $N$ is a number of cells in the room and $M$ is a number of obstacles.
+    -   We visit each non-obstacle cell once and only once.
+    -   At each visit, we will check 4 directions around the cell. Therefore, the total number of operations would be $4 \cdot (N-M)$.
+-   Space complexity: $\mathcal{O}(N - M)$, where N is the number of cells in the room and M is the number of obstacles.
+    -   We employed a hashtable to keep track of whether a non-obstacle cell is visited or not.
