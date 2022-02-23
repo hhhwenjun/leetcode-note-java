@@ -382,3 +382,155 @@ Output: Robot cleaned all rooms.
     -   At each visit, we will check 4 directions around the cell. Therefore, the total number of operations would be $4 \cdot (N-M)$.
 -   Space complexity: $\mathcal{O}(N - M)$, where N is the number of cells in the room and M is the number of obstacles.
     -   We employed a hashtable to keep track of whether a non-obstacle cell is visited or not.
+
+## Sudoku Solver(Hard #37)
+
+**Question**: Write a program to solve a Sudoku puzzle by filling the empty cells.
+
+A sudoku solution must satisfy **all of the following rules**:
+
+1.  Each of the digits `1-9` must occur exactly once in each row.
+2.  Each of the digits `1-9` must occur exactly once in each column.
+3.  Each of the digits `1-9` must occur exactly once in each of the 9 `3x3` sub-boxes of the grid.
+
+The `'.'` character indicates empty cells.
+
+**Example 1:**
+
+![img](https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Sudoku-by-L2G-20050714.svg/250px-Sudoku-by-L2G-20050714.svg.png)
+
+```
+Input: board = [["5","3",".",".","7",".",".",".","."],["6",".",".","1","9","5",".",".","."],[".","9","8",".",".",".",".","6","."],["8",".",".",".","6",".",".",".","3"],["4",".",".","8",".","3",".",".","1"],["7",".",".",".","2",".",".",".","6"],[".","6",".",".",".",".","2","8","."],[".",".",".","4","1","9",".",".","5"],[".",".",".",".","8",".",".","7","9"]]
+Output: [["5","3","4","6","7","8","9","1","2"],["6","7","2","1","9","5","3","4","8"],["1","9","8","3","4","2","5","6","7"],["8","5","9","7","6","1","4","2","3"],["4","2","6","8","5","3","7","9","1"],["7","1","3","9","2","4","8","5","6"],["9","6","1","5","3","7","2","8","4"],["2","8","7","4","1","9","6","3","5"],["3","4","5","2","8","6","1","7","9"]]
+Explanation: The input board is shown above and the only valid solution is shown below:
+```
+
+**Constraints:**
+
+-   `board.length == 9`
+-   `board[i].length == 9`
+-   `board[i][j]` is a digit or `'.'`.
+-   It is **guaranteed** that the input board has only one solution.
+
+### Standard Solution
+
+#### Solution #1 Backtracking
+
+*   Hard problems usually contain multiple methods to solve one problem
+    *   How to analyze the problem and break down the problem into sub-problems(divide and conquer)
+    *   How to organize your need of the methods, and arrange their relationship
+    *   List multiple points of the problem and separate them into each method
+        *   What are the methods, each method for one sub-problem
+        *   What fields you may need
+        *   What programming concepts and structures are applicable
+*   Enumerate sub boxes: `box_index = (row / 3) * 3 + column / 3`
+
+<img src="https://leetcode.com/problems/sudoku-solver/Figures/36/36_boxes_2.png" alt="img" style="zoom: 33%;" />
+
+*   **Algorithm**: Now everything is ready to write down the backtrack function `backtrack(row = 0, col = 0)`.
+    *   Start from the upper left cell `row = 0, col = 0`. Proceed till the first free cell.
+    *   Iterate over the numbers from `1` to `9` and try to put each number `d` in the `(row, col)` cell.
+        -   If number `d` is not yet in the current row, column, and box :
+            -   Place the `d` in a `(row, col)` cell.
+            -   Write down that `d` is now present in the current row, column and box.
+            -   If we're on the last cell `row == 8, col == 8`:
+                -   That means that we've solved the sudoku.
+            -   Else
+                -   Proceed to place further numbers.
+            -   Backtrack if the solution is not yet here: remove the last number from the `(row, col)` cell.
+
+```java
+// box size
+int n = 3;
+// row size
+int N = n * n;
+
+int[][] rows = new int[N][N + 1];
+int[][] columns = new int[N][N + 1];
+int[][] boxes = new int[N][N + 1];
+
+char[][] board;
+boolean sudokuSolved = false;
+
+public boolean couldPlace(int d, int row, int col){
+    // check if one could place a number d in (row, col) cell
+    int idx = (row / n) * n + col / n; // box index
+    return rows[row][d] + columns[col][d] + boxes[idx][d] == 0; // no other location place this num
+}
+
+public void placeNumber(int d, int row, int col){
+    // place a number d in (row, col) cell
+    int idx = (row / n) * n + col / n;
+    
+    // place number, change flag to 1
+    rows[row][d]++;
+    columns[col][d]++;
+    boxes[idx][d]++;
+    board[row][col] = (char)(d + '0');
+}
+
+public void removeNumber(int d, int row, int col){
+    // remove a number which did not lead to a solution
+    int idx = (row / n) * n + col / n;
+    rows[row][d]--;
+    columns[col][d]--;
+    boxes[idx][d]--;
+    board[row][col] = '.';
+}
+
+// determine the end of operations, determine where to move next
+public void placeNextNumbers(int row, int col){
+    /*
+    * call backtrack function in recursion to continue to place numbers
+    * till the moment we have a solution
+    */
+    // if we're in the last cell
+    // that means we have the solution
+    if ((col == N - 1) && (row == N - 1)){
+        sudokuSolved = true;
+    }
+    else {
+        // if we are in the end of row, go to next row
+        if (col == N - 1) backtrack(row + 1, 0);
+        // go to the next column
+        else backtrack(row, col + 1);
+    }
+}
+
+public void backtrack(int row, int col){
+    // if the cell is empty
+    if (board[row][col] == '.'){
+        // iterate over all numbers from 1 to 9
+        for (int d = 1; d < 10; d++){
+            if (couldPlace(d, row, col)){
+                placeNumber(d, row, col);
+                placeNextNumbers(row, col);
+                // if sodoku is solved, there is no need to backtrack
+                // since the single unique solution is promised
+                if (!sudokuSolved) removeNumber(d, row, col);
+            }
+        }
+    }
+    else placeNextNumbers(row, col);
+}
+
+public void solveSudoku(char[][] board){
+    this.board = board;
+    // init rows, columns and boxes
+    for (int i = 0; i < N; i++){
+        for (int j = 0; j < N; j++){
+            char num = board[i][j];
+            if (num != '.'){
+                int d = Character.getNumericValue(num);
+                // record the existing number in the 2D arrays records
+                placeNumber(d, i, j);
+            }
+        }
+    }
+    backtrack(0,0);// solve from the first value
+}
+```
+
+*   Time complexity is constant here since the board size is fixed and there is no N-parameter to measure. Though let's discuss the number of operations needed : $(9!)^9$. Let's consider one row, i.e. not more than 99 cells to fill. There are not more than 9 possibilities for the first number to put, not more than $9 \times 8$ for the second one, not more than $9 \times 8 \times 7$ for the third one, etc. In total that results in not more than $9!$ possibilities for just one row, that means not more than $(9!)^9$ operations in total. Let's compare:
+    -   and $(9!)^9 $for the standard backtracking
+*   Space complexity: the board size is fixed, and the space is used to store board, rows, columns, and boxes structures, each containing `81` elements.
