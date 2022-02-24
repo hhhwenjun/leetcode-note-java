@@ -140,7 +140,7 @@ Output: [["Q"]]
 
 *   Same as the last problem, but using a 2D array to make up the solution
 *   Add one more helper method to transfer the 2D array to a list
-*   In the backtracking method, modify the character in a 2D array to 'Q'
+*   In the backtracking method, modify the character in a 2D array to 'Q.'
     *   When do the backtrack, change 'Q' back to the dot
 
 ```java
@@ -201,13 +201,13 @@ public void backtrack(int row, Set<Integer> diagonals, Set<Integer> antiDiagonal
 
 -   Time complexity: $O(N!)$
 
-    Unlike the brute force approach, we will only place queens on squares that aren't under attack. For the first queen, we have N options. For the next queen, we won't attempt to place it in the same column as the first queen, and there must be at least one square attacked diagonally by the first queen as well. Thus, the maximum number of squares we can consider for the second queen is N - 2. For the third queen, we won't attempt to place it in 2 columns already occupied by the first 2 queens, and there must be at least two squares attacked diagonally from the first 2 queens. Thus, the maximum number of squares we can consider for the third queen is N - 4. This pattern continues, resulting in an approximate time complexity of $N!$.
+    Unlike the brute force approach, we will only place queens on squares that aren't under attack. For the first queen, we have N options. For the next queen, we won't attempt to place it in the same column as the first queen, and there must be at least one square attacked diagonally by the first queen as well. Thus, the maximum number of squares we can consider for the second queen is N - 2. For the third queen, we won't attempt to place it in 2 columns already occupied by the first two queens, and there must be at least two squares attacked diagonally from the first two queens. Thus, the maximum number of squares we can consider for the third queen is N - 4. This pattern continues, resulting in an approximate time complexity of $N!$.
 
-    While it costs $O(N^2)$ to build each valid solution, the amount of valid solutions S(N) does not grow nearly as fast as N!, so $O(N! + S(N) * N^2) = O(N!)$.
+    While it costs $O(N^2)$ to build each valid solution, the amount of good solutions S(N) does not grow nearly as fast as N!, so $O(N! + S(N) * N^2) = O(N!)$.
 
 -   Space complexity: $O(N^2)$
 
-    Extra memory used includes the 3 sets used to store board state, as well as the recursion call stack. All of this scales linearly with the number of queens. However, to keep the board state costs $O(N^2)$, since the board is of size `N * N`. Space used for the output does not count towards space complexity.
+    Extra memory used includes the 3 sets used to store board state and the recursion call stack. All of this scales linearly with the number of queens. However, to keep the board state costs. $O(N^2)$, since the board is of size `N * N`. Space used for the output does not count towards space complexity.
 
 ## Backtracking Template
 
@@ -228,34 +228,34 @@ def backtrack(candidate):
             remove(next_candidate)
 ```
 
-*   At the first level, the function is implemented as recursion. At each occurrence of recursion, the function is one step further to the final solution. 
+*   At the first level, the function is implemented as recursion. At each occurrence of recursion, the process is one step further to the final solution. 
 *   As the second level, within the recursion, we have an iteration that allows us to explore all the candidates that are of the same progress to the final solution.
-*   Unlike brute-force search, in backtracking algorithms, we are often able to determine if a partial solution candidate is worth exploring further.
+*   Unlike brute-force search, in backtracking algorithms, we can often determine if a partial solution candidate is worth exploring further.
 
 ### Robot Room Cleaner(Example)
 
-*   Given a room that is represented as a grid of cells, where each cell contains a value that indicates whether it is an obstacle or not, we are asked to clean the room with a robot cleaner which can turn in four directions and move one step at a time
+*   Given a room represented as a grid of cells, where each cell contains a value that indicates whether it is an obstacle or not, we are asked to clean the room with a robot cleaner that can turn in four directions and move one step at a time.
 
-<img src="https://assets.leetcode.com/uploads/2019/04/06/robot_room_cleaner.png" alt="img" style="zoom: 50%;" />
+.<img src="https://assets.leetcode.com/uploads/2019/04/06/robot_room_cleaner.png" alt="img" style="zoom: 50%;" />
 
 *   Implementation
-    *   One can model each step of the robot as a recursive function (*i.e.* `backtrack()`).
-    *   At each step, technically the robot would have four candidates of direction to explore, *e.g.* the robot located at the coordinate of `(0, 0)`. Since not each direction is available though, one should check if the cell in the given direction is an obstacle or it has been cleaned before, *i.e.* `is_valid(candidate)`. Another benefit of the check is that it would greatly reduce the number of possible paths that one needs to explore.
-    *   Once the robot decides to explore the cell in a certain direction, the robot should mark its decision (*i.e.* `place(candidate)`). More importantly, later the robot should be able to revert the previous decision (*i.e.* `remove(candidate)`), by going back to the cell and restoring its original direction.
-    *   The robot conducts the cleaning step by step, in the form of recursion of the `backtrack()` function. The backtracking would be triggered whenever the robot reaches a point that it is surrounded either by the obstacles (*e.g.* cell at row `1` and column `-3`) or the cleaned cells. At the end of the backtracking, the robot would get back to its starting point, and each cell in the grid would be traversed at least once. As a result, the room is cleaned at the end.
+    *   One can model each robot step as a recursive function (*i.e.,* `backtrack()`).
+    *   At each step, technically, the robot would have four candidates of direction to explore, *e.g.,* the robot located at the coordinate of `(0, 0)`. Since not each guide is available, one should check if the cell in the given order is an obstacle or has been cleaned before, *i.e.,* `is_valid(candidate)`. Another benefit of the check is that it would greatly reduce the number of possible paths that one needs to explore.
+    *   Once the robot decides to explore the cell in a certain direction, the robot should mark its decision (*i.e.,* `place(candidate)`). More importantly, later, the robot should revert the previous decision (*i.e.,* `remove(candidate)`) by returning to the cell and restoring its original direction.
+    *   The robot conducts the cleaning step by step in the recursion of the `backtrack()` function. The backtracking would be triggered whenever the robot reaches a point surrounded by either the obstacles (*e.g.*, cell at row `1` and column `-3`) or the cleaned cell. At the end of the backtracking, the robot would get back to its starting point, and each cell in the grid would be traversed at least once. As a result, the room is cleaned at the end.
 
 ### Sudoku Solver(Example)
 
-*   Sudoku is a popular game that many of you are familiar with. The main idea of the game is to fill a grid with only the numbers from 1 to 9 while ensuring that each row and each column as well as each sub-grid of 9 elements does not contain duplicate numbers.
+*   Sudoku is a popular game that many of you are familiar with. The game's main idea is to fill a grid with only the numbers from 1 to 9 while ensuring that each row, column, and sub-grid of 9 elements do not contain duplicate numbers.
 *   Implementation
-    *   Given a grid with some pre-filled numbers, the task is to fill the empty cells with the numbers that meet the constraint of the Sudoku game. We could model each step to fill an empty cell as a recursion function (*i.e.* our famous `backtrack()` function).
-    *   At each step, technically we have 9 candidates at hand to fill the empty cell. Yet, we could filter out the candidates by examining if they meet the rules of the Sudoku game, (*i.e.* `is_valid(candidate)`).
-    *   Then, among all the suitable candidates, we can try out one by one by filling the cell (i.e. `place(candidate)`). Later we can revert our decision (*i.e.* `remove(candidate)`) so that we could try out the other candidates.
+    *   Given a grid with some pre-filled numbers, the task is to fill the empty cells with the numbers that meet the constraint of the Sudoku game. We could model each step to serve an open call open-cell as a recursion function (*i.e.,* our famous `backtrack()` function).
+    *   Technically, we have nine candidates at hand to fill the empty cell at each step. Technically, we have nine candidates at hand to fill the open cell at each stage. Yet, we could filter out the candidates by examining if they meet the rules of the Sudoku game (*i.e.* `is_valid(candidate)`).
+    *   Then, among all the suitable candidates, we can try out one by one by filling the cell (i.e. `place(candidate)`). Later we can revert our decision (*i.e.,* `remove(candidate)`) so that we could try out the other candidates.
     *   The solver would carry on one step after another, in the form of recursion by the `backtrack` function. The backtracking would be triggered at the points where either the solver cannot find any suitable candidate (as shown in the above figure), or the solver finds a solution to the problem. At the end of the backtracking, we would enumerate all the possible solutions to the Sudoku game. 
 
 ## Robot Room Cleaner(Hard #489)
 
-**Question**: You are controlling a robot that is located somewhere in a room. The room is modeled as an `m x n` binary grid where `0` represents a wall and `1` represents an empty slot.
+**Question**: You are controlling a robot located somewhere in a room. The room is modeled as an `m x n` binary grid where `0` represents a wall, and `1` illustrates an empty slot.
 
 The robot starts at an unknown location in the room that is guaranteed to be empty, and you do not have access to the grid, but you can move the robot using the given API `Robot`.
 
@@ -281,7 +281,7 @@ interface Robot {
 }
 ```
 
-**Note** that the initial direction of the robot will be facing up. You can assume all four edges of the grid are all surrounded by a wall.
+**Note** that the initial direction of the robot will be facing up. You can assume all four edges of the grid are surrounded by a wall.
 
 **Custom testing:**
 
@@ -531,6 +531,78 @@ public void solveSudoku(char[][] board){
 }
 ```
 
-*   Time complexity is constant here since the board size is fixed and there is no N-parameter to measure. Though let's discuss the number of operations needed : $(9!)^9$. Let's consider one row, i.e. not more than 99 cells to fill. There are not more than 9 possibilities for the first number to put, not more than $9 \times 8$ for the second one, not more than $9 \times 8 \times 7$ for the third one, etc. In total that results in not more than $9!$ possibilities for just one row, that means not more than $(9!)^9$ operations in total. Let's compare:
+*   Time complexity is constant since the board size is fixed and there is no N-parameter to measure. Though let's discuss the number of operations needed : $(9!)^9$. Let's consider one row, i.e., not more than 99 cells to fill. There are not more than nineineineineineineine possibilities for the first number to put, not more than $9 \times 8$ for the second one, not more than $9 \times 8 \times 7$ for the third one, etc, In total , that results in not more than $9!$ possibilities for just one row that means not more than $(9!)^9$ operations in total. Let's compare:
     -   and $(9!)^9 $for the standard backtracking
 *   Space complexity: the board size is fixed, and the space is used to store board, rows, columns, and boxes structures, each containing `81` elements.
+
+## Combinations(Medium #77)
+
+**Question**: Given two integers `n` and `k`, return *all possible combinations of* `k` *numbers out of the range* `[1, n]`.
+
+You may return the answer in **any order**.
+
+**Example 1:**
+
+```
+Input: n = 4, k = 2
+Output:
+[
+  [2,4],
+  [3,4],
+  [2,3],
+  [1,2],
+  [1,3],
+  [1,4],
+]
+```
+
+**Example 2:**
+
+```
+Input: n = 1, k = 1
+Output: [[1]]
+```
+
+**Constraints:**
+
+-   `1 <= n <= 20`
+-   `1 <= k <= n`
+
+### My Solution
+
+*   Backtracking: find a solution, remove the key, backtrack
+
+```java
+private List<List<Integer>> comb;
+private int n;
+private int k;
+
+public List<List<Integer>> combine(int n, int k) {
+    this.n = n;
+    this.k = k;
+    comb = new LinkedList<>();
+    // put a potential solution into the recursion, empty solution here
+    backtrack(1, new LinkedList<Integer>());
+    return comb;
+}
+
+public void backtrack(int start, LinkedList<Integer> solution){
+    // base case
+    if (solution.size() == k){
+        comb.add(new LinkedList(solution));
+    }
+    for (int i = start; i < n + 1; i++){
+        solution.add(i);
+        backtrack(i + 1, solution);
+        solution.removeLast();
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Backtracking
+
+*   Same as my solution
+*   Time complexity : $\mathcal{O}(k C_N^k)$, where $C_N^k = \frac{N!}{(N - k)! k!}$ is a number of combinations to build. `append / pop (add / removeLast)` operations are constant-time ones and the only consuming part here is to append the built combination of length k to the output.
+*   Space complexity: $\mathcal{O}(C_N^k)$ to keep all the combinations for an output.
