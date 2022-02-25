@@ -563,3 +563,240 @@ Following the pseudocode template of the divide-and-conquer algorithm, as we pre
     ```
 
     *   Depending on the pivot values, the time complexity of the quick sort algorithm can vary from $O\big(N \log_2{N}\big)$ in the best case and $O(N^2)$ in the worst case, with N as the length of the list.
+
+## Unfold Recursion
+
+*   We illustrate how to convert a recursion algorithm to a non-recursion one, *i.e.* ***unfold*** the recursion.
+
+*   The recursion often incurs additional memory consumption on the system stack, which is a limited resource for each program. If not used properly, the recursion algorithm could lead to StackOverflow.
+
+*   Along with the additional memory consumption, the recursion could impose at least the additional cost of function calls, and in a worse case duplicate calculation.
+
+*   **Example**: 
+
+    ```
+    Given two binary trees, write a function to check if they are the same or not.
+    
+    Two binary trees are considered the same if they are structurally identical and the nodes have the same value.
+    ```
+
+    ```java
+    // recursive solution
+    /**
+     * Definition for a binary tree node.
+     * public class TreeNode {
+     *     int val;
+     *     TreeNode left;
+     *     TreeNode right;
+     *     TreeNode(int x) { val = x; }
+     * }
+     */
+    class Solution {
+      public boolean isSameTree(TreeNode p, TreeNode q) {
+        // p and q are both null
+        if (p == null && q == null) return true;
+        // one of p and q is null
+        if (q == null || p == null) return false;
+        if (p.val != q.val) return false;
+        return isSameTree(p.right, q.right) &&
+                isSameTree(p.left, q.left);
+      }
+    }
+    ```
+
+    ```java
+    class Solution {
+      public boolean check(TreeNode p, TreeNode q) {
+        // p and q are null
+        if (p == null && q == null) return true;
+        // one of p and q is null
+        if (q == null || p == null) return false;
+        if (p.val != q.val) return false;
+        return true;
+      }
+    
+      public boolean isSameTree(TreeNode p, TreeNode q) {
+        if (p == null && q == null) return true;
+        if (!check(p, q)) return false;
+        // init deques
+        ArrayDeque<TreeNode> deqP = new ArrayDeque<TreeNode>();
+        ArrayDeque<TreeNode> deqQ = new ArrayDeque<TreeNode>();
+        deqP.addLast(p);
+        deqQ.addLast(q);
+    
+        while (!deqP.isEmpty()) {
+          p = deqP.removeFirst();
+          q = deqQ.removeFirst();
+    
+          if (!check(p, q)) return false;
+          if (p != null) {
+            // in Java nulls are not allowed in Deque
+            if (!check(p.left, q.left)) return false;
+            if (p.left != null) {
+              deqP.addLast(p.left);
+              deqQ.addLast(q.left);
+            }
+            if (!check(p.right, q.right)) return false;
+            if (p.right != null) {
+              deqP.addLast(p.right);
+              deqQ.addLast(q.right);
+            }
+          }
+        }
+        return true;
+      }
+    }
+    ```
+
+    *   To convert a recursion approach to an iteration one, we could perform the following two steps:
+        *   We use a stack or queue data structure within the function, to replace the role of the system call stack. At each occurrence of recursion, we simply push the parameters as a new element into the data structure that we created, instead of invoking a recursion.
+        *   In addition, we create a loop over the data structure that we created before. The chain invocation of recursion would then be replaced with the iteration within the loop.
+
+## Same Tree(Easy #100)
+
+**Question**: Given the roots of two binary trees `p` and `q`, write a function to check if they are the same or not.
+
+Two binary trees are considered the same if they are structurally identical, and the nodes have the same value.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2020/12/20/ex1.jpg)
+
+```
+Input: p = [1,2,3], q = [1,2,3]
+Output: true
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2020/12/20/ex2.jpg)
+
+```
+Input: p = [1,2], q = [1,null,2]
+Output: false
+```
+
+**Example 3:**
+
+![img](https://assets.leetcode.com/uploads/2020/12/20/ex3.jpg)
+
+```
+Input: p = [1,2,1], q = [1,1,2]
+Output: false
+```
+
+**Constraints:**
+
+-   The number of nodes in both trees is in the range `[0, 100]`.
+-   `-104 <= Node.val <= 104`
+
+### My Solution
+
+```java
+public boolean isSameTree(TreeNode p, TreeNode q){
+    if (p == null && q == null){
+        return true;
+    }
+    if (p == null || q == null){
+        return false;
+    }
+    return q.val == p.val && 
+        isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
+}
+```
+
+*   Same as the above unfold recursion content.
+
+### Standard Solution
+
+#### Solution #1 Recursion
+
+*   Same as my solution
+*   Time complexity: $\mathcal{O}(N)$, where N is the number of nodes in the tree since one visits each node exactly once.
+*   Space complexity: $\mathcal{O}(\log(N))$ in the best case of the completely balanced tree and $\mathcal{O}(N)$ in the worst case of the completely unbalanced tree, to keep a recursion stack.
+
+#### Solution #2 Iteration
+
+*   Same as above content
+*   Time and space complexity same as the above solution.
+
+## Generate Parentheses(Medium #22)
+
+**Question**: Given `n` pairs of parentheses, write a function to *generate all combinations of well-formed parentheses*.
+
+**Example 1:**
+
+```
+Input: n = 3
+Output: ["((()))","(()())","(())()","()(())","()()()"]
+```
+
+**Example 2:**
+
+```
+Input: n = 1
+Output: ["()"]
+```
+
+**Constraints:**
+
+-   `1 <= n <= 8`
+
+### My Solution
+
+*   Backtracking is suitable for the case
+
+```java
+private List<String> res;
+private int n;
+public List<String> generateParenthesis(int n){
+    this.n = n;
+    res = new ArrayList<String>();
+    backtrack(new StringBuilder(), 0, 0);
+    return res;
+}
+public void backtrack(StringBuilder string, int open, int close){
+    if (start == n * 2){// reach the certain number
+        res.add(string.toString());
+    }
+    if (open < n){
+        string.append("(");
+        backtrack(string, open+1, close);
+        string.deleteCharAt(string.length() - 1);
+    }
+    if (close < open){
+        string.append(")");
+        backtrack(string, open, close+1);
+        string.deleteCharAt(string.length() - 1);
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Backtracking
+
+*   Same as my solution
+*   Time Complexity : $O(\dfrac{4^n}{\sqrt{n}})$. Each valid sequence has at most `n` steps during the backtracking procedure.
+*   Space Complexity : $O(\dfrac{4^n}{\sqrt{n}})$ as described above, and using $O(n)$ space to store the sequence.
+
+#### Solution #2 Closure Number
+
+*   For each closure number `c`, we know the starting and ending brackets must be at index `0` and `2*c + 1`. Then, the `2*c` elements between must be a valid sequence, plus the rest of the elements must be a valid sequence.
+
+```java
+public List<String> generateParenthesis(int n) {
+    List<String> ans = new ArrayList();
+    if (n == 0) {
+        ans.add("");
+    } else {
+        for (int c = 0; c < n; ++c)
+            for (String left: generateParenthesis(c))
+                for (String right: generateParenthesis(n-1-c))
+                    ans.add("(" + left + ")" + right);
+    }
+    return ans;
+}
+```
+
+*   Time and space complexity is same as last solution.
