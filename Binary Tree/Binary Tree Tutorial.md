@@ -508,6 +508,29 @@ public List<List<Integer>> levelOrder(TreeNode root) {
 }
 ```
 
+```java
+// second attempt
+public List<List<Integer>> levelOrder(TreeNode root) {
+    List<List<Integer>> res = new ArrayList<>();
+    bfs(root, res, 0);
+    return res;
+}
+
+public void bfs(TreeNode root, List<List<Integer>> res, int level){
+    if (root == null){
+        return;
+    }
+    if (res.size() == level){
+        res.add(new ArrayList<Integer>());
+    }
+    res.get(level).add(root.val);
+    bfs(root.left, res, level + 1);
+    bfs(root.right, res, level + 1);
+}
+```
+
+
+
 ### Standard Solution
 
 #### Solution #1 Iteration

@@ -111,3 +111,87 @@ class Solution {
 
 *   Time complexity : $\mathcal{O}(\sum_{k = 1}^{N}{P(N, k)})$ = $\frac{N!}{(N - k)!} = N (N - 1) ... (N - k + 1)$ is so-called [*k-permutations_of_n*, or *partial permutation*](https://en.wikipedia.org/wiki/Permutation#k-permutations_of_n).
 *   Space complexity : $\mathcal{O}(N!)$ since one has to keep `N!` solutions.
+
+## Letter Combinations of a Phone Number(Medium #17)
+
+**Question**: Given a string containing digits from `2-9` inclusive, return all possible letter combinations that the number could represent. Return the answer in **any order**.
+
+A mapping of digits to letters (just like on the telephone buttons) is given below. Note that one does not map to any letters.
+
+![img](https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Telephone-keypad2.svg/200px-Telephone-keypad2.svg.png)
+
+**Example 1:**
+
+```
+Input: digits = "23"
+Output: ["ad","ae","af","bd","be","bf","cd","ce","cf"]
+```
+
+**Example 2:**
+
+```
+Input: digits = ""
+Output: []
+```
+
+**Example 3:**
+
+```
+Input: digits = "2"
+Output: ["a","b","c"]
+```
+
+**Constraints:**
+
+-   `0 <= digits.length <= 4`
+-   `digits[i]` is a digit in the range `['2', '9']`.
+
+### My Solution
+
+*   The backtracking solution first stores the hashmap of the character and corresponding letters in the string.
+*   The base case is a solution that has the same length as the given string length
+*   For each loop through the letters in the stored number, then add 1 to the index and go to the next number.
+*   Delete the last character in the solution
+
+```java
+private List<String> res = new LinkedList<>();
+public Map<Character, String> getMap(){
+    Map<Character, String> map = Map.of('2', "abc", '3', "def",
+                                       '4', "ghi", '5', "jkl", '6', "mno",
+                                       '7', "pqrs", '8', "tuv", '9', "wxyz");
+    return map;
+}
+public List<String> letterCombinations(String digits) {
+    if (digits.length() == 0) return res;
+    Map<Character, String> map = getMap();
+    char[] chars = digits.toCharArray();
+    combination(map, 0, chars, new StringBuilder());
+    return res;
+}
+public void combination(Map<Character, String> map, int idx, char[] chars, StringBuilder solution){
+    // base case
+    if (solution.length() == chars.length){
+        res.add(solution.toString());
+        return;
+    }
+    String letters = map.get(chars[idx]);
+    for (char ch :letters.toCharArray()){
+        // add the character to the solution
+        solution.append(ch);
+        // move to the next digit
+        combination(map, idx + 1, chars, solution);
+        // backtrack and remove the previous letter
+        solution.deleteCharAt(solution.length() - 1);
+    }
+}
+```
+
+*   Time complexity: $O(4^N \cdot N)$, where N is the length of `digits`. Note that 4 in this expression is referring to the maximum *value* length in the *hash map*, and ***not*** to the length of the *input*.
+
+    The worst-case is where the input consists of only 7s and 9s. In that case, we have to explore 4 additional paths for every extra digit. Then, for each combination, it costs up to N to build the combination. This problem can be generalized to a scenario where numbers correspond with up to M digits, in which case the time complexity would be $O(M^N \cdot N)$. For the problem constraints, we're given, $M = 4,$ because digits 7 and 9 have 4 letters each.
+
+*   Space complexity: $O(N)$, where N is the length of `digits`.
+
+    Not counting space used for the output, **the extra space we use relative to input size is the space occupied by the recursion call stack**. It will only go as deep as the number of digits in the input since whenever we reach that depth, we backtrack.
+
+    As the hash map does not grow as the inputs grow, it occupies $O(1)$ space.
