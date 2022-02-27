@@ -799,4 +799,118 @@ public List<String> generateParenthesis(int n) {
 }
 ```
 
-*   Time and space complexity is same as last solution.
+*   Time and space complexity is the same as the last solution.
+
+## Beyond Recursion
+
+*   A divide-and-conquer algorithm works by recursively breaking the problem down into two or more subproblems of the same or related type until these subproblems become simple enough to be solved directly. Then one combines the results of subproblems to form the final solution.
+
+    <img src="https://assets.leetcode.com/uploads/2019/04/15/divide_and_conquer.png" alt="img" style="zoom:33%;" />
+
+*   Backtracking is a general algorithm for finding all (or some) solutions to some computational problems (notably constraint satisfaction problems), which incrementally builds candidates to the solution and abandons a candidate ("backtracks") as soon as it determines that the candidate cannot leads to a valid solution.
+
+    <img src="https://assets.leetcode.com/uploads/2019/04/15/backtracking.png" alt="img" style="zoom:33%;" />
+
+*   Divide and Conquer vs. Backtracking
+    *   Often the case, the divide-and-conquer problem has a ***sole*** solution, while the backtracking problem has unknown number of solutions. 
+    *   Each step in the divide-and-conquer problem is ***indispensable*** to build the final solution, while many steps in backtracking problem might not be useful to build the solution, but serve as ***atttempts*** to search for the potential solutions.
+    *   When building the solution in the divide-and-conquer algorithm, we have a ***clear and predefined*** path, though there might be several different manners to build the path. While in the backtracking problems, one does not know in advance the ***exact path*** to the solution.
+
+## Convert Binary Search Tree to Sorted Doubly Linked List(Medium #426)
+
+**Question**: Convert a **Binary Search Tree** to a sorted **Circular Doubly-Linked List** in place.
+
+You can think of the left and right pointers as synonymous to the predecessor and successor pointers in a doubly-linked list. For a circular doubly linked list, the predecessor of the first element is the last element, and the successor of the last element is the first element.
+
+We want to do the transformation **in place**. After the transformation, the left pointer of the tree node should point to its predecessor, and the right pointer should point to its successor. You should return the pointer to the smallest element of the linked list.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2018/10/12/bstdlloriginalbst.png" alt="img" style="zoom: 50%;" />
+
+<img src="https://assets.leetcode.com/uploads/2018/10/12/bstdllreturndll.png" alt="img" style="zoom:50%;" />
+
+```
+Input: root = [4,2,5,1,3]
+Output: [1,2,3,4,5]
+
+Explanation: The figure below shows the transformed BST. The solid line indicates the successor relationship, while the dashed line means the predecessor relationship.
+```
+
+**Example 2:**
+
+```
+Input: root = [2,1,3]
+Output: [1,2,3]
+```
+
+**Constraints:**
+
+-   The number of nodes in the tree is in the range `[0, 2000]`.
+-   `-1000 <= Node.val <= 1000`
+-   All the values of the tree are **unique**.
+
+### Standard Solution
+
+#### Solution #1 Recursion
+
+*   Makes it an inorder traversal from BFS 
+
+*   Use recursion for linking the nodes
+
+*   Link the previous node with the current one, track the last node, and track the first node
+
+    <img src="https://leetcode.com/problems/convert-binary-search-tree-to-sorted-doubly-linked-list/Figures/426/process.png" alt="postorder" style="zoom:50%;" />
+
+*   **Algorithm**: 
+
+    *   Initiate the `first` and the `last` nodes as nulls.
+    *   Call the standard inorder recursion `helper(root)` :
+        -   If node is not null :
+            -   Call the recursion for the left subtree `helper(node.left)`.
+            -   If the `last` node is not null, link the `last` and the current `node` nodes.
+            -   Else initiate the `first` node.
+            -   Mark the current node as the last one : `last = node`.
+            -   Call the recursion for the right subtree `helper(node.right)`.
+    *   Link the first and the last nodes to close DLL ring and then return the `first` node.
+
+```java
+class Solution {
+  // the smallest (first) and the largest (last) nodes
+  Node first = null;
+  Node last = null;
+
+  public void helper(Node node) {
+    if (node != null) {
+      // left
+      helper(node.left);
+      // node 
+      if (last != null) {
+        // link the previous node (last)
+        // with the current one (node)
+        last.right = node;
+        node.left = last;
+      }
+      else {
+        // keep the smallest node
+        // to close DLL later on
+        first = node;
+      }
+      last = node;
+      // right
+      helper(node.right);
+    }
+  }
+  public Node treeToDoublyList(Node root) {
+    if (root == null) return null;
+    helper(root);
+    // close DLL
+    last.right = first;
+    first.left = last;
+    return first;
+  }
+}
+```
+
+*   Time complexity : $\mathcal{O}(N)$ since each node is processed exactly once.
+*   Space complexity : $\mathcal{O}(N)$. We have to keep a recursion stack of the size of the tree height, which is $\mathcal{O}(\log N)$ for the best case of completely balanced tree and $\mathcal{O}(N)$ for the worst case of completely unbalanced tree.
