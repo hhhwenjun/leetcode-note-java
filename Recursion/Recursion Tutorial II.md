@@ -913,4 +913,160 @@ class Solution {
 ```
 
 *   Time complexity : $\mathcal{O}(N)$ since each node is processed exactly once.
-*   Space complexity : $\mathcal{O}(N)$. We have to keep a recursion stack of the size of the tree height, which is $\mathcal{O}(\log N)$ for the best case of completely balanced tree and $\mathcal{O}(N)$ for the worst case of completely unbalanced tree.
+*   Space complexity : $\mathcal{O}(N)$. We have to keep a recursion stack of the size of the tree height, which is $\mathcal{O}(\log N)$ for the best case of the completely balanced tree and $\mathcal{O}(N)$ for the worst case of a completely unbalanced tree.
+
+## Largest Rectangle in Histogram(Hard #84)
+
+**Question**: Given an array of integers `heights` representing the histogram's bar height where the width of each bar is `1`, return *the area of the largest rectangle in the histogram*.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/01/04/histogram.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: heights = [2,1,5,6,2,3]
+Output: 10
+Explanation: The above is a histogram where width of each bar is 1.
+The largest rectangle is shown in the red area, which has an area = 10 units.
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2021/01/04/histogram-1.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: heights = [2,4]
+Output: 4
+```
+
+**Constraints:**
+
+-   `1 <= heights.length <= 105`
+-   `0 <= heights[i] <= 104`
+
+### My Solution
+
+*   Fail for some of the test cases
+
+```java
+// fail some test cases
+public int largestRectangleArea(int[] heights) {
+    int max = 0;
+    int area = 0;
+    int slow = 0, fast = 0;
+    int minLength = Integer.MAX_VALUE;
+    int tempMin = Integer.MAX_VALUE;
+    while(slow <= fast && fast <= heights.length - 1){
+        tempMin = Math.min(heights[slow], heights[fast]);
+        minLength = Math.min(tempMin, minLength);
+        area = ((fast - slow) + 1) * minLength;
+        max = Math.max(area, max);
+        if (heights[slow] < heights[fast]){
+
+            if (minLength == heights[slow]){
+                minLength = Integer.MAX_VALUE;
+            }
+            slow++;
+        } else if (heights[slow] >= heights[fast] || slow == fast){
+            fast++;
+        }
+    }
+    return max;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Brute Force(Exceed Limited Time)
+
+*   Brute force method with nested loops
+
+```java
+public int largestRectangleArea(int[] heights){
+    int maxArea = 0;
+    int length = heights.length;
+    for (int i = 0; i < length; i++){
+        int minHeight = Integer.MAX_VALUE;
+        for (int j = i; j < length; j++){
+            minHeight = Math.min(minHeight, heights[j]);
+            maxArea = Math.max(maxArea, minHeight * (j - 1 + 1));
+        }
+    }
+    return maxArea;
+}
+```
+
+*   Time complexity: $O(n^2)$. Every possible pair is considered
+*   Space complexity: $O(1)$. No extra space is used.
+
+#### Solution #2 Divide and Conquer Approach(Exceed Limited Time)
+
+*   Exceed the limited time but recommended to learn
+
+    <img src="https://leetcode.com/media/original_images/84_Largest_Rectangle2.PNG" alt="Divide and Conquer" style="zoom: 67%;" />
+
+*   **Algorithm**:
+
+    *   The widest possible rectangle with a height equal to the height of the shortest bar.
+    *   The largest rectangle is confined to the left of the shortest bar(subproblem).
+    *   The largest rectangle is confined to the right of the shortest bar(subproblem).
+
+```java
+public int calculateArea(int[] heights, int start, int end){
+    if (start > end){
+        return 0;
+    }
+    int minindex = start;
+    for (int i = start; i <= end; i++){
+        if (heights[minindex] > heights[i]){
+            minindex = i;
+        }
+    }
+    return Math.max(heights[minindex] * (end - start + 1),
+                   Math.max(calculateArea(heights, start, minindex - 1),
+                           calculateArea(heights, minindex + 1, end)));
+}
+public int largestRectangleArea(int[] heights){
+    return calculateArea(heights, 0, heights.length - 1);
+}
+```
+
+-   Time complexity:
+
+    Average Case: $O\big(n \log n\big)$.
+
+    Worst Case: $O(n^2)$. If the numbers in the array are sorted, we don't gain the advantage of divide and conquer.
+
+-   Space complexity: $O(n)$. Recursion with worst-case depth n.
+
+#### Solution #3 Stack
+
+*   Use a stack to store the width index information
+*   Each time we encounter a height of $i + 1$ smaller than $i$, it helps us determine the max area before the $i + 1$.
+
+```java
+public int largestRectangleArea(int[] heights){
+    Deque<Integer> stack = new ArrayDeque<>();
+    stack.push(-1);
+    int length = heights.length;
+    int maxArea = 0;
+    for (int i = 0; i < length; i++){
+        while((stack.peek() != -1)
+             && (heights[stack.peek()] >= heights[i])){
+            int currentHeight = heights[stack.pop()];
+            int currentWidth = i - stack.peek() - 1;
+            maxArea = Math.max(maxArea, currentHeight * currentWidth);
+        }
+        stack.push(i);
+    }
+    while (stack.peek() != -1){
+        int currentHeight = heights[stack.pop()];
+        int currentWidth = length - stack.peek() - 1;
+        maxArea = Math.max(maxArea, currentHeight * currentWidth);
+    }
+    return maxArea;
+}
+```
+
+-   Time complexity: $O(n)$. n numbers are pushed and popped.
+-   Space complexity: $O(n)$. Stack is used.
