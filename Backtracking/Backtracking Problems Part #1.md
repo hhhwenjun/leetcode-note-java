@@ -1,5 +1,7 @@
 # Backtracking Problems Part #1
 
+## Permutations(Medium #46)
+
 **Question**: Given an array `nums` of distinct integers, return *all the possible permutations*. You can return the answer in **any order**.
 
 **Example 1:**
@@ -62,6 +64,35 @@ public void helperCalculator(int digit, ArrayList<Integer> numsList, List<List<I
     }
 }
 ```
+
+```java
+// second attempt
+List<List<Integer>> res = new ArrayList<>();
+List<Integer> numsArry = new ArrayList<>();
+public List<List<Integer>> permute(int[] nums) {
+    for (int num : nums){
+        numsArry.add(num);
+    }
+    helper(0);
+    return res;
+}
+
+public void helper(int loc){
+    if (loc == numsArry.size() - 1){
+        res.add(new ArrayList<Integer>(numsArry));
+        return;
+    }
+    for(int i = loc; i < numsArry.size(); i++){
+        Collections.swap(numsArry, loc, i);
+        helper(loc + 1);
+        Collections.swap(numsArry, loc, i);
+    }
+}
+```
+
+*   Store the number array to the array list, use the built-in method to swap the digits.
+*   When moving to the end digit, add the current array list to the results.
+*   Swap -> call next -> swap back
 
 ### Standard Solution 
 
@@ -186,6 +217,36 @@ public void combination(Map<Character, String> map, int idx, char[] chars, Strin
 }
 ```
 
+```java
+// second attempt
+Map<Character, String> map = Map.of('2', "abc", '3', "def", '4', "ghi",
+                                   '5', "jkl", '6', "mno", '7', "pqrs",
+                                   '8', "tuv", '9', "wxyz");
+List<String> res = new ArrayList<>();
+char[] nums;
+public List<String> letterCombinations(String digits) {
+    if (digits.length() == 0) return res;
+    this.nums = digits.toCharArray();
+    findComb(0, new StringBuilder());
+    return res;
+}
+
+// create a backtracking method to find all the combinations
+public void findComb(int start, StringBuilder string){
+    // base case : when reach length of combination(e.g. "23", length is 2)
+    if (start == nums.length){
+        res.add(string.toString());
+        return;
+    }
+    String chars = map.get(nums[start]);
+    for (int j = 0; j < chars.length(); j++){
+        string.append(chars.charAt(j));
+        findComb(start + 1, string);
+        string.deleteCharAt(string.length() - 1);
+    }
+}
+```
+
 *   Time complexity: $O(4^N \cdot N)$, where N is the length of `digits`. Note that 4 in this expression is referring to the maximum *value* length in the *hash map*, and ***not*** to the length of the *input*.
 
     The worst-case is where the input consists of only 7s and 9s. In that case, we have to explore 4 additional paths for every extra digit. Then, for each combination, it costs up to N to build the combination. This problem can be generalized to a scenario where numbers correspond with up to M digits, in which case the time complexity would be $O(M^N \cdot N)$. For the problem constraints, we're given, $M = 4,$ because digits 7 and 9 have 4 letters each.
@@ -195,3 +256,113 @@ public void combination(Map<Character, String> map, int idx, char[] chars, Strin
     Not counting space used for the output, **the extra space we use relative to input size is the space occupied by the recursion call stack**. It will only go as deep as the number of digits in the input since whenever we reach that depth, we backtrack.
 
     As the hash map does not grow as the inputs grow, it occupies $O(1)$ space.
+
+## Word Search(Medium #79)
+
+**Question**: Given an `m x n` grid of characters `board` and a string `word`, return `true`  *if*  `word` *exists in the grid*.
+
+The word can be constructed from letters of sequentially adjacent cells, where adjacent cells are horizontally or vertically neighboring. The same letter cell may not be used more than once.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2020/11/04/word2.jpg)
+
+```
+Input: board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCCED"
+Output: true
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2020/11/04/word-1.jpg)
+
+```
+Input: board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "SEE"
+Output: true
+```
+
+**Example 3:**
+
+![img](https://assets.leetcode.com/uploads/2020/10/15/word3.jpg)
+
+```
+Input: board = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]], word = "ABCB"
+Output: false
+```
+
+**Constraints:**
+
+-   `m == board.length`
+-   `n = board[i].length`
+-   `1 <= m, n <= 6`
+-   `1 <= word.length <= 15`
+-   `board` and `word` consists of only lowercase and uppercase English letters.
+
+**Follow up:** Could you use search pruning to make your solution faster with a larger `board`?
+
+### My Solution & Standard Solution
+
+#### Solution #1 Backtracking
+
+*   2D grid traversal problem, similar to Robot Room Cleaner problem
+*   **Algorithm**: The skeleton of the algorithm is a loop that iterates through each cell in the grid. For each cell, we invoke the *backtracking* function (*i.e.* `backtrack()`) to check if we would obtain a solution, starting from this very cell.
+    *   Step 1). In the beginning, first, we check if we reach the bottom case of the recursion, where the word to be matched is empty, *i.e.* we have already found the match for each prefix of the word.
+    *   Step 2). We then check if the current state is invalid, either the position of the cell is out of the boundary of the board or the letter in the current cell does not match with the first letter of the word.
+    *   Step 3). If the current step is valid, we then start the exploration of backtracking with the strategy of DFS. First, we mark the current cell as *visited*, *e.g.* any non-alphabetic letter will do. Then we iterate through the four possible directions, namely *up*, *right*, *down,* and *left*. The order of the directions can be altered, to one's preference.
+    *   Step 4). At the end of the exploration, we revert the cell back to its original state. Finally, we return the result of the exploration.
+
+```java
+char[][] board;
+String word;
+int[][] directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+int maxRow = 0;
+int maxCol = 0;
+public boolean exist(char[][] board, String word) {
+    this.board = board;
+    this.word = word;
+    this.maxRow = board.length;
+    this.maxCol = board[0].length;
+    for (int i = 0; i < maxRow; i++){
+        for (int j = 0; j < maxCol; j++){
+            if (backtrack(i, j, 0)){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+public boolean backtrack(int row, int col, int idx){
+    if (idx >= word.length()){
+        // find the word
+        return true;
+    }
+    if (row < 0 || row == maxRow || col == maxCol || col < 0){
+        // out of the boundary
+        return false;
+    }
+    if (board[row][col] != word.charAt(idx)){
+        // do not find the char at this location
+        return false;
+    }
+    boolean track = false;
+    // mark as visited before going to the next one
+    this.board[row][col] = '#';
+    for (int i = 0; i < 4; i++){
+        track = backtrack(row + directions[i][0], col + directions[i][1], idx + 1);
+        if (track){
+            break;
+        }
+    }
+    // put the char back to the visited cell
+    this.board[row][col] = word.charAt(idx);
+    return track;
+}
+```
+
+-   Time Complexity: $\mathcal{O}(N \cdot 3 ^ L)$ where $N$ is the number of cells on the board and $L$ is the length of the word to be matched.
+    -   For the backtracking function, initially, we could have at most 4 directions to explore, but further, the choices are reduced into 3 (since we won't go back to where we come from). As a result, the execution trace after the first step could be visualized as a 3-ary tree, each of the branches represents a potential exploration in the corresponding direction. Therefore, in the worst case, the total number of invocations would be the number of nodes in a full 3-nary tree, which is about $3^L$.
+    -   We iterate through the board for backtracking, *i.e.* there could be N times invocation for the backtracking function in the worst case.
+    -   As a result, overall the time complexity of the algorithm would be $\mathcal{O}(N \cdot 3 ^ L)$.
+-   Space Complexity: $\mathcal{O}(L)$ where L is the length of the word to be matched.
+    -   The main consumption of the memory lies in the recursion call of the backtracking function. The maximum length of the call stack would be the length of the word. Therefore, the space complexity of the algorithm is $\mathcal{O}(L)$.
