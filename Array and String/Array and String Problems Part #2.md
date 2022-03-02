@@ -464,3 +464,77 @@ public void merge(int[] nums1, int m, int[] nums2, int n){
 -   Space complexity: $\mathcal{O}(m)$.
 
     We are allocating an additional array of length m.
+
+## Is Subsequence(Easy #392)
+
+**Question**: Given two strings `s` and `t`, return `true` *if* `s` *is a **subsequence** of* `t`*, or* `false` *otherwise*.
+
+A **subsequence** of a string is a new string that is formed from the original string by deleting some (can be none) of the characters without disturbing the relative positions of the remaining characters. (i.e., `"ace"` is a subsequence of `"abcde"` while `"aec"` is not).
+
+**Example 1:**
+
+```
+Input: s = "abc", t = "ahbgdc"
+Output: true
+```
+
+**Example 2:**
+
+```
+Input: s = "axc", t = "ahbgdc"
+Output: false
+```
+
+**Constraints:**
+
+-   `0 <= s.length <= 100`
+-   `0 <= t.length <= 104`
+-   `s` and `t` consist only of lowercase English letters.
+
+### My Solution
+
+```java
+public boolean isSubsequence(String s, String t) {
+    if (s.equals("")) return true;
+    char[] schar = s.toCharArray();
+    int idx = 0;
+    for (int i = 0; i < t.length(); i++){
+        if (t.charAt(i) == schar[idx]){
+            idx++;
+        }
+        if (idx == schar.length){
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+*   Time complexity: $O(T)$
+*   Space complexity: $O(1)$
+
+### Standard Solution
+
+#### Solution #1 Two Pointers
+
+*   There are other solutions but way more complicated
+*   Similar to my solution
+
+```java
+class Solution {
+    public boolean isSubsequence(String s, String t) {
+        Integer leftBound = s.length(), rightBound = t.length();
+        Integer pLeft = 0, pRight = 0;
+        while (pLeft < leftBound && pRight < rightBound) {
+            // move both pointers or just the right pointer
+            if (s.charAt(pLeft) == t.charAt(pRight)) {
+                pLeft += 1;
+            }
+            pRight += 1;
+        }
+        return pLeft == leftBound;
+    }
+}
+```
+
+*   Complexity should be same as my solution
