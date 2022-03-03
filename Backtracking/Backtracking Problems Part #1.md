@@ -366,3 +366,108 @@ public boolean backtrack(int row, int col, int idx){
     -   As a result, overall the time complexity of the algorithm would be $\mathcal{O}(N \cdot 3 ^ L)$.
 -   Space Complexity: $\mathcal{O}(L)$ where L is the length of the word to be matched.
     -   The main consumption of the memory lies in the recursion call of the backtracking function. The maximum length of the call stack would be the length of the word. Therefore, the space complexity of the algorithm is $\mathcal{O}(L)$.
+
+## Combination Sum(Medium #39)
+
+**Question**: Given an array of **distinct** integers `candidates` and a target integer `target`, return *a list of all **unique combinations** of* `candidates` *where the chosen numbers sum to* `target`*.* You may return the combinations in **any order**.
+
+The **same** number may be chosen from `candidates` an **unlimited number of times**. Two combinations are unique if the frequency of at least one of the chosen numbers is different.
+
+It is **guaranteed** that the number of unique combinations that sum up to `target` is less than `150` combinations for the given input.
+
+**Example 1:**
+
+```
+Input: candidates = [2,3,6,7], target = 7
+Output: [[2,2,3],[7]]
+Explanation:
+2 and 3 are candidates, and 2 + 2 + 3 = 7. Note that 2 can be used multiple times.
+7 is a candidate, and 7 = 7.
+These are the only two combinations.
+```
+
+**Example 2:**
+
+```
+Input: candidates = [2,3,5], target = 8
+Output: [[2,2,2,2],[2,3,3],[3,5]]
+```
+
+**Example 3:**
+
+```
+Input: candidates = [2], target = 1
+Output: []
+```
+
+**Constraints:**
+
+-   `1 <= candidates.length <= 30`
+-   `1 <= candidates[i] <= 200`
+-   All elements of `candidates` are **distinct**.
+-   `1 <= target <= 500`
+
+### My Solution
+
+```java
+int[] candidates;
+List<List<Integer>> res = new ArrayList<>();
+// main method
+public List<List<Integer>> combinationSum(int[] candidates, int target) {
+    this.candidates = candidates;
+    backtracking(0, target, new ArrayList<Integer>());
+    return res;
+}
+// call backtracking to add new solution
+public void backtracking(int start, int target, List<Integer> single){
+    // base case
+    if (target == 0){
+        res.add(new ArrayList<Integer>(single));
+        return;
+    }
+    else if (target < 0 || start == candidates.length){
+        return;
+    }
+    // from different starting point
+    for (int i = start; i < candidates.length; i++){
+        single.add(candidates[i]);
+        // each time start will add 1
+        backtracking(i, target - candidates[i], single);
+        single.remove(single.size() - 1);
+    }
+}
+// pretty great solution, faster than 92%, less than 76%
+```
+
+### Standard Solution
+
+#### Solution #1 Backtracking
+
+![exploration tree](https://leetcode.com/problems/combination-sum/Figures/39/39_exploration_tree.png)
+
+*   Same as my solution: backtracking in a for loop
+    *   For the first base case of the recursive function, if the `remain==0`, *i.e.* we fulfill the desired target sum, therefore we can add the current combination to the final list.
+    *   As another base case, if `remain < 0`, *i.e.* we exceed the target value, we will cease the exploration here.
+    *   Other than the above two base cases, we would then continue to explore the sublist of candidates as `[start ... n]`. For each of the candidates, we invoke the recursive function itself with updated parameters.
+        -   Specifically, we add the current candidate into the combination.
+        -   With the added candidate, we now have less sum to fulfill, *i.e.* `remain - candidate`.
+        -   For the next exploration, still we start from the current cursor `start`.
+        -   At the end of each exploration, we ***backtrack\*** by popping out the candidate out of the combination.
+
+*   Let N be the number of candidates, T be the target value, and M is the minimum value among the candidates.
+
+*   Time Complexity: $\mathcal{O}(N^{\frac{T}{M}+1})$
+    -   As we illustrated before, the execution of the backtracking is unfolded as a DFS traversal in an n-ary tree. The total number of steps during the backtracking would be the number of nodes in the tree.
+    -   At each node, it takes a constant time to process, except the leaf nodes which could take a linear time to make a copy of the combination. So we can say that the time complexity is linear to the number of nodes of the execution tree.
+    -   Here we provide a *loose* upper bound on the number of nodes.
+        -   First of all, the fan-out of each node would be bounded to N, *i.e.* the total number of candidates.
+        -   The maximal depth of the tree would be $\frac{T}{M}$, where we keep on adding the smallest element to the combination.
+        -   As we know, the maximal number of nodes in the N-ary tree of $\frac{T}{M}$ height would be $N^{\frac{T}{M}+1}$.
+    -   **Note that**, the actual number of nodes in the execution tree would be much smaller than the upper bound since the fan-out of the nodes is decreasing level by level.
+*   Space Complexity: $\mathcal{O}(\frac{T}{M})$
+    -   We implement the algorithm in recursion, which consumes some additional memory in the function call stack.
+    -   The number of recursive calls can pile up to $\frac{T}{M}$, where we keep on adding the smallest element to the combination. As a result, the space overhead of the recursion is $\mathcal{O}(\frac{T}{M})$.
+    -   In addition, we keep a combination of numbers during the execution, which requires at most $\mathcal{O}(\frac{T}{M})$ space as well.
+    -   To sum up, the total space complexity of the algorithm would be $\mathcal{O}(\frac{T}{M})$.
+    -   Note that, we did not take into the account the space used to hold the final results for the space complexity.
+
