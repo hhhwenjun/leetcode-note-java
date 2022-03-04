@@ -469,5 +469,104 @@ public void backtracking(int start, int target, List<Integer> single){
     -   The number of recursive calls can pile up to $\frac{T}{M}$, where we keep on adding the smallest element to the combination. As a result, the space overhead of the recursion is $\mathcal{O}(\frac{T}{M})$.
     -   In addition, we keep a combination of numbers during the execution, which requires at most $\mathcal{O}(\frac{T}{M})$ space as well.
     -   To sum up, the total space complexity of the algorithm would be $\mathcal{O}(\frac{T}{M})$.
-    -   Note that, we did not take into the account the space used to hold the final results for the space complexity.
+    -   Note that, we did not take into account the space used to hold the final results for the space complexity.
 
+## Combination Sum II(Medium #40)
+
+**Question**: Given a collection of candidate numbers (`candidates`) and a target number (`target`), find all unique combinations in `candidates` where the candidate numbers sum to `target`.
+
+Each number in `candidates` may only be used **once** in the combination.
+
+**Note:** The solution set must not contain duplicate combinations.
+
+**Example 1:**
+
+```
+Input: candidates = [10,1,2,7,6,1,5], target = 8
+Output: 
+[
+[1,1,6],
+[1,2,5],
+[1,7],
+[2,6]
+]
+```
+
+**Example 2:**
+
+```
+Input: candidates = [2,5,2,1,2], target = 5
+Output: 
+[
+[1,2,2],
+[5]
+]
+```
+
+**Constraints:**
+
+-   `1 <= candidates.length <= 100`
+-   `1 <= candidates[i] <= 50`
+-   `1 <= target <= 30`
+
+### My Solution
+
+```java
+public List<List<Integer>> combinationSum2(int[] candidates, int target){
+    List<List<Integer>> res = new ArrayList<>();
+    int[] candidates;
+    public List<List<Integer>> combinationSum2(int[] candidates, int target) {
+        this.candidates = candidates;
+        Arrays.sort(candidates);
+        backtracking(0, target, new ArrayList<Integer>());
+        return res;
+    }
+    // create backtracking method to find all combinations
+    public void backtracking(int index, int target, List<Integer> combination){
+        // base case
+        if (target == 0){
+            res.add(new ArrayList<Integer>(combination));
+            return;
+        }
+        // invalid combinations or we traverse the last digit in the candidates
+        else if (target < 0){
+            return;
+        }
+        for (int i = index; i < candidates.length; i++){
+            // skip the positions
+            if (i > index && candidates[i] == candidates[i - 1]){
+                continue;
+            }
+            if (target - candidates[i] < 0){
+                break;
+            }
+            combination.add(candidates[i]);
+            backtracking(i + 1, target - candidates[i], combination);
+            combination.remove(combination.size() - 1);
+        }
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Backtracking
+
+*   Same as my solution
+*   We skip the position if the following two conditions are met:
+    -   1). `next_curr > curr`: we will pick the number at the current `curr` position into the combination, regardless of the other conditions. *This is important, since the iteration should allow us to select multiple instances of a unique number into the combination.*
+    -   2). `candidates[next_curr] == candidates[next_curr-1]`: we will skip the occurrences of all repetitive numbers **in-between**, *e.g.* we skip the second and third occurrence of number `2` in this round of backtracking.
+
+![index demo](https://leetcode.com/problems/combination-sum-ii/Figures/40/40_index_demo.png)
+
+Let N*N* be the size of the input array.
+
+-   Time Complexity: $\mathcal{O}(2^N)$
+    -   In the worst case, our algorithm will *exhaust* all possible combinations from the input array, which in total amounts to $2^N$ as we discussed before.
+    -   The sorting will take $\mathcal{O}(N \log N)$
+    -   To sum up, the overall time complexity of the algorithm is dominated by the backtracking process, which is $\mathcal{O}(2^N)$
+-   Space Complexity: $\mathcal{O}(N)$
+    -   We use the variable `comb` to keep track of the current combination we build, which requires $\mathcal{O}(N)$ space.
+    -   In addition, we apply recursion in the algorithm, which will incur additional memory consumption in the function call stack. In the worst case, the stack will pile up to $\mathcal{O}(N)$ space.
+    -   To sum up, the overall space complexity of the algorithm is $\mathcal{O}(N) + \mathcal{O}(N) = \mathcal{O}(N)$.
+    -   ***Note:\*** we did not take into account the space needed to hold the final results of the combination in the above analysis.
