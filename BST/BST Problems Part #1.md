@@ -1,4 +1,4 @@
-# BST Problems Part #1
+BST Problems Part #1
 
 ## Two Sum IV(Easy #653)
 
