@@ -460,3 +460,93 @@ public int findMin(TreeNode root){
 *   Almost the same as my solution
 *   Time complexity : $\mathcal{O}(\log N)$. During the algorithm execution, we go down the tree all the time - on the left or on the right, first to search the node to delete $\mathcal{O}(H_1)$ time complexity as already [discussed](https://leetcode.com/articles/insert-into-a-bst/)) and then to actually delete it. $H_1$ is a tree height from the root to the node to delete. Delete process takes $\mathcal{O}(H_2)$ time, where $H_2$ is a tree height from the root to delete the leaves. That in total results in $\mathcal{O}(H_1 + H_2) = \mathcal{O}(H)$ time complexity, where $H$ is a tree height, equal to $\log N$ in the case of the balanced tree.
 *   Space complexity: $\mathcal{O}(H)$ to keep the recursion stack, where $H$ is a tree height. $H = \log N$ for the balanced tree.
+
+## kth Largest Element in a Stream(Easy #703)
+
+**Question**: Design a class to find the `kth` largest element in a stream. Note that it is the `kth` largest element in the sorted order, not the `kth` distinct element.
+
+Implement `KthLargest` class:
+
+-   `KthLargest(int k, int[] nums)` Initializes the object with the integer `k` and the stream of integers `nums`.
+-   `int add(int val)` Appends the integer `val` to the stream and returns the element representing the `kth` largest element in the stream. 
+
+**Example 1:**
+
+```
+Input
+["KthLargest", "add", "add", "add", "add", "add"]
+[[3, [4, 5, 8, 2]], [3], [5], [10], [9], [4]]
+Output
+[null, 4, 5, 5, 8, 8]
+
+Explanation
+KthLargest kthLargest = new KthLargest(3, [4, 5, 8, 2]);
+kthLargest.add(3);   // return 4
+kthLargest.add(5);   // return 5
+kthLargest.add(10);  // return 5
+kthLargest.add(9);   // return 8
+kthLargest.add(4);   // return 8
+```
+
+**Constraints:**
+
+-   `1 <= k <= 104`
+-   `0 <= nums.length <= 104`
+-   `-104 <= nums[i] <= 104`
+-   `-104 <= val <= 104`
+-   At most `104` calls will be made to `add`.
+-   It is guaranteed that there will be at least `k` elements in the array when you search for the `kth` element.
+
+### Standard Solution
+
+*   Should use heap.
+*   If you use other tree structures, need to define nodes and the structure would be more complicated.
+
+#### Solution #1 Heap
+
+*   Heap is a priority queue, you can just simply use Java collection.
+*   A heap is a data structure that is capable of giving you the smallest (or largest) element (by some criteria) in constant time, while also being able to add elements and remove the smallest (or largest) element in only logarithmic time. 
+*   In summary, a heap:
+    -   Stores elements, and can find the smallest (min-heap) or largest (max-heap) element stored in $O(1)$.
+    -   Can add elements and remove the smallest (min-heap) or largest (max-heap) element in $O(\log(n))$.
+    -   Can perform insertions and removals while always maintaining the first property.
+
+```java
+class KthLargest {
+    private static int k;
+    private PriorityQueue<Integer> heap;
+
+    public KthLargest(int k, int[] nums) {
+        this.k = k;
+        heap = new PriorityQueue<>();
+        
+        for (int num : nums){
+            heap.offer(num);
+        }
+        
+        while(heap.size() > k){
+            heap.poll();
+        }
+    }
+    
+    public int add(int val) {
+        heap.offer(val);
+        if (heap.size() > k){
+            heap.poll();
+        }
+        return heap.peek();
+    }
+}
+```
+
+-   Given N as the length of `nums` and M as the number of calls to `add()`,
+
+-   Time complexity: $O(N \cdot \log(N) + M \cdot \log(k))$
+
+    The time complexity is split into two parts. First, the constructor needs to turn `nums` into a heap of size `k`. In Python, `heapq.heapify()` can turn `nums` into a heap in $O(N)$ time. Then, we need to remove from the heap until there are only `k` elements in it, which means removing `N - k` elements. Since `k` can be, say 1, in terms of big O this is `N` operations, with each operation costing $\log(N)$. Therefore, the constructor costs $O(N + N \cdot \log(N)) = O(N \cdot \log(N))$.
+
+    Next, every call to `add()` involves adding an element to `heap` and potentially removing an element from `heap`. Since our heap is of size `k`, every call to `add()` at worst costs $O(2 * \log(k)) = O(\log(k))$. That means `M` calls to `add()` costs $O(M \cdot \log(k))$.
+
+-   Space complexity: $O(N)$
+
+    The only extra space we use is the `heap`. While during `add()` calls we limit the size of the heap to `k`, in the constructor, we start by converting `nums` into a heap, which means the heap will initially be of size `N`.
