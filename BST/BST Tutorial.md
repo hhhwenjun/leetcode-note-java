@@ -550,3 +550,187 @@ class KthLargest {
 -   Space complexity: $O(N)$
 
     The only extra space we use is the `heap`. While during `add()` calls we limit the size of the heap to `k`, in the constructor, we start by converting `nums` into a heap, which means the heap will initially be of size `N`.
+
+#### Solution #2 BST
+
+```java
+// find number of right subtree
+
+class KthLargest {
+    // insert a node into the BST
+    private Node insertNode(Node root, int num) {
+        if (root == null) {
+            return new Node(num, 1);
+        }
+        if (root.val < num) {
+            root.right = insertNode(root.right, num);
+        } else {
+            root.left = insertNode(root.left, num);
+        }
+        root.cnt++;
+        return root;
+    }
+
+    private int searchKth(Node root, int k) {
+        // m = the size of right subtree
+        int m = root.right != null ? root.right.cnt : 0;
+        // root is the m+1 largest node in the BST
+        if (k == m + 1) {
+            return root.val;
+        }
+        if (k <= m) {
+            // find kth largest in the right subtree
+            return searchKth(root.right, k);
+        } else {
+            // find (k-m-1)th largest in the left subtree
+            return searchKth(root.left, k - m - 1);
+        }
+    } 
+    
+    private Node root;
+    private int m_k;
+
+    public KthLargest(int k, int[] nums) {
+        root = null;
+        for (int i = 0; i < nums.length; ++i) {
+            root = insertNode(root, nums[i]);
+        }
+        m_k = k;
+    }
+    
+    public int add(int val) {
+        root = insertNode(root, val);
+        return searchKth(root, m_k);
+    }
+}
+
+class Node {    // the structure for the tree node
+    Node left;
+    Node right;
+    int val;
+    int cnt;    // the size of the subtree rooted at the node
+    public Node (int v, int c) {
+        left = null;
+        right = null;
+        val = v;
+        cnt = c;
+    }
+}
+
+/**
+ * Your KthLargest object will be instantiated and called as such:
+ * KthLargest obj = new KthLargest(k, nums);
+ * int param_1 = obj.add(val);
+ */
+```
+
+*   By using a BST, the time complexity for insertion and search are both `O(h)`. The time complexity of performing all the operations will be `O(N*h)`. That is, `O(N^2)` in the worst case and `O(NlogN)` ideally. 
+
+## Lowest Common Ancestor of a Binary Search Tree(Easy #235)
+
+**Question**: Given a binary search tree (BST), find the lowest common ancestor (LCA) of two given nodes in the BST.
+
+According to the [definition of LCA on Wikipedia](https://en.wikipedia.org/wiki/Lowest_common_ancestor): “The lowest common ancestor is defined between two nodes `p` and `q` as the lowest node in `T` that has both `p` and `q` as descendants (where we allow **a node to be a descendant of itself**).”
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2018/12/14/binarysearchtree_improved.png)
+
+```
+Input: root = [6,2,8,0,4,7,9,null,null,3,5], p = 2, q = 8
+Output: 6
+Explanation: The LCA of nodes 2 and 8 is 6.
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2018/12/14/binarysearchtree_improved.png)
+
+```
+Input: root = [6,2,8,0,4,7,9,null,null,3,5], p = 2, q = 4
+Output: 2
+Explanation: The LCA of nodes 2 and 4 is 2, since a node can be a descendant of itself according to the LCA definition.
+```
+
+**Example 3:**
+
+```
+Input: root = [2,1], p = 2, q = 1
+Output: 2
+```
+
+**Constraints:**
+
+-   The number of nodes in the tree is in the range `[2, 105]`.
+-   `-109 <= Node.val <= 109`
+-   All `Node.val` are **unique**.
+-   `p != q`
+-   `p` and `q` will exist in the BST.
+
+### My Solution
+
+*   Try to find the first node that has value in-between.
+*   Fully use the properties of BST.
+
+```java
+public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q){
+    if (p.val > root.val && q.val > root.val){
+            root = lowestCommonAncestor(root.right, p, q);
+        }
+        else if (p.val < root.val && q.val < root.val){
+            root = lowestCommonAncestor(root.left, p, q);
+        }
+        else {
+            return root;
+        }
+        return root;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Recursion
+
+*   Same as my solution
+*   Time Complexity: $O(N)$, where N is the number of nodes in the BST. In the worst case, we might be visiting all the nodes of the BST.
+*   Space Complexity: $O(N)$. This is because the maximum amount of space utilized by the recursion stack would be N since the height of a skewed BST could be N.
+
+#### Solution #2 Iteration
+
+```java
+class Solution {
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+
+        // Value of p
+        int pVal = p.val;
+
+        // Value of q;
+        int qVal = q.val;
+
+        // Start from the root node of the tree
+        TreeNode node = root;
+
+        // Traverse the tree
+        while (node != null) {
+
+            // Value of ancestor/parent node.
+            int parentVal = node.val;
+
+            if (pVal > parentVal && qVal > parentVal) {
+                // If both p and q are greater than parent
+                node = node.right;
+            } else if (pVal < parentVal && qVal < parentVal) {
+                // If both p and q are lesser than parent
+                node = node.left;
+            } else {
+                // We have found the split point, i.e. the LCA node.
+                return node;
+            }
+        }
+        return null;
+    }
+}
+```
+
+-   Time Complexity: $O(N)$, where N is the number of nodes in the BST. In the worst case we might be visiting all the nodes of the BST.
+-   Space Complexity: $O(1)$.
