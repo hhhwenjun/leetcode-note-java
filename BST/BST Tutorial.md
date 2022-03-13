@@ -732,8 +732,86 @@ class Solution {
 }
 ```
 
--   Time Complexity: $O(N)$, where N is the number of nodes in the BST. In the worst case we might be visiting all the nodes of the BST.
+-   Time Complexity: $O(N)$, where N is the number of nodes in the BST. In the worst case, we might be visiting all the nodes of the BST.
 -   Space Complexity: $O(1)$.
 
+## Height-Balanced BST
 
+*   The terminology used in trees:
 
+    -   Depth of node - the number of edges from the tree's root node to the node
+
+    -   Height of node - the number of edges on the longest path between that node and a leaf
+
+    -   Height of Tree - the height of its root node
+
+*   A `height-balanced` (or `self-balancing`) binary search tree is a binary search tree that automatically keeps its height small in the face of arbitrary item insertions and deletions. That is, the height of a balanced BST with `N` nodes is always `logN`. Also, the height of the two subtrees of every node never differs by more than 1.
+*   The height of a balanced BST with `N` nodes is always `logN`.
+*   The` tree set`, `TreeSet` in Java or `set` in C++, is implemented by the height-balanced BST. Therefore, the time complexity of search, insertion, and deletion are all `O(logN)`.
+
+## Balanced Binary Tree(Easy #110)
+
+**Question**: Given a binary tree, determine if it is height-balanced.
+
+For this problem, a height-balanced binary tree is defined as:
+
+>   a binary tree in which the left and right subtrees of *every* node differ in height by no more than 1.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2020/10/06/balance_1.jpg)
+
+```
+Input: root = [3,9,20,null,null,15,7]
+Output: true
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2020/10/06/balance_2.jpg)
+
+```
+Input: root = [1,2,2,3,3,null,null,4,4]
+Output: false
+```
+
+**Example 3:**
+
+```
+Input: root = []
+Output: true 
+```
+
+**Constraints:**
+
+-   The number of nodes in the tree is in the range `[0, 5000]`.
+-   `-104 <= Node.val <= 104`
+
+### My Solution
+
+```java
+ public boolean isBalanced(TreeNode root) {
+    if (root == null){
+        return true;
+    }
+    return Math.abs(balanceHelper(root.left) - balanceHelper(root.right)) <= 1
+        && isBalanced(root.left)
+        && isBalanced(root.right);
+}
+public int balanceHelper(TreeNode root){
+    if (root == null){
+        return -1;
+    }
+    return 1 + Math.max(balanceHelper(root.left), balanceHelper(root.right));
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Recursion
+
+*   Same as my solution
+*   Find the height of the subtrees and compare the value, use && to connect them
+
+*   Time complexity: $O(n \log n)$
+*   Space complexity: $\mathcal{O}(n)$. The recursion stack may contain all nodes if the tree is skewed.
