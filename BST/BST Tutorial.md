@@ -815,3 +815,122 @@ public int balanceHelper(TreeNode root){
 
 *   Time complexity: $O(n \log n)$
 *   Space complexity: $\mathcal{O}(n)$. The recursion stack may contain all nodes if the tree is skewed.
+
+## Convert Sorted Array to Binary Search Tree(Easy #108)
+
+**Question**: Given an integer array `nums` where the elements are sorted in **ascending order**, convert *it to a **height-balanced** binary search tree*.
+
+A **height-balanced** binary tree is a binary tree in which the depth of the two subtrees of every node never differs by more than one.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2021/02/18/btree1.jpg)
+
+```
+Input: nums = [-10,-3,0,5,9]
+Output: [0,-3,9,-10,null,5]
+Explanation: [0,-10,5,null,-3,null,9] is also accepted:
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2021/02/18/btree.jpg)
+
+```
+Input: nums = [1,3]
+Output: [3,1]
+Explanation: [1,null,3] and [3,1] are both height-balanced BSTs.
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 104`
+-   `-104 <= nums[i] <= 104`
+-   `nums` is sorted in a **strictly increasing** order.
+
+### My Solution
+
+```java
+public TreeNode sortedArrayToBST(int[] nums) {
+    // find the root
+    int length = nums.length;
+    TreeNode root = new TreeNode(nums[length / 2]);
+    List<Integer> left = new ArrayList<>();
+    List<Integer> right = new ArrayList<>();
+    int index = 0;
+    while(index < length/2){
+        left.add(nums[index]);
+        index++;
+    }
+    // reverse the left one
+    Collections.reverse(left);
+    index++;
+    while(index < length){
+        right.add(nums[index]);
+        index++;
+    }
+    // add to the tree
+    for(Integer num : left){
+        addToTree(num, root);
+    }
+    for(Integer num : right){
+        addToTree(num, root);
+    }
+    return root;
+}
+public TreeNode addToTree(int num, TreeNode root){
+    if (root == null){
+        return new TreeNode(num);
+    }
+    if (num > root.val){
+        root.right = addToTree(num, root.right);
+    }
+    else {
+        root.left = addToTree(num, root.left);
+    }
+    return root;
+}
+```
+
+*   It is a BST, but not with a balanced height
+*   Not a passed solution
+
+### Standard Solution
+
+*   It is also about the traversal method
+*   Basically, the height-balanced restriction means that at **each step one has to pick up the number in the middle as a root**. That works fine with arrays containing an odd number of elements but there is no predefined choice for arrays with an even number of elements.
+
+#### Solution #1 Preorder Traversal: Always Choose Left Middle Node as a Root
+
+-   Implement helper function `helper(left, right)`, which constructs BST from nums elements between indexes `left` and `right`:
+    -   If left > right, then there are no elements available for that subtree. Return None.
+    -   Pick left middle element: `p = (left + right) // 2`.
+    -   Initiate the root: `root = TreeNode(nums[p])`.
+    -   Compute recursively left and right subtrees: `root.left = helper(left, p - 1)`, `root.right = helper(p + 1, right)`.
+
+```java
+int[] nums;
+
+public TreeNode helper(int left, int right){
+    if (left > right) return null;
+    
+    // always choose left middle node as a root
+    int p = (left + right) / 2;
+    
+    // preorder traversal: node -> left -> right
+    TreeNode root = new TreeNode(nums[p]);
+    root.left = helper(left, p - 1);
+    root.right = helper(p + 1, right);
+    return root;
+}
+public TreeNode sortedArrayToBST(int[] nums){
+    this.nums = nums;
+    return helper(0, nums.length - 1);
+}
+```
+
+-   Time complexity: $O(N)$ since we visit each node exactly once.
+
+-   Space complexity: $O(\log N)$.
+
+    The recursion stack requires $O(\log N)$ space because the tree is height-balanced. Note that the $O(N)$ space used to store the output does not count as auxiliary space, so it is not included in the space complexity.
