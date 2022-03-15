@@ -132,3 +132,148 @@ class Solution {
 *   Space Complexity : $O(n)$.
 
     In the worst case, the stack will have all the numbers on it at the same time. This is never more than half the length of the input array.
+
+## Minimum Remove to Make Valid Parentheses(Medium #1249)
+
+**Question**: Given a string s of `'('` , `')'` and lowercase English characters.
+
+Your task is to remove the minimum number of parentheses ( `'('` or `')'`, in any positions ) so that the resulting *parentheses string* is valid and returns **any** valid string.
+
+Formally, a *parentheses string* is valid if and only if:
+
+-   It is the empty string, that contains only lowercase characters, or
+-   It can be written as `AB` (`A` concatenated with `B`), where `A` and `B` are valid strings, or
+-   It can be written as `(A)`, where `A` is a valid string.
+
+**Example 1:**
+
+```
+Input: s = "lee(t(c)o)de)"
+Output: "lee(t(c)o)de"
+Explanation: "lee(t(co)de)" , "lee(t(c)ode)" would also be accepted.
+```
+
+**Example 2:**
+
+```
+Input: s = "a)b(c)d"
+Output: "ab(c)d"
+```
+
+**Example 3:**
+
+```
+Input: s = "))(("
+Output: ""
+Explanation: An empty string is also valid.
+```
+
+**Constraints:**
+
+-   `1 <= s.length <= 105`
+-   `s[i]` is either`'('` , `')'`, or lowercase English letter`.`
+
+### My Solution
+
+```java
+public String minRemoveToMakeValid(String s) {
+    Set<Integer> remove = new HashSet<>();
+    StringBuilder sb = new StringBuilder();
+    Stack<Integer> stack = new Stack<>();
+    for(int i = 0; i < s.length(); i++){
+        if (s.charAt(i) == '('){
+            stack.push(i);
+        }
+        else if (s.charAt(i) == ')'){
+            if (!stack.isEmpty()){
+                stack.pop();
+            }
+            else {
+                remove.add(i);
+            }
+        }
+    }
+    while (!stack.isEmpty()){
+        remove.add(stack.pop());
+    }
+    for (int j = 0; j < s.length(); j++){
+        if (!remove.contains(j)){
+            sb.append(s.charAt(j));
+        }
+    }
+    return sb.toString();
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Using a Stack and String Builder
+
+*   Same as my solution
+*   Use stack to record the index of parentheses, and use hash set to record what should be removed from the string
+
+```java
+public String minRemoveToMakeValid(String s) {
+    Set<Integer> indexesToRemove = new HashSet<>();
+    Deque<Integer> stack = new ArrayDeque<>();
+    for (int i = 0; i < s.length(); i++) {
+        if (s.charAt(i) == '(') {
+            stack.push(i);
+        } if (s.charAt(i) == ')') {
+            if (stack.isEmpty()) {
+                indexesToRemove.add(i);
+            } else {
+                stack.pop();
+            }
+        }
+    }
+    // Put any indexes remaining on stack into the set.
+    while (!stack.isEmpty()) indexesToRemove.add(stack.pop());
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < s.length(); i++) {
+        if (!indexesToRemove.contains(i)) {
+            sb.append(s.charAt(i));
+        }
+    }
+    return sb.toString();
+}
+```
+
+*   Time complexity: $O(n)$, where n is the length of the input string.
+
+*   Space complexity: $O(n)$, where n is the length of the input string.
+
+    We are using a **stack**, **set**, and **string builder**, each of which could have up to n characters in them, and so require up to $O(n)$ space.
+
+#### Solution #2 Two-Pass String Builder
+
+*   A key observation you might have made from the previous algorithm is that for all invalid `")"`, we know immediately that they are invalid (they are the ones we were putting in the set). It is the `"("` that we don't know about until the end (as they are what was left on the stack at the end).
+*   We could be building up a string builder in that first loop that has *all* of the invalid `")"` removed. Then go to the second loop to remove all the invalid `"("`.
+    *   Reverse the first-term result and put it back to the algorithm to remove invalid closing
+
+```java
+private StringBuilder removeInvalidClosing(charSequence string, char open, char close){
+    StringBuilder sb = new StringBuilder();
+    int balance = 0;
+    for (int i = 0; i < string.length(); i++){
+        char c = string.charAt(i);
+        if (c == open){
+            balance++;
+        }
+        if (c == close){
+            if (balance == 0) continue;
+            balance--;
+        }
+        sb.append(c);
+    }
+    return sb;
+    
+    public String minRemoveToMakeValid(String s){
+        StringBuilder result = removeInvalidClosing(s, '(', ')');
+        result = removeInvalidClosing(result.reverse(), ')', '(');
+        return result.reverse().toString();
+    }
+}
+```
+
+*   Time and space complexity is the same.
