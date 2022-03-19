@@ -715,4 +715,56 @@ public String intToRoman(int num) {
 }
 ```
 
-*   Time and space complexity is same as above.
+*   Time and space complexity is the same as above.
+
+## Remove Duplicate Letters(Medium #316)
+
+**Question**: Given a string `s`, remove duplicate letters so that every letter appears once and only once. You must make sure your result is **the smallest in lexicographical order** among all possible results.
+
+**Example 1:**
+
+```
+Input: s = "bcabc"
+Output: "abc"
+```
+
+**Example 2:**
+
+```
+Input: s = "cbacdcbc"
+Output: "acdb"
+```
+
+**Constraints:**
+
+-   `1 <= s.length <= 104`
+-   `s` consists of lowercase English letters.
+
+**Note:** This question is the same as 1081: https://leetcode.com/problems/smallest-subsequence-of-distinct-characters/
+
+### Standard Solution
+
+#### Solution #1 Greedy Solving Letter by Letter
+
+*   In each iteration, we determine the leftmost letter in our solution. This will be **the smallest character such that its suffix contains at least one copy of every character in the string**.
+*   We determine the rest of our answer by recursively calling the function on the suffix we generate from the original string (the leftmost letter is removed).
+
+```java
+public String removeDuplicateLetters(String s) {
+    int[] cnt = new int[26];
+    int pos = 0;
+    for (int i = 0; i < s.length(); i++){
+        cnt[s.charAt(i) - 'a']++;
+    }
+    for (int i = 0; i < s.length(); i++){
+        if (s.charAt(i) < s.charAt(pos)){
+            pos = i;
+        }
+        if (--cnt[s.charAt(i) - 'a'] == 0) break;
+    }
+    return s.length() == 0 ? "" : s.charAt(pos) + removeDuplicateLetters(s.substring(pos + 1).replaceAll("" + s.charAt(pos), ""));
+}
+```
+
+-   Time complexity: $O(N)$. Each recursive call will take $O(N)$. The number of recursive calls is bounded by a constant (26 letters in the alphabet), so we have $O(N) * C = O(N)$.
+-   Space complexity: $O(N)$. Each time we slice the string we're creating a new one (strings are immutable). The number of slices is bound by a constant, so we have $O(N) * C = O(N)$.
