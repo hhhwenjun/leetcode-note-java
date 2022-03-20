@@ -768,3 +768,117 @@ public String removeDuplicateLetters(String s) {
 
 -   Time complexity: $O(N)$. Each recursive call will take $O(N)$. The number of recursive calls is bounded by a constant (26 letters in the alphabet), so we have $O(N) * C = O(N)$.
 -   Space complexity: $O(N)$. Each time we slice the string we're creating a new one (strings are immutable). The number of slices is bound by a constant, so we have $O(N) * C = O(N)$.
+
+## Minimum Domino Rotations For Equal Row(Medium #1007)
+
+**Question**: In a row of dominoes, `tops[i]` and `bottoms[i]` represent the top and bottom halves of the `ith` domino. (A domino is a tile with two numbers from 1 to 6 - one on each half of the tile.)
+
+We may rotate the `ith` domino, so that `tops[i]` and `bottoms[i]` swap values.
+
+Return the minimum number of rotations so that all the values in `tops` are the same, or all the values in `bottoms` are the same.
+
+If it cannot be done, return `-1`.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/05/14/domino.png" alt="img" style="zoom:50%;" />
+
+```
+Input: tops = [2,1,2,4,2,2], bottoms = [5,2,6,2,3,2]
+Output: 2
+Explanation: 
+The first figure represents the dominoes as given by tops and bottoms: before we do any rotations.
+If we rotate the second and fourth dominoes, we can make every value in the top row equal to 2, as indicated by the second figure.
+```
+
+**Example 2:**
+
+```
+Input: tops = [3,5,1,2,3], bottoms = [3,6,3,3,4]
+Output: -1
+Explanation: 
+In this case, it is not possible to rotate the dominoes to make one row of values equal.
+```
+
+**Constraints:**
+
+-   `2 <= tops.length <= 2 * 104`
+-   `bottoms.length == tops.length`
+-   `1 <= tops[i], bottoms[i] <= 6`
+
+### My Solution
+
+```java
+public int minDominoRotations(int[] tops, int[] bottoms) {
+    int res = Integer.MAX_VALUE;
+    int length = tops.length;
+    int indicator = 0;
+    int topNum = 0;
+    int bottomNum = 0;
+
+    for (int i = 1; i <= 6; i++){
+        indicator = 0;
+        topNum = 0;
+        bottomNum = 0;
+
+        for(int j = 0; j < length; j++){
+            if(tops[j] == i || bottoms[j] == i){
+                indicator++;
+                if (tops[j] == i && bottoms[j] != i){
+                    topNum++;
+                }
+                else if (tops[j] != i && bottoms[j] == i) {
+                    bottomNum++;
+                }
+            }
+        }
+        if (indicator == length){
+            res = Math.min(res, topNum);
+            res = Math.min(res, bottomNum);
+        }
+    }
+    return res == Integer.MAX_VALUE ? -1 : res;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Greedy
+
+*   Algorithm: 
+    *   Pick up the first element. It has two sides: `A[0]` and `B[0]`.
+    *   Check if one could make all elements in `A` row or `B` row to be equal to `A[0]`. If yes, return the minimum number of rotations needed.
+    *   Check if one could make all elements in `A` row or `B` row to be equal to `B[0]`. If yes, return the minimum number of rotations needed.
+    *   Otherwise return `-1`.
+
+```java
+  public int check(int x, int[] A, int[] B, int n) {
+    // how many rotations should be done
+    // to have all elements in A equal to x
+    // and to have all elements in B equal to x
+    int rotations_a = 0, rotations_b = 0;
+    for (int i = 0; i < n; i++) {
+      // rotations coudn't be done
+      if (A[i] != x && B[i] != x) return -1;
+      // A[i] != x and B[i] == x
+      else if (A[i] != x) rotations_a++;
+      // A[i] == x and B[i] != x    
+      else if (B[i] != x) rotations_b++;
+    }
+    // min number of rotations to have all
+    // elements equal to x in A or B
+    return Math.min(rotations_a, rotations_b);
+  }
+
+  public int minDominoRotations(int[] A, int[] B) {
+    int n = A.length;
+    int rotations = check(A[0], B, A, n);
+    // If one could make all elements in A or B equal to A[0]
+    if (rotations != -1 || A[0] == B[0]) return rotations;
+    // If one could make all elements in A or B equal to B[0]
+    else return check(B[0], B, A, n);
+  }
+```
+
+-   Time complexity: $\mathcal{O}(N)$ since here one iterates over the arrays not more than two times.
+-   Space complexity: $\mathcal{O}(1)$ since it's a constant space solution.
