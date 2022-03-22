@@ -345,4 +345,199 @@ There are two kinds of heaps: **Max Heap** and **Min Heap**.
     
     ```
 
-    
+## Heap Construction
+
+*   When creating a Heap, we can simultaneously perform the **heapify** operation. Heapify means converting a group of data into a Heap.
+*   Time complexity: $O(N)$.
+*   Space complexity: $O(N)$.
+
+```java
+// In Java, a Heap is represented by a Priority Queue
+import java.util.Collections;
+import java.util.PriorityQueue;
+import java.util.Arrays;
+
+// Construct an empty Min Heap
+PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+
+// Construct an empty Max Heap
+PriorityQueue<Integer> maxHeap = new PriorityQueue<>(Collections.reverseOrder());
+
+// Construct a Heap with initial elements. 
+// This process is named "Heapify".
+// The Heap is a Min Heap
+PriorityQueue<Integer> heapWithValues= new PriorityQueue<>(Arrays.asList(3, 1, 2));
+```
+
+*   Inserting an element
+    *   Time complexity: $O(\log N)$
+    *   Space complexity: $O(1)$
+
+```java
+// Insert an element to the Min Heap
+minHeap.add(5);
+
+// Insert an element to the Max Heap
+maxHeap.add(5);
+```
+
+*   Getting the top element of the heap
+    *   Time complexity: $O(1)$
+    *   Space complexity: $O(1)$
+
+```java
+// Get top element from the Min Heap
+// i.e. the smallest element
+minHeap.peek();
+// Get top element from the Max Heap
+// i.e. the largest element
+maxHeap.peek();
+```
+
+*   Deleting the top element
+    *   Time complexity: $O(\log N)$
+    *   Space complexity: $O(1)$
+
+```java
+// Delete top element from the Min Heap
+minHeap.poll();
+
+// Delete top element from the Max Heap
+maxheap.poll();
+```
+
+*   Getting the length of a heap
+    *   Time complexity: $O(1)$
+    *   Space complexity: $O(1)$
+
+```java
+// Length of the Min Heap
+minHeap.size();
+
+// Length of the Max Heap
+maxHeap.size();
+
+// Note, in Java, apart from checking if the length of the Heap is 0, we can also use isEmpty()
+// If there are no elements in the Heap, isEmpty() will return true;
+// If there are still elements in the Heap, isEmpty() will return false;
+```
+
+*   Time and Space Complexity:
+
+    | Heap method            | Time complexity | Space complexity |
+    | ---------------------- | --------------- | ---------------- |
+    | Construct a Heap       | $O(N)$          | $O(N)$           |
+    | Insert an element      | $O(\log N)$     | $O(1)$           |
+    | Get the top element    | $O(1)$          | $O(1)$           |
+    | Delete the top element | $O(\log N)$     | $O(1)$           |
+    | Get the size of a Heap | $O(1)$          | $O(1)$           |
+
+## Common Methods of Heap
+
+**Min Heap**
+
+```java
+// Code for Min Heap
+import java.util.PriorityQueue;
+
+public class App {
+    public static void main(String[] args) {
+        // Construct an instance of Min Heap
+        PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+        
+        // Add 3，1，2 respectively to the Min Heap
+        minHeap.add(3);
+        minHeap.add(1);
+        minHeap.add(2);
+        
+        // Check all elements in the Min Heap, the result is [1, 3, 2]
+        System.out.println("minHeap: " + minHeap.toString());
+        
+        // Get the top element of the Min Heap
+        int peekNum = minHeap.peek();
+        
+        // The result is 1
+        System.out.println("peek number: " + peekNum);
+        
+        // Delete the top element in the Min Heap
+        int pollNum = minHeap.poll();
+        
+        // The reult is 1
+        System.out.println("poll number: " + pollNum);
+        
+        // Check the top element after deleting 1, the result is 2
+        System.out.println("peek number: " + minHeap.peek());
+        
+        // Check all elements in the Min Heap, the result is [2,3]
+        System.out.println("minHeap: " + minHeap.toString());
+        
+        // Check the number of elements in the Min Heap
+        // Which is also the length of the Min Heap
+        int heapSize = minHeap.size();
+        
+        // The result is 2
+        System.out.println("minHeap size: " + heapSize);
+        
+        // Check if the Min Heap is empty
+        boolean isEmpty = minHeap.isEmpty();
+        
+        // The result is false
+        System.out.println("isEmpty: " + isEmpty);
+    }
+}
+```
+
+**Max Heap**
+
+```java
+// Code for Max Heap
+import java.util.Collections;
+import java.util.PriorityQueue;
+
+public class App {
+    public static void main(String[] args) {
+        // Construct an instance of Max Heap
+        PriorityQueue<Integer> maxHeap = new PriorityQueue<>(Collections.reverseOrder());
+        
+        // Add 1，3，2 respectively to the Max Heap
+        maxHeap.add(1);
+        maxHeap.add(3);
+        maxHeap.add(2);
+        
+        // Check all elements in the Max Heap, the result is [3, 1, 2]
+        System.out.println("maxHeap: " + maxHeap.toString());
+        
+        // Get the top element of the Max Heap
+        int peekNum = maxHeap.peek();
+        
+        // The result is 3
+        System.out.println("peek number: " + peekNum);
+        
+        // Delete the top element in the Max Heap
+        int pollNum = maxHeap.poll();
+        
+        // The reult is 3
+        System.out.println("poll number: " + pollNum);
+        
+        // Check the top element after deleting 3, the result is 2
+        System.out.println("peek number: " + maxHeap.peek());
+        
+        // Check all elements in the Max Heap, the result is [2,1]
+        System.out.println("maxHeap: " + maxHeap.toString());
+        
+        // Check the number of elements in the Max Heap
+        // Which is also the length of the Max Heap
+        int heapSize = maxHeap.size();
+        
+        // The result is 2
+        System.out.println("maxHeap size: " + heapSize);
+        
+        // Check if the Max Heap is empty
+        boolean isEmpty = maxHeap.isEmpty();
+        
+        // The result is false
+        System.out.println("isEmpty: " + isEmpty);
+    }
+}
+```
+

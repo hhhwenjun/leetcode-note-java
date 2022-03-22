@@ -943,3 +943,103 @@ public List<Integer> partitionLabels(String S) {
 
 -   Time Complexity: $O(N)$, where $N$ is the length of S.
 -   Space Complexity: $O(1)$ to keep the data structure `last` of not more than 26 characters.
+
+## Smallest String With a Given Numeric Value(Medium #1663)
+
+**Question**: The **numeric value** of a **lowercase character** is defined as its position `(1-indexed)` in the alphabet, so the numeric value of `a` is `1`, the numeric value of `b` is `2`, the numeric value of `c` is `3`, and so on.
+
+The **numeric value** of a **string** consisting of lowercase characters is defined as the sum of its characters' numeric values. For example, the numeric value of the string `"abe"` is equal to `1 + 2 + 5 = 8`.
+
+You are given two integers `n` and `k`. Return *the **lexicographically smallest string** with **length** equal to `n` and **numeric value** equal to `k`.*
+
+Note that a string `x` is lexicographically smaller than string `y` if `x` comes before `y` in dictionary order, that is, either `x` is a prefix of `y`, or if `i` is the first position such that `x[i] != y[i]`, then `x[i]` comes before `y[i]` in alphabetic order.
+
+**Example 1:**
+
+```
+Input: n = 3, k = 27
+Output: "aay"
+Explanation: The numeric value of the string is 1 + 1 + 25 = 27, and it is the smallest string with such a value and length equal to 3.
+```
+
+**Example 2:**
+
+```
+Input: n = 5, k = 73
+Output: "aaszz"
+```
+
+**Constraints:**
+
+-   `1 <= n <= 105`
+-   `n <= k <= 26 * n`
+
+### Standard Solution
+
+#### Solution #1 Build number from left to right
+
+*   Check how many 'z' we have for n - 1 location. Put the rest value to the first location.
+*   Otherwise, just put 1 to the first location. Put as many 'a' as possible.
+
+```java
+public String getSmallestString(int n, int k) {
+    char[] result = new char[n];
+    // length of the results
+    for (int position = 0; position < n; position++){
+        // last location of the result
+        int positionsLeft = (n - position - 1);
+        if (k > positionsLeft * 26){
+            int add = k - (positionsLeft * 26);
+            // rest of the exceeded limit move to beginning
+            result[position] = (char)('a' + add - 1);
+            k -= add;
+        }
+        else {
+            result[position] = 'a';
+            k--;
+        }
+    }
+    return new String(result);
+}
+```
+
+-   Time Complexity: $\mathcal{O}(n)$ as we iterate over n positions to build the resultant string.
+-   Space Complexity: $\mathcal{O}(1)$, as we use constant extra space to store `add` and `position` variables.
+
+#### Solution #2 Build number from right
+
+*   Put 'a' to all locations, then try to put 'z' to take place of 'a' from the last location.
+
+```java
+public String getSmallestString(int n, int k) {
+    char[] result = new char[n];
+    Arrays.fill(result, 'a');
+    k -= n;
+    for (int position = n - 1; position >= 0 && k > 0; position--) {
+        int add = Math.min(k, 25);
+        result[position] = (char) (result[position] + add);
+        k -= add;
+    }
+    return new String(result);
+}
+```
+
+*   Complexity is the same.
+
+#### Solution #3 Build number from the right - optimized solution
+
+*   Put 'z' from the end location to the front until less than 'z'. Put as many values at the end as possible.
+
+```java
+public String getSamllestString(int n, int k){
+    char[] result = new char[n];
+    for (int position = n - 1; position >= 0; position--){
+        int add = Math.min(k - position, 26);
+        result[position] = (char)(add + 'a' - 1);
+        k -= add;
+    }
+    return new String(result);
+}
+```
+
+*   Complexity is the same.
