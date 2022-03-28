@@ -1967,3 +1967,147 @@ public int romanToInt(String s) {
 *   Space complexity: $O(1)$.
 
     Because only a constant number of single-value variables are used, the space complexity is $O(1)$.
+
+## The K Weakest Rows in a Matrix(Easy 1337)
+
+**Question**: You are given an `m x n` binary matrix `mat` of `1`'s (representing soldiers) and `0`'s (representing civilians). The soldiers are positioned **in front** of the civilians. That is, all the `1`'s will appear to the **left** of all the `0`'s in each row.
+
+A row `i` is **weaker** than a row `j` if one of the following is true:
+
+-   The number of soldiers in row `i` is less than the number of soldiers in row `j`.
+-   Both rows have the same number of soldiers and `i < j`.
+
+Return *the indices of the* `k` ***weakest** rows in the matrix ordered from weakest to strongest*.
+
+**Example 1:**
+
+```
+Input: mat = 
+[[1,1,0,0,0],
+ [1,1,1,1,0],
+ [1,0,0,0,0],
+ [1,1,0,0,0],
+ [1,1,1,1,1]], 
+k = 3
+Output: [2,0,3]
+Explanation: 
+The number of soldiers in each row is: 
+- Row 0: 2 
+- Row 1: 4 
+- Row 2: 1 
+- Row 3: 2 
+- Row 4: 5 
+The rows ordered from weakest to strongest are [2,0,3,1,4].
+```
+
+**Example 2:**
+
+```
+Input: mat = 
+[[1,0,0,0],
+ [1,1,1,1],
+ [1,0,0,0],
+ [1,0,0,0]], 
+k = 2
+Output: [0,2]
+Explanation: 
+The number of soldiers in each row is: 
+- Row 0: 1 
+- Row 1: 4 
+- Row 2: 1 
+- Row 3: 1 
+The rows ordered from weakest to strongest are [0,2,3,1].
+```
+
+**Constraints:**
+
+-   `m == mat.length`
+-   `n == mat[i].length`
+-   `2 <= n, m <= 100`
+-   `1 <= k <= m`
+-   `matrix[i][j]` is either 0 or 1.
+
+### My Solution
+
+```java
+public int[] kWeakestRows(int[][] mat, int k) {
+    Map<Integer, List<Integer>> order = new HashMap<>();
+    int sum = 0;
+    for(int i = 0; i < mat.length; i++){
+        sum = 0;
+        for (int j : mat[i]){
+            sum += j;
+        }
+        if (!order.containsKey(sum)){
+            order.put(sum, new ArrayList<Integer>());
+            order.get(sum).add(i);
+        }
+        else {
+            order.get(sum).add(i);
+        }
+    }
+    int[] res = new int[k];
+    int sol = 0;
+    int index = 0;
+    while(index < k){
+        if(order.containsKey(sol)){
+            for (Integer num : order.get(sol)){
+                res[index] = num;
+                index++;
+                if (index == k){
+                    break;
+                }
+            }
+        }
+        sol++;
+    }
+    return res;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Vertical Iteration
+
+*   Treat the matrix as columns, search each column
+*   If meet the requirement, record the row number
+
+```java
+public int[] kWeakestRows(int[][] mat, int k) {
+    int m = mat.length;
+    int n = mat[0].length;
+    int [] indexes = new int[k];
+    int nextInsertIndex = 0;
+
+    // This code does the same as the animation above.
+    for (int c = 0; c < n && nextInsertIndex < k; c++) {
+        for (int r = 0; r < m && nextInsertIndex < k; r++) {
+            // If this is the first 0 in the current row.
+            if (mat[r][c] == 0 && (c == 0 || mat[r][c - 1] == 1)) {
+                indexes[nextInsertIndex] = r;
+                nextInsertIndex++;
+            }
+        }
+    }
+    /* If there aren't enough, it's because some of the first k weakest rows
+     * are entirely 1's. We need to include the ones with the lowest indexes
+     * until we have at least k. */
+    for (int r = 0; nextInsertIndex < k ; r++) {
+        /* If index i in the last column is 1, this was a full row and therefore
+         * couldn't have been included in the output yet. */
+        if (mat[r][n - 1] == 1) {
+            indexes[nextInsertIndex] = r;
+            nextInsertIndex++;
+        }
+    }
+    return indexes;
+}
+```
+
+-   Time Complexity: $O(m \cdot n)$
+
+    We are visiting each of the first $m \cdot n - 1$ cells at most once, and the last column of m cells at most twice. In big-oh notation, $O(m \cdot (n - 1) + 2 \cdot m) = O(m \cdot n)$. At each of the cells, we do a simple $O(1)$ check to determine whether or not it should be added to the output list. The output list doesn't need any further processing, and so does not add anything further to the time complexity. This leaves us with $O(m \cdot n)$.
+
+-   Space Complexity: $O(1)$.
+
+    Because the output array is used *only* for gathering up the outputs to return, and these outputs require no further processing, this algorithm is considered to be $O(1)$ space. This is in contrast to the previous approaches that were also using the output array as working memory.

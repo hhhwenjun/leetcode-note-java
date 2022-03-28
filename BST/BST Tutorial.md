@@ -497,6 +497,32 @@ kthLargest.add(4);   // return 8
 -   At most `104` calls will be made to `add`.
 -   It is guaranteed that there will be at least `k` elements in the array when you search for the `kth` element.
 
+### My Solution
+
+```java
+// second attempt: heap, but more efficient than standard solution
+private PriorityQueue<Integer> heap;
+private int k;
+public KthLargest(int k, int[] nums) {
+    this.k = k;
+    heap = new PriorityQueue<Integer>();
+    for(int num : nums){
+        heap.add(num);
+        if (heap.size() > k){
+            heap.poll();
+        }
+    }
+}
+
+public int add(int val) {
+    heap.add(val);
+    if (heap.size() > k){
+        heap.poll();
+    }
+    return heap.peek();
+}
+```
+
 ### Standard Solution
 
 *   Should use heap.

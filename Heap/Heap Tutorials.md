@@ -561,3 +561,65 @@ The sorting algorithm using a **Max Heap** is as follows:
     *   Let N be the total number of elements.
     *   Time complexity: $O(N \log N)$
     *   Space complexity: $O(N)$
+
+## The Top K Problem
+
+Solution of the Top K largest elements:
+
+1.  Construct a Max Heap.
+2.  Add all elements into the Max Heap.
+3.  Traversing and deleting the top element (using pop() or poll() for instance), and storing the value into the result array T.
+4.  Repeat step 3 until we have removed the K largest elements.
+
+**Complexity Analysis**
+
+*   Time complexity: $O(K \log N + N)$
+    *   Steps one and two require us to construct a Max Heap which requires $O(N)$ time using the previously discussed heapify method. Each element removed from the heap requires $O(\log N)$ time; this process is repeated K*K* times. Thus the total time complexity is $O(K \log N + N)$.
+
+*   Space complexity: $O(N)$
+    *   After step 2, the heap will store all N elements.
+
+## The K-th Element
+
+### Approach 1
+
+*   Solution of the K-th largest element:
+
+    1.  Construct a Max Heap.
+    2.  Add all elements into the Max Heap.
+    3.  Traversing and deleting the top element (using pop() or poll() for instance).
+    4.  Repeat Step 3 K times until we find the K-th largest element.
+
+*   Let N be the total number of elements.
+
+    Time complexity: $O(K \log N + N)$
+
+    -   Steps one and two require us to construct a Max Heap which requires O(N) time using the previously discussed heapify method. Each element removed from the heap requires $O(\log N)$ time; this process is repeated K times. Thus the total time complexity is $O(K \log N + N)$.
+
+    Space complexity: $O(N)$
+
+    -   After step 2, the heap will store all N elements.
+
+### Approach 2
+
+*   Solution of the K-th largest element:
+
+    1.  Construct a Min Heap with size K.
+    2.  Add elements to the Min Heap one by one.
+    3.  When there are K elements in the “Min Heap”, compare the current element with the top element of the Heap:
+        -   If the current element is not larger than the top element of the Heap, drop it and proceed to the next element.
+        -   If the current element is larger than the Heap’s top element, delete the Heap’s top element, and add the current element to the “Min Heap”.
+    4.  Repeat Steps 2 and 3 until all elements have been iterated.
+
+    Now the top element in the Min Heap is the K-th largest element.
+
+*   Complexity: 
+
+    *   Time complexity: $O(N \log K)$
+
+        -   Steps one and two will require $O(K \log K)$ time if the elements are added one by one to the heap, however using the heapify method, these two steps could be accomplished in $O(K)$ time. Steps 3 and 4 will require $O(\log K)$ time each time an element must be replaced in the heap. In the worst-case scenario, this will be done N - K times. Thus the total time complexity is $O((N - K) \log K + K \log K)$ which simplifies to $O(N \log K)$.
+
+        Space complexity: $O(K)$
+
+        -   The heap will contain at most K elements at any given time.
+
