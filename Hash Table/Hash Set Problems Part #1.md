@@ -934,6 +934,21 @@ public int findDuplicate(int[] nums) {
 }
 ```
 
+```java
+// second attempt： hashset
+public int findDuplicate(int[] nums) {
+    Set<Integer> numSet = new HashSet<>();
+    for (int num : nums){
+        if (!numSet.add(num)){
+            return num;
+        }
+    }
+    return -1;
+}
+```
+
+
+
 ### Standard Solution
 
 This question has many solutions. The note would only take some of them which are well-written.
