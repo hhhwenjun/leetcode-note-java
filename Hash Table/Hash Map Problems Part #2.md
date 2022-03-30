@@ -2065,6 +2065,39 @@ public int[] kWeakestRows(int[][] mat, int k) {
 }
 ```
 
+```java
+// second attempt: but pretty slow
+public int[] kWeakestRows(int[][] mat, int k) {
+    // use a min heap to find the weakest one among matrix
+    PriorityQueue<Integer> heap = new PriorityQueue<>((n1, n2) -> (n1 - n2));
+    List<Integer> matList = new ArrayList<>();
+
+    int[] res = new int[k];
+    int num = 0;
+    // store the sum of each row to the array list, and store sum to heap
+    for(int[] row : mat){
+        num = 0;
+        for (int digit : row){
+            num += digit;
+        }
+        matList.add(num);
+        heap.add(num);
+    }
+    // output the order from heap
+    int min = 0;
+    int index = 0;
+    while(heap.size() > mat.length - k){
+        min = heap.poll();
+        res[index] = matList.indexOf(min);
+        matList.set(matList.indexOf(min), 101);
+        index++;
+    }
+    return res;
+}
+```
+
+
+
 ### Standard Solution
 
 #### Solution #1 Vertical Iteration
@@ -2111,3 +2144,4 @@ public int[] kWeakestRows(int[][] mat, int k) {
 -   Space Complexity: $O(1)$.
 
     Because the output array is used *only* for gathering up the outputs to return, and these outputs require no further processing, this algorithm is considered to be $O(1)$ space. This is in contrast to the previous approaches that were also using the output array as working memory.
+
