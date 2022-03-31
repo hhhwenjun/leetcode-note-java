@@ -440,3 +440,211 @@ class Solution {
     -   After that, we perform K iterations and each iteration has two operations. We extract the minimum element from a heap containing X elements. Then we add a new element to this heap. Both the operations will take $O(\log(X))$ time.
     -   Thus, the total time complexity for this algorithm comes down to be $O(X + K\log(X))$ where X is $\text{min}(K, N)$.
 -   Space Complexity: $O(X)$ which is occupied by the heap.
+
+## Meeting Rooms II(Medium #253)
+
+**Question**: Given an array of meeting time intervals `intervals` where `intervals[i] = [starti, endi]`, return *the minimum number of conference rooms required*.
+
+**Example 1:**
+
+```
+Input: intervals = [[0,30],[5,10],[15,20]]
+Output: 2
+```
+
+**Example 2:**
+
+```
+Input: intervals = [[7,10],[2,4]]
+Output: 1
+```
+
+**Constraints:**
+
+-   `1 <= intervals.length <= 104`
+-   `0 <= starti < endi <= 106`
+
+### Standard Solution
+
+#### Solution #1 Priority Queue
+
+*   First sort the input array to arrange it with the meeting start time
+*   Based on the start time, create rooms for meetings, and store each room's end time in a min-heap
+*   In the min-heap, each time we pop the room that ends first. If the current meeting information starts before the room's end time, we need to create a new room for the meeting.
+*   **Algorithm**: 
+    *   Sort the given meetings by their `start time`.
+    *   Initialize a new `min-heap` and add the first meeting's ending time to the heap. We simply need to keep track of the ending times as that tells us when a meeting room will get free.
+    *   For every meeting room check if the minimum element of the heap i.e. the room at the top of the heap is free or not.
+    *   If the room is free, then we extract the topmost element and add it back with the ending time of the current meeting we are processing.
+    *   If not, then we allocate a new room and add it to the heap.
+    *   After processing all the meetings, the size of the heap will tell us the number of rooms allocated. This will be the minimum number of rooms needed to accommodate all the meetings.
+
+```java
+public int minMeetingRooms(int[][] intervals){
+    // check for the base case. If there are no intervals, return 0
+    if (intervals.length == 0){
+        return 0;
+    }
+    
+    // min heap
+    PriorityQueue<Integer> allocator = 
+        new PriorityQueue<Integer>(intervals.length,new Comparator<Integer>(){
+            public int compare(Integer a, Integer b){
+                return a - b;
+            }
+        });
+    // sort the intervals by start time
+    Arrays.sort(intervals, new Comparator<int[]>(){
+        public int compare(final int[] a, final int[] b){
+            return a[0] - b[0];
+        }
+    });
+    // add the first meeting
+    allocator.add(intervals[0][1]);
+    
+    // iterate over remaining intervals
+    for (int i = 1; i < intervals.length; i++){
+        // if the room due to free up the earliest is free, assign that room to this meeting
+        if (intervals[i][0] >= allocator.peek()){
+            allocator.poll();
+        }
+        // if a new room is to be assigned, then also add to the heap
+        // if an old room is allocated, then also we have to add to the heap with updated end time
+        allocator.add(intervals[i][1]);
+    }
+    return allocator.size();
+}
+```
+
+*   Time Complexity: $O(N\log N)$
+    -   There are two major portions that take up time here. One is `sorting` the array that takes $O(N\log N)$ considering that the array consists of N elements.
+    -   Then we have the `min-heap`. In the worst case, all N meetings will collide with each other. In any case, we, have N*N* add operations on the heap. In the worst case, we will have N*N* extract-min operations as well. Overall complexity being $(NlogN)$ since the extract-min operation on a heap takes $O(\log N)$.
+*   Space Complexity: $O(N)$ because we construct the `min-heap` and that can contain N elements in the worst case as described above in the time complexity section. Hence, the space complexity is $O(N)$.
+
+## K Closest Points to Origin(Medium #973)
+
+**Question**: Given an array of `points` where `points[i] = [xi, yi]` represents a point on the **X-Y** plane and an integer `k`, return the `k` closest points to the origin `(0, 0)`.
+
+The distance between two points on the **X-Y** plane is the Euclidean distance (i.e., `√(x1 - x2)2 + (y1 - y2)2`).
+
+You may return the answer in **any order**. The answer is **guaranteed** to be **unique** (except for the order that it is in).
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/03/03/closestplane1.jpg" alt="img" style="zoom:33%;" />
+
+```
+Input: points = [[1,3],[-2,2]], k = 1
+Output: [[-2,2]]
+Explanation:
+The distance between (1, 3) and the origin is sqrt(10).
+The distance between (-2, 2) and the origin is sqrt(8).
+Since sqrt(8) < sqrt(10), (-2, 2) is closer to the origin.
+We only want the closest k = 1 points from the origin, so the answer is just [[-2,2]].
+```
+
+**Example 2:**
+
+```
+Input: points = [[3,3],[5,-1],[-2,4]], k = 2
+Output: [[3,3],[-2,4]]
+Explanation: The answer [[-2,4],[3,3]] would also be accepted.
+```
+
+**Constraints:**
+
+-   `1 <= k <= points.length <= 104`
+-   `-104 < xi, yi < 104`
+
+### My Solution
+
+```java
+public int[][] kClosest(int[][] points, int k) {
+    // use min heap to store the value of points, and hashmap 
+    PriorityQueue<int[]> heap = new PriorityQueue<>(new Comparator<int[]>(){
+        public int compare(int[] a, int[] b){
+            return a[0]*a[0] + a[1]*a[1] - (b[0]*b[0] + b[1]*b[1]);
+        }
+    });
+    for(int[] point : points){
+        heap.add(point);
+    }
+    int[][] res = new int[k][2];
+    int[] singlePoint;
+    for(int i = 0; i < k; i++){
+        singlePoint = heap.poll();
+        res[i] = singlePoint;
+    }
+    return res;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Sort with Custom Comparator
+
+*   Sort with a custom comparator, similar to my solution but without a heap
+
+```java
+public int[][] kClosest(int[][] points, int k){
+    // sort the array with a custom lambda comparator function
+    Arrays.sort(points, (a, b) -> squaredDistance(a) - squaredDistance(b));
+    
+    // return the first k elements of the sorted array
+    return Arrays.copyOf(points, k);
+}
+private int squaredDistance(int[] point){
+    // calculate and return the squared euclidean distance
+    return point[0]*point[0] + point[1]*point[1];
+}
+```
+
+*   Time complexity: $O(N \cdot \log N)$ for the sorting of `points`.
+
+*   Space complexity: $O(\log N)$ to $O(N)$ for the extra space required by the sorting process.
+
+#### Solution #2 Max Heap
+
+*   Create a new structure to store the distance and point index(similar to a hashmap but not a map).
+*   Create a max heap to store the distance data
+*   Each time poll the topmost point with the farthest distance, and input the new pointer with a shorter distance
+*   Finally, poll all the data from the heap and use the point index to find the point.
+
+```java
+public int[][] kClosest(int[][] points, int k){
+    // use a lambda comparator to sort the PQ by the farthest distance
+    Queue<int[]> maxPQ = new PriorityQueue<>((a, b) -> b[0] - a[0]);
+    for (int i = 0; i < points.length; i++){
+        int[] entry = {squaredDistance(points[i]), i};
+        if (maxPQ.size() < k){
+            // fill the max PQ up to k points
+            maxPQ.add(entry);
+        }
+        else if (entry[0] < maxPQ.peek()[0]){
+            // if the max PQ is full and a closer point is found, discard the farthest point
+            maxPQ.poll();
+            maxPQ.add(entry);
+        }
+    }
+    // return all points stored in max PQ
+    int[][] ansert = new int[k][2];
+    for (int i = 0; i < k; i++){
+        int entryIndex = maxPQ.poll()[1];
+        answer[i] = points[entryIndex];
+    }
+    return answer;
+}
+
+ private int squaredDistance(int[] point) {
+    // Calculate and return the squared Euclidean distance
+    return point[0] * point[0] + point[1] * point[1];
+}
+```
+
+-   Time complexity: $O(N \cdot \log k)$
+
+    Adding to/removing from the heap (or priority queue) only takes $O(\log k)$ time when the size of the heap is capped at k elements.
+
+-   Space complexity: $O(k)$
+
+    The heap (or priority queue) will contain at most k elements.
