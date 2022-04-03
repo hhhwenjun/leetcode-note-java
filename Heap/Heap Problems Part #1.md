@@ -643,8 +643,136 @@ public int[][] kClosest(int[][] points, int k){
 
 -   Time complexity: $O(N \cdot \log k)$
 
-    Adding to/removing from the heap (or priority queue) only takes $O(\log k)$ time when the size of the heap is capped at k elements.
+    Adding to/removing from the heap (or priority queue) only takes $O(\log k)$ the time when the size of the heap is capped at k elements.
 
 -   Space complexity: $O(k)$
 
     The heap (or priority queue) will contain at most k elements.
+
+## Minimum Cost to Connet Sticks(Medium #1167)
+
+**Question**: You have some number of sticks with positive integer lengths. These lengths are given as an array `sticks`, where `sticks[i]` is the length of the `ith` stick.
+
+You can connect any two sticks of lengths `x` and `y` into one stick by paying a cost of `x + y`. You must connect all the sticks until there is only one stick remaining.
+
+Return *the minimum cost of connecting all the given sticks into one stick in this way*.
+
+**Example 1:**
+
+```
+Input: sticks = [2,4,3]
+Output: 14
+Explanation: You start with sticks = [2,4,3].
+1. Combine sticks 2 and 3 for a cost of 2 + 3 = 5. Now you have sticks = [5,4].
+2. Combine sticks 5 and 4 for a cost of 5 + 4 = 9. Now you have sticks = [9].
+There is only one stick left, so you are done. The total cost is 5 + 9 = 14.
+```
+
+**Example 2:**
+
+```
+Input: sticks = [1,8,3,5]
+Output: 30
+Explanation: You start with sticks = [1,8,3,5].
+1. Combine sticks 1 and 3 for a cost of 1 + 3 = 4. Now you have sticks = [4,8,5].
+2. Combine sticks 4 and 5 for a cost of 4 + 5 = 9. Now you have sticks = [9,8].
+3. Combine sticks 9 and 8 for a cost of 9 + 8 = 17. Now you have sticks = [17].
+There is only one stick left, so you are done. The total cost is 4 + 9 + 17 = 30.
+```
+
+**Example 3:**
+
+```
+Input: sticks = [5]
+Output: 0
+Explanation: There is only one stick, so you don't need to do anything. The total cost is 0.
+```
+
+**Constraints:**
+
+-   `1 <= sticks.length <= 104`
+-   `1 <= sticks[i] <= 104`
+
+### My Solution
+
+```java
+public int connectSticks(int[] sticks) {
+    // create a min heap
+    PriorityQueue<Integer> heap = new PriorityQueue<>((n1, n2) -> n1 - n2);
+
+    // add to the heap
+    for(int stick : sticks){
+        heap.add(stick);
+    }
+    int cost = 0;
+    while(heap.size() > 1){
+        int stick1 = heap.poll();
+        int stick2 = heap.poll();
+        int newStick = stick1 + stick2;
+        cost += stick1 + stick2;
+        heap.add(newStick);
+    }
+    return cost;
+}
+```
+
+*   Same as the given standard solution
+*   Time complexity: $O(N\log{N})$, where N is the length of the input array. Let's break it down:
+    -   Step 1) Adding N elements to the priority queue will be $O(N\log{N})$.
+    -   Step 2) We remove two of the smallest elements and then add one element to the priority queue until we are left with one element. Since each such operation will reduce one element from the priority queue, we will perform N-1 such operations. Now, we know that both `add` and `remove` operations take $O(\log{N})$ in the priority queue, therefore, the complexity of this step will be $O(N\log{N})$.
+*   Space complexity: $O(N)$ since we will store N elements in our priority queue.
+
+## Furthest Building You Can Reach(Medium #1642)
+
+**Question**: You are given an integer array `heights` representing the heights of buildings, some `bricks`, and some `ladders`.
+
+You start your journey from building `0` and move to the next building by possibly using bricks or ladders.
+
+While moving from building `i` to building `i+1` (**0-indexed**),
+
+-   If the current building's height is **greater than or equal** to the next building's height, you do **not** need a ladder or bricks.
+-   If the current building's height is **less than** the next building's height, you can either use **one ladder** or `(h[i+1] - h[i])` **bricks**.
+
+*Return the furthest building index (0-indexed) you can reach if you use the given ladders and bricks optimally.*
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2020/10/27/q4.gif" alt="img" style="zoom:33%;" />
+
+```
+Input: heights = [4,2,7,6,9,14,12], bricks = 5, ladders = 1
+Output: 4
+Explanation: Starting at building 0, you can follow these steps:
+- Go to building 1 without using ladders nor bricks since 4 >= 2.
+- Go to building 2 using 5 bricks. You must use either bricks or ladders because 2 < 7.
+- Go to building 3 without using ladders nor bricks since 7 >= 6.
+- Go to building 4 using your only ladder. You must use either bricks or ladders because 6 < 9.
+It is impossible to go beyond building 4 because you do not have any more bricks or ladders.
+```
+
+**Example 2:**
+
+```
+Input: heights = [4,12,2,7,3,18,20,3,19], bricks = 10, ladders = 2
+Output: 7
+```
+
+**Example 3:**
+
+```
+Input: heights = [14,3,19,3], bricks = 17, ladders = 0
+Output: 3
+```
+
+**Constraints:**
+
+-   `1 <= heights.length <= 105`
+-   `1 <= heights[i] <= 106`
+-   `0 <= bricks <= 109`
+-   `0 <= ladders <= heights.length`
+
+### My Solution
+
+```
+```
+
