@@ -771,8 +771,53 @@ Output: 3
 -   `0 <= bricks <= 109`
 -   `0 <= ladders <= heights.length`
 
-### My Solution
+### Standard Solution
 
-```
+#### Solution #1 Min Heap
+
+*   Each time we assume to use ladders as a priority when the number of ladders is sufficient and put the number of steps of the ladder into a min-heap.
+*   Then after using all the ladders, we start to use bricks to take the place of the ladders
+    *   When the size of the heap is larger than the ladder number, we poll the topmost one to use bricks instead
+    *   In this way, each time we find the shortest height and use bricks to save the ladder for a longer height
+    *   Then minus the brick number until it is below 0, return the current index of array
+
+```java
+    public int furthestBuilding(int[] heights, int bricks, int ladders) {
+        // create a min-heap to store the ladder steps
+        PriorityQueue<Integer> ladderSteps = new PriorityQueue<>((n1, n2) -> n1 - n2);
+        
+        // loop through the heights of the building, allocates the bricks and ladders
+        for(int i = 0; i < heights.length - 1; i++){
+            if (heights[i] > heights[i + 1]){
+                continue;
+            }
+            // requires bricks and ladders for the climb
+            ladderSteps.add(heights[i + 1] - heights[i]);
+            
+            // check if exceed the given ladder number
+            if (ladderSteps.size() <= ladders){
+                continue;
+            }
+            
+            // otherwise, try to poll the topmost(min) to use bricks instead
+            int changeToBricks = ladderSteps.poll();
+            bricks -= changeToBricks;
+            if (bricks < 0){
+                return i;
+            }
+        }
+        return heights.length - 1;
+    }
 ```
 
+*   Let N be the length of the `heights` array. Let L be the number of ladders available. We're mostly going to focus on analyzing in terms of N; however, it is also interesting to look at how the number of ladders available impacts the time and space complexity.
+
+*   Time complexity: $O(N \log N)$ or $O(N \log L)$
+
+    Inserting or removing an item from a heap incurs a cost of $O(\log x)$, where x is the number of items currently in the heap. In the worst case, we know that there will be an N - 1 climb in the heap, thus giving a time complexity of $O(\log N)$for each insertion and removal, and we're doing up to N of each of these two operations. This gives a total time complexity of $O(N \log N)$.
+
+    In practice, though, the heap will never contain more than L + 1 climbs at a time—when it gets to this size, we immediately remove a climb from it. So, the heap operations are actually $O(\log L)$. We are still performing up to N of each of them, though, so this gives a total time complexity of $O(N \log L)$.
+
+*   Space complexity: $O(N)$ or $O(L)$.
+
+    As we determined above, the heap can contain up to $O(L)$ numbers at a time. In the worst case, $L = N$, so we get $O(N)$.
