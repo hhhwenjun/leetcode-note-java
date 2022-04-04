@@ -821,3 +821,153 @@ Output: 3
 *   Space complexity: $O(N)$ or $O(L)$.
 
     As we determined above, the heap can contain up to $O(L)$ numbers at a time. In the worst case, $L = N$, so we get $O(N)$.
+
+## Find Median from Data Stream(Hard #295)
+
+**Question**: The **median** is the middle value in an ordered integer list. If the size of the list is even, there is no middle value and the median is the mean of the two middle values.
+
+-   For example, for `arr = [2,3,4]`, the median is `3`.
+-   For example, for `arr = [2,3]`, the median is `(2 + 3) / 2 = 2.5`.
+
+Implement the MedianFinder class:
+
+-   `MedianFinder()` initializes the `MedianFinder` object.
+-   `void addNum(int num)` adds the integer `num` from the data stream to the data structure.
+-   `double findMedian()` returns the median of all elements so far. Answers within `10-5` of the actual answer will be accepted. 
+
+**Example 1:**
+
+```
+Input
+["MedianFinder", "addNum", "addNum", "findMedian", "addNum", "findMedian"]
+[[], [1], [2], [], [3], []]
+Output
+[null, null, null, 1.5, null, 2.0]
+
+Explanation
+MedianFinder medianFinder = new MedianFinder();
+medianFinder.addNum(1);    // arr = [1]
+medianFinder.addNum(2);    // arr = [1, 2]
+medianFinder.findMedian(); // return 1.5 (i.e., (1 + 2) / 2)
+medianFinder.addNum(3);    // arr[1, 2, 3]
+medianFinder.findMedian(); // return 2.0
+```
+
+**Constraints:**
+
+-   `-105 <= num <= 105`
+-   There will be at least one element in the data structure before calling `findMedian`.
+-   At most `5 * 104` calls will be made to `addNum` and `findMedian`.
+
+**Follow up:**
+
+-   If all integer numbers from the stream are in the range `[0, 100]`, how would you optimize your solution?
+-   If `99%` of all integer numbers from the stream are in the range `[0, 100]`, how would you optimize your solution?
+
+### My Solution
+
+```java
+// first attempt, exceed limit time
+class MedianFinder {
+    private PriorityQueue<Integer> heap;
+    private List<Integer> storage;
+    
+    public MedianFinder() {
+        heap = new PriorityQueue<Integer>((n1, n2) -> n1 - n2);
+    }
+    
+    public void addNum(int num) {
+        heap.add(num);
+    }
+    
+    public double findMedian() {
+        storage = new ArrayList<>();
+        int size = heap.size();
+        boolean even = false;
+        boolean complete = false;
+        // check if the median exists
+        if (size % 2 == 0){
+            even = true;
+        }
+        // while we haven't find out the median
+        int i = 0;
+        double res = 0;
+        while(!complete){
+            int element = heap.poll();
+            storage.add(element);
+            i++;
+            if(even && i >= size / 2){
+                int lastElement = heap.poll();
+                res = ((double)element + (double)lastElement)/2;
+                storage.add(lastElement);
+                complete = true;
+            }
+            else if (!even && i > size / 2){
+                res = element;
+                complete = true;
+            }
+        }
+        while(storage.size() > 0){
+            heap.add(storage.remove(0));
+        }
+        return res;
+    }
+}
+```
+
+```java
+// second attempt, faster than 86%, less than 92%
+class MedianFinder {
+	// store value > median
+    private PriorityQueue<Integer> minheap;
+	// store value <= median
+    private PriorityQueue<Integer> maxheap;
+    
+    public MedianFinder() {
+        minheap = new PriorityQueue<Integer>((n1, n2) -> n1 - n2);
+        maxheap = new PriorityQueue<Integer>((n1, n2) -> n2 - n1);
+    }
+    
+    public void addNum(int num) {
+        maxheap.add(num);
+        minheap.add(maxheap.poll());
+        if (maxheap.size() < minheap.size()){
+            maxheap.add(minheap.poll());
+        }
+    }
+    
+    public double findMedian() {
+        return maxheap.size() > minheap.size() ? maxheap.peek() : ((double)maxheap.peek() + minheap.peek()) * 0.5;
+    }
+}
+
+/**
+ * Your MedianFinder object will be instantiated and called as such:
+ * MedianFinder obj = new MedianFinder();
+ * obj.addNum(num);
+ * double param_2 = obj.findMedian();
+ */
+```
+
+### Standard Solution
+
+*   Various solutions are applicable, such as insertion sort, two pointers, two heaps
+*   Only present two heap method
+
+#### Solution #1 Two heaps
+
+*   Same as my solution number 2
+*   We would create min-heap and max-heap at the same time
+    *   Min-heap: the value larger than the median
+    *   Max-heap: the value smaller or equal to the median
+*   In this way for adding a number:
+    *   We add it to the max-heap first, let the heap rearrange the data
+    *   Poll the topmost(maximum) number of the max-heap, move it to the min-heap
+    *   Poll max-heap elements and balancing the size of two heaps
+*   Find the median:
+    *   If two heap has different size, poll the topmost element of the max-heap
+    *   Otherwise, poll the topmost elements of two heaps and calculate the mean
+*   Time complexity: $O(5 \cdot \log n) + O(1) \approx O(\log n)$
+    -   At worst, there are three heap insertions and two heap deletions from the top. Each of these takes about $O(\log n)$ time.
+    -   Finding the median takes constant $O(1)$ time since the tops of heaps are directly accessible.
+*   Space complexity: $O(n)$ linear space to hold input in containers.
