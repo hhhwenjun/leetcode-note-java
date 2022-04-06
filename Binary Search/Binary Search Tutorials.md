@@ -16,29 +16,64 @@
 *   **Always sort the collection before applying binary search.**
 *   Binary Search can take many alternate forms and might not always be as straightforward as searching for a specific value.
 
-*   **Template**
+*   **Template 1**
     *   ***Pre-processing*** - Sort if the collection is unsorted.
     *   ***Binary Search*** - Using a loop or recursion to divide search space in half after each comparison.
     *   ***Post-processing*** - Determine viable candidates in the remaining space.
+    *   Initial Condition:` left = 0, right = length-1`
+    *   Termination: `left > right`
+    *   Searching Left: `right = mid-1`
+    *   Searching Right: `left = mid+1`
 
 ```java
-public int search(int[] nums, int target) {
-    int low = 0, high = nums.length - 1;
-    while(low <= high){
-        int mid = low + (high - low) / 2;
-        if (nums[mid] == target){
-            return mid;
-        }
-        else if (nums[mid] > target){
-            high = mid - 1;
-        }
-        else {
-            low = mid + 1;
-        }
-    }
+int binarySearch(int[] nums, int target){
+  if(nums == null || nums.length == 0)
     return -1;
+
+  int left = 0, right = nums.length - 1;
+  while(left <= right){
+    // Prevent (left + right) overflow
+    int mid = left + (right - left) / 2;
+    if(nums[mid] == target){ return mid; }
+    else if(nums[mid] < target) { left = mid + 1; }
+    else { right = mid - 1; }
+  }
+
+  // End Condition: left > right
+  return -1;
 }
 ```
+
+*   **Template 2**
+    *   Search Condition needs to access the element's immediate right neighbor
+    *   Use the element's right neighbor to determine if the condition is met and decide whether to go left or right
+    *   Initial Condition: `left = 0, right = length`
+    *   Termination: `left == right`
+    *   Searching Left: `right = mid`
+    *   Searching Right: `left = mid+1`
+
+```java
+int binarySearch(int[] nums, int target){
+  if(nums == null || nums.length == 0)
+    return -1;
+
+  int left = 0, right = nums.length;
+  while(left < right){
+    // Prevent (left + right) overflow
+    int mid = left + (right - left) / 2;
+    if(nums[mid] == target){ return mid; }
+    else if(nums[mid] < target) { left = mid + 1; }
+    else { right = mid; }
+  }
+
+  // Post-processing:
+  // End Condition: left == right
+  if(left != nums.length && nums[left] == target) return left;
+  return -1;
+}
+```
+
+
 
 ## Sqrt(x) (Easy #69)
 
@@ -388,3 +423,260 @@ class Solution {
 ```
 
 *   Complexity is the same
+
+## First Bad Version(Easy #278)
+
+**Question**: You are a product manager and currently leading a team to develop a new product. Unfortunately, the latest version of your product fails the quality check. Since each version is developed based on the previous version, all the versions after a bad version are also bad.
+
+Suppose you have `n` versions `[1, 2, ..., n]` and you want to find out the first bad one, which causes all the following ones to be bad.
+
+You are given an API `bool isBadVersion(version)` which returns whether `version` is bad. Implement a function to find the first bad version. You should minimize the number of calls to the API.
+
+**Example 1:**
+
+```
+Input: n = 5, bad = 4
+Output: 4
+Explanation:
+call isBadVersion(3) -> false
+call isBadVersion(5) -> true
+call isBadVersion(4) -> true
+Then 4 is the first bad version.
+```
+
+**Example 2:**
+
+```
+Input: n = 1, bad = 1
+Output: 1
+```
+
+**Constraints:**
+
+-   `1 <= bad <= n <= 231 - 1`
+
+### My Solution
+
+```java
+public int firstBadVersion(int n) {
+    int low = 1, high = n;
+    while(low < high){
+        int mid = low + (high - low) / 2;
+        boolean isBad = isBadVersion(mid);
+        if (!isBad){
+            low = mid + 1;
+        }
+        else {
+            high = mid;
+        }
+    }
+    if (isBadVersion(low)){
+        return low;
+    }
+    return -1;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Binary Search
+
+*   Same as my solution
+*   `left` and `right` indicator meet and it must be the first bad version.
+
+```java
+public int firstBadVersion(int n) {
+    int left = 1;
+    int right = n;
+    while (left < right) {
+        int mid = left + (right - left) / 2;
+        if (isBadVersion(mid)) {
+            right = mid;
+        } else {
+            left = mid + 1;
+        }
+    }
+    return left;
+}
+```
+
+-   Time complexity: $O(\log n)$. The search space is halved each time, so the time complexity is $O(\log n)$.
+-   Space complexity: $O(1)$.
+
+## Find Peak Element(Medium #162)
+
+**Question**: A peak element is an element that is strictly greater than its neighbors.
+
+Given an integer array `nums`, find a peak element, and return its index. If the array contains multiple peaks, return the index to **any of the peaks**.
+
+You may imagine that `nums[-1] = nums[n] = -∞`.
+
+You must write an algorithm that runs in `O(log n)` time.
+
+**Example 1:**
+
+```
+Input: nums = [1,2,3,1]
+Output: 2
+Explanation: 3 is a peak element and your function should return the index number 2.
+```
+
+**Example 2:**
+
+```
+Input: nums = [1,2,1,3,5,6,4]
+Output: 5
+Explanation: Your function can return either index number 1 where the peak element is 2, or index number 5 where the peak element is 6.
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 1000`
+-   `-231 <= nums[i] <= 231 - 1`
+-   `nums[i] != nums[i + 1]` for all valid `i`.
+
+### My Solution
+
+*   Use a hashmap to store the value in array and the index
+*   Output the last one's index in the sorted array
+
+```java
+public int findPeakElement(int[] nums) {
+    // first use hashmap to store the index of the integer
+    Map<Integer, Integer> map = new HashMap<>();
+    for (int i = 0; i < nums.length; i++){
+        if(!map.containsKey(nums[i])){
+            map.put(nums[i], i);
+        }
+    }
+    Arrays.sort(nums);
+    return map.get(nums[nums.length - 1]);
+}
+```
+
+### Standard Solution
+
+*   From the description, we can assume there is one peak in the data
+*   Moreover, every other values would be smaller than the peak
+
+#### Solution #1 Recursive Binary Search
+
+*   Recursively find the middle pivot, and check if this value larger than than `pivot + 1`
+*   If so, we search the subarray before pivot, otherwise, search the subarray after the pivot
+*   Search subarray until `left` and `right` converge
+
+```java
+public int findPeakElement(int[] nums) {
+    return search(nums, 0, nums.length - 1);
+}
+public int search(int[] nums, int l, int r) {
+    if (l == r)
+        return l;
+    int mid = (l + r) / 2;
+    if (nums[mid] > nums[mid + 1])
+        return search(nums, l, mid);
+    return search(nums, mid + 1, r);
+}
+```
+
+-   Time complexity: $O\big(log_2(n)\big)$. We reduce the search space in half at every step. Thus, the total search space will be consumed in $log_2(n)$ steps. Here, n refers to the size of nums array.
+-   Space complexity: $O\big(log_2(n)\big)$. We reduce the search space in half at every step. Thus, the total search space will be consumed in $log_2(n)$ steps. Thus, the depth of recursion tree will go upto $log_2(n)$.
+
+#### Solution #2 Iterative Binary Search
+
+*   Similar idea to above solution, but in while loop
+
+```java
+public int findPeakElement(int[] nums){
+    int l = 0, r = nums.length - 1;
+    while(l < r){
+        int mid = (l + r) / 2;
+        if (nums[mid] > nums[mid + 1]){
+            r = mid;
+        }
+        else {
+            l = mid + 1;
+        }
+    }
+    return l;
+}
+```
+
+*   Time complexity: $O\big(log_2(n)\big)$. We reduce the search space in half at every step. Thus, the total search space will be consumed in $log_2(n)$ steps. Here, n*n* refers to the size of nums array.
+*   Space complexity: $O(1)$. Constant extra space is used.
+
+## Find Minimum in Rotated Sorted Array(Medium #153)
+
+**Question**: Suppose an array of length `n` sorted in ascending order is **rotated** between `1` and `n` times. For example, the array `nums = [0,1,2,4,5,6,7]` might become:
+
+-   `[4,5,6,7,0,1,2]` if it was rotated `4` times.
+-   `[0,1,2,4,5,6,7]` if it was rotated `7` times.
+
+Notice that **rotating** an array `[a[0], a[1], a[2], ..., a[n-1]]` 1 time results in the array `[a[n-1], a[0], a[1], a[2], ..., a[n-2]]`.
+
+Given the sorted rotated array `nums` of **unique** elements, return *the minimum element of this array*.
+
+You must write an algorithm that runs in `O(log n) time.`
+
+**Example 1:**
+
+```
+Input: nums = [3,4,5,1,2]
+Output: 1
+Explanation: The original array was [1,2,3,4,5] rotated 3 times.
+```
+
+**Example 2:**
+
+```
+Input: nums = [4,5,6,7,0,1,2]
+Output: 0
+Explanation: The original array was [0,1,2,4,5,6,7] and it was rotated 4 times.
+```
+
+**Example 3:**
+
+```
+Input: nums = [11,13,15,17]
+Output: 11
+Explanation: The original array was [11,13,15,17] and it was rotated 4 times. 
+```
+
+**Constraints:**
+
+-   `n == nums.length`
+-   `1 <= n <= 5000`
+-   `-5000 <= nums[i] <= 5000`
+-   All the integers of `nums` are **unique**.
+-   `nums` is sorted and rotated between `1` and `n` times.
+
+### My Solution
+
+*   Binary search with template that ending with `left == right`
+*   Compare the mid point with the edge point
+
+```java
+public int findMin(int[] nums) {
+    int left = 0, right = nums.length - 1;
+    while(left < right){
+        int pivot = left + (right - left) / 2;
+        // check if current pivot has larger value than end of subarray
+        // meaning there is rotation
+        if (nums[pivot] > nums[right]){
+            left = pivot + 1;
+        }
+        else {
+            right = pivot;
+        }
+    }
+    return nums[left];
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Binary Search
+
+*   Similar idea with my solution
+*   Time Complexity: Same as Binary Search $O(\log N)$
+*   Space Complexity: $O(1)$
