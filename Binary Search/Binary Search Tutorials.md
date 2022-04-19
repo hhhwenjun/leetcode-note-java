@@ -73,7 +73,37 @@ int binarySearch(int[] nums, int target){
 }
 ```
 
+*   **Template 3**
+    *   Initial Condition:` left = 0, right = length-1`
+    *   Termination: `left + 1 == right`
+    *   Searching Left: `right = mid`
+    *   Searching Right: `left = mid`
 
+```java
+int binarySearch(int[] nums, int target) {
+    if (nums == null || nums.length == 0)
+        return -1;
+
+    int left = 0, right = nums.length - 1;
+    while (left + 1 < right){
+        // Prevent (left + right) overflow
+        int mid = left + (right - left) / 2;
+        if (nums[mid] == target) {
+            return mid;
+        } else if (nums[mid] < target) {
+            left = mid;
+        } else {
+            right = mid;
+        }
+    }
+
+    // Post-processing:
+    // End Condition: left + 1 == right
+    if(nums[left] == target) return left;
+    if(nums[right] == target) return right;
+    return -1;
+}
+```
 
 ## Sqrt(x) (Easy #69)
 
@@ -680,3 +710,271 @@ public int findMin(int[] nums) {
 *   Similar idea with my solution
 *   Time Complexity: Same as Binary Search $O(\log N)$
 *   Space Complexity: $O(1)$
+
+## Find First And Last Position of Element in Sorted Array(Medium #34)
+
+**Question**: Given an array of integers `nums` sorted in non-decreasing order, find the starting and ending position of a given `target` value.
+
+If `target` is not found in the array, return `[-1, -1]`.
+
+You must write an algorithm with `O(log n)` runtime complexity.
+
+**Example 1:**
+
+```
+Input: nums = [5,7,7,8,8,10], target = 8
+Output: [3,4]
+```
+
+**Example 2:**
+
+```
+Input: nums = [5,7,7,8,8,10], target = 6
+Output: [-1,-1]
+```
+
+**Example 3:**
+
+```
+Input: nums = [], target = 0
+Output: [-1,-1]
+```
+
+**Constraints:**
+
+-   `0 <= nums.length <= 105`
+-   `-109 <= nums[i] <= 109`
+-   `nums` is a non-decreasing array.
+-   `-109 <= target <= 109`
+
+### My Solution
+
+```java
+public int[] searchRange(int[] nums, int target) {
+    int low = 0, high = nums.length - 1;
+    int targetLow = -1, targetHigh = -1;
+    boolean lowFound = false, highFound = false;
+    while (low <= high){
+        if (nums[low] == target && !lowFound){
+            targetLow = low;
+            lowFound = true;
+        }
+        if (nums[high] == target && !highFound){
+            targetHigh = high;
+            highFound = true;
+        }
+        if (!lowFound){
+            low++;
+        }
+        if (!highFound){
+            high--;
+        }
+        if (highFound && lowFound){
+            break;
+        }
+    }
+    return new int[]{targetLow, targetHigh};
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Binary Search
+
+```java
+class Solution {
+    public int[] searchRange(int[] nums, int target) {      
+        int firstOccurrence = this.findBound(nums, target, true);        
+        if (firstOccurrence == -1) {
+            return new int[]{-1, -1};
+        }      
+        int lastOccurrence = this.findBound(nums, target, false);       
+        return new int[]{firstOccurrence, lastOccurrence};
+    }
+    private int findBound(int[] nums, int target, boolean isFirst) {
+        int N = nums.length;
+        int begin = 0, end = N - 1;       
+        while (begin <= end) {     
+            int mid = (begin + end) / 2;         
+            if (nums[mid] == target) {         
+                if (isFirst) {           
+                    // This means we found our lower bound.
+                    if (mid == begin || nums[mid - 1] != target) {
+                        return mid;
+                    }            
+                    // Search on the left side for the bound.
+                    end = mid - 1;                
+                } else {           
+                    // This means we found our upper bound.
+                    if (mid == end || nums[mid + 1] != target) {
+                        return mid;
+                    }        
+                    // Search on the right side for the bound.
+                    begin = mid + 1;
+                }         
+            } else if (nums[mid] > target) {
+                end = mid - 1;
+            } else {
+                begin = mid + 1;
+            }
+        }
+        return -1;
+    }
+}
+```
+
+-   Time Complexity: $O(\text{log} N)$ considering there are N elements in the array. This is because binary search takes logarithmic time to scan an array of N elements. Why? Because at each step we discard half of the array we are scanning and hence, we're done after a logarithmic number of steps. We simply perform a binary search twice in this case.
+-   Space Complexity: $O(1)$ since we only use space for a few variables and our result array, all of which require constant space.
+
+## Find K Closest Elements(Medium #658)
+
+**Question**: Given a **sorted** integer array `arr`, two integers `k` and `x`, return the `k` closest integers to `x` in the array. The result should also be sorted in ascending order.
+
+An integer `a` is closer to `x` than an integer `b` if:
+
+-   `|a - x| < |b - x|`, or
+-   `|a - x| == |b - x|` and `a < b`
+
+**Example 1:**
+
+```
+Input: arr = [1,2,3,4,5], k = 4, x = 3
+Output: [1,2,3,4]
+```
+
+**Example 2:**
+
+```
+Input: arr = [1,2,3,4,5], k = 4, x = -1
+Output: [1,2,3,4]
+```
+
+**Constraints:**
+
+-   `1 <= k <= arr.length`
+-   `1 <= arr.length <= 104`
+-   `arr` is sorted in **ascending** order.
+-   `-104 <= arr[i], x <= 104`
+
+### My Solution
+
+*   Create a comparator to sort the values
+
+```java
+public List<Integer> findClosestElements(int[] arr, int k, int x) {
+    List<Integer> res = new ArrayList<>();
+    for (int digit : arr){
+        res.add(digit);
+    }
+    Collections.sort(res, new Comparator<Integer>(){
+        @Override
+        public int compare(Integer n1, Integer n2){ // have to use integer instead of int
+            return Math.abs(x - n1) - Math.abs(x - n2);
+        }
+    });
+    res = res.subList(0, k);
+    Collections.sort(res);
+    return res;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Sort with Custom Comparator
+
+*   Similar to my solution
+*   A more simplified version
+
+```java
+class Solution {
+    public List<Integer> findClosestElements(int[] arr, int k, int x) {
+        // Convert from array to list first to make use of Collections.sort()
+        List<Integer> sortedArr = new ArrayList<Integer>();
+        for (int num: arr) {
+            sortedArr.add(num);
+        }
+        // Sort using custom comparator
+        Collections.sort(sortedArr, (num1, num2) -> Math.abs(num1 - x) - Math.abs(num2 - x));
+        // Only take k elements
+        sortedArr = sortedArr.subList(0, k);
+        // Sort again to have output in ascending order
+        Collections.sort(sortedArr);
+        return sortedArr;
+    }
+}
+```
+
+-   Time complexity: $O(N \cdot \log(N) + k \cdot \log(k))$
+
+    To build `sortedArr`, we need to sort every element in the array by a new criteria: `x - num`. This costs $O(N \cdot \log(N))$. Then, we have to sort `sortedArr` again to get the output in ascending order. This costs $O(k \cdot \log(k))$ time since `sortedArr.length` is only `k`.
+
+-   Space complexity: $O(N)$
+
+    Before we slice `sortedArr` to contain only `k` elements, it contains every element from `arr`, which requires $O(N)$ extra space. Note that we can use less space if we sort the input in place.
+
+#### Solution #2 Binary Search
+
+*   Binary search to find the closest element
+*   Find the target location in the array
+*   Create window size with the target center, and expand the window size until reach k
+
+```java
+class Solution {
+    public List<Integer> findClosestElements(int[] arr, int k, int x) {
+        List<Integer> result = new ArrayList<Integer>();        
+        // Base case
+        if (arr.length == k) {
+            for (int i = 0; i < k; i++) {
+                result.add(arr[i]);
+            }
+            
+            return result;
+        }      
+        // Binary search to find the closest element
+        int left = 0;
+        int right = arr.length;
+        int mid = 0;
+        while (left < right) {
+            mid = (left + right) / 2;
+            if (arr[mid] >= x) {
+                right = mid;
+            } else {
+                left = mid + 1;
+            }
+        }
+        
+        // Initialize our sliding window's bounds
+        left -= 1;
+        right = left + 1;
+        
+        // While the window size is less than k
+        while (right - left - 1 < k) {
+            // Be careful to not go out of bounds
+            if (left == -1) {
+                right += 1;
+                continue;
+            }         
+            // Expand the window towards the side with the closer number
+            // Be careful to not go out of bounds with the pointers
+            if (right == arr.length || Math.abs(arr[left] - x) <= Math.abs(arr[right] - x)) {
+                left -= 1;
+            } else {
+                right += 1;
+            }
+        } 
+        // Build and return the window
+        for (int i = left + 1; i < right; i++) {
+            result.add(arr[i]);
+        }    
+        return result;
+    }
+}
+```
+
+-   Time complexity: $O(\log(N) + k)$.
+
+    The initial binary search to find where we should start our window costs $O(\log(N))$. Our sliding window initially starts with size 0 and we expand it one by one until it is of size `k`, thus it costs $O(k)$ to expand the window.
+
+-   Space complexity: $O(1)$
+
+    We only use integer variables `left` and `right` that are $O(1)$ regardless of input size. Space used for the output is not counted towards the space complexity.
