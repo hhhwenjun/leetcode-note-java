@@ -105,6 +105,15 @@ int binarySearch(int[] nums, int target) {
 }
 ```
 
+*   Template Summary
+
+    ![img](https://leetcode.com/explore/learn/card/binary-search/136/template-analysis/Figures/binary_search/Template_Diagram.png)
+
+    *   left, mid, right index assignments
+    *   loop or a recursive termination condition
+    *   necessity of post-processing
+    *   Templates 1 and 3 are the most commonly used and almost all binary search problems can be easily implemented in one of them. Template 2 is a bit more advanced and used for certain types of problems.
+
 ## Sqrt(x) (Easy #69)
 
 **Question**: Given a non-negative integer `x`, compute and return *the square root of* `x`.
