@@ -1118,3 +1118,117 @@ class Solution {
 
 *   Time complexity: $O(\log N)$
 *   Space complexity: $O(1)$
+
+## Rotate Image (Medium #48)
+
+**Question**: You are given an `n x n` 2D `matrix` representing an image, rotate the image by **90** degrees (clockwise).
+
+You have to rotate the image [**in-place**](https://en.wikipedia.org/wiki/In-place_algorithm), which means you have to modify the input 2D matrix directly. **DO NOT** allocate another 2D matrix and do the rotation.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2020/08/28/mat1.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: matrix = [[1,2,3],[4,5,6],[7,8,9]]
+Output: [[7,4,1],[8,5,2],[9,6,3]]
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2020/08/28/mat2.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: matrix = [[5,1,9,11],[2,4,8,10],[13,3,6,7],[15,14,12,16]]
+Output: [[15,13,2,5],[14,3,4,1],[12,6,8,9],[16,7,10,11]]
+```
+
+**Constraints:**
+
+-   `n == matrix.length == matrix[i].length`
+-   `1 <= n <= 20`
+-   `-1000 <= matrix[i][j] <= 1000`
+
+### My Solution
+
+*   Use a new matrix to record the content
+*   But in a rotated way
+
+```java
+public void rotate(int[][] matrix) {
+    // n * n matrix
+    int length = matrix.length;
+    int[][] res = new int[length][length];
+    for (int i = 0; i < length; i++){
+        for (int j = 0; j < length; j++){
+            // row to column in new matrix
+            res[i][j] = matrix[i][j];
+        }
+    }
+    for (int i = 0; i < length; i++){
+        for (int j = 0; j < length; j++){
+            // row to column in new matrix
+            matrix[j][length - 1 - i] = res[i][j];
+        }
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Rotate
+
+*   Similar to my solution
+*   But using swap to save more memory
+
+```java
+public void rotate(int[][] matrix) {
+    int n = matrix.length;
+    for (int i = 0; i < (n + 1) / 2; i++) {
+        for (int j = 0; j < n / 2; j++) {
+            int temp = matrix[n - 1 - j][i];
+            matrix[n - 1 - j][i] = matrix[n - 1 - i][n - j - 1];
+            matrix[n - 1 - i][n - j - 1] = matrix[j][n - 1 -i];
+            matrix[j][n - 1 - i] = matrix[i][j];
+            matrix[i][j] = temp;
+        }
+    }
+}
+```
+
+-   Time complexity: $\mathcal{O}(M)$, as each cell is getting read once and written once.
+-   Space complexity: $\mathcal{O}(1)$ because we do not use any other additional data structures.
+
+#### Solution #2 Transpose then Reversed
+
+```java
+public void rotate(int[][] matrix) {
+    transpose(matrix);
+    reflect(matrix);
+}
+
+public void transpose(int[][] matrix) {
+    int n = matrix.length;
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            int tmp = matrix[j][i];
+            matrix[j][i] = matrix[i][j];
+            matrix[i][j] = tmp;
+        }
+    }
+}
+
+public void reflect(int[][] matrix) {
+    int n = matrix.length;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n / 2; j++) {
+            int tmp = matrix[i][j];
+            matrix[i][j] = matrix[i][n - j - 1];
+            matrix[i][n - j - 1] = tmp;
+        }
+    }
+}
+```
+
+-   Time complexity: $\mathcal{O}(M)$. We perform two steps; transposing the matrix, and then reversing each row. Transposing the matrix has a cost of $\mathcal{O}(M)$ because we're moving the value of each cell once. Reversing each row also has a cost of $\mathcal{O}(M)$, because again we're moving the value of each cell once.
+-   Space complexity: $\mathcal{O}(1)$ because we do not use any other additional data structures.

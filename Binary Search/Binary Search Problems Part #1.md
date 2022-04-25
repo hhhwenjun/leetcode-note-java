@@ -291,3 +291,330 @@ public boolean isPerfectSquare(int num) {
 *   Time complexity: $\mathcal{O}(\log N)$.
 *   Space complexity: $\mathcal{O}(1)$.
 
+## Find Smallest Letter Greater Than Target (Easy #744)
+
+**Question**: Given a characters array `letters` that is sorted in **non-decreasing** order and a character `target`, return *the smallest character in the array that is larger than* `target`.
+
+**Note** that the letters wrap around.
+
+-   For example, if `target == 'z'` and `letters == ['a', 'b']`, the answer is `'a'`.
+
+**Example 1:**
+
+```
+Input: letters = ["c","f","j"], target = "a"
+Output: "c"
+```
+
+**Example 2:**
+
+```
+Input: letters = ["c","f","j"], target = "c"
+Output: "f"
+```
+
+**Example 3:**
+
+```
+Input: letters = ["c","f","j"], target = "d"
+Output: "f"
+```
+
+**Constraints:**
+
+-   `2 <= letters.length <= 104`
+-   `letters[i]` is a lowercase English letter.
+-   `letters` are sorted in **non-decreasing** order.
+-   `letters` contain at least two different characters.
+-   `target` is a lowercase English letter.
+
+### My Solution
+
+*   Calculate the relative distance
+
+```java
+public char nextGreatestLetter(char[] letters, char target) {
+    int distance = 0;
+    int minDistance = Integer.MAX_VALUE;
+    char res = 'a';
+    for (char letter : letters){
+        if (letter >= target){
+            distance = letter - target;
+        }
+        else {
+            distance = 'z' - target + letter - 'a' + 1;
+        }
+        if (distance > 0 && distance < minDistance){
+            minDistance = distance;
+            res = letter;
+        }
+    }
+    return res;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Linear Scan
+
+*   The question asks for the letter, not distance, don't need to calculate the distance
+*   Just loop through the letters and find the one that meets the requirement
+
+```java
+class Solution {
+    public char nextGreatestLetter(char[] letters, char target) {
+        for (char c: letters)
+            if (c > target) return c;
+        return letters[0];
+    }
+}
+```
+
+-   Time Complexity: $O(N)$, where N is the length of `letters`. We scan every element of the array.
+-   Space Complexity: $O(1)$, as we maintain only pointers.
+
+#### Solution #2 Binary Search
+
+*   Binary search method to check if the letter is larger than the target
+
+```java
+public char nextGreatestLetter(char[] letters, char target) {
+    int lo = 0, hi = letters.length;
+    while (lo < hi) {
+        int mi = lo + (hi - lo) / 2;
+        if (letters[mi] <= target) lo = mi + 1;
+        else hi = mi;
+    }
+    return letters[lo % letters.length];
+}
+```
+
+-   Time Complexity: $O(\log N)$, where N is the length of `letters`. We peek only at $\log N$ elements in the array.
+-   Space Complexity: $O(1)$, as we maintain only pointers.
+
+## Find Minimum in Rotated Sorted Array II (Hard #154)
+
+**Question**: Suppose an array of length `n` sorted in ascending order is **rotated** between `1` and `n` times. For example, the array `nums = [0,1,4,4,5,6,7]` might become:
+
+-   `[4,5,6,7,0,1,4]` if it was rotated `4` times.
+-   `[0,1,4,4,5,6,7]` if it was rotated `7` times.
+
+Notice that **rotating** an array `[a[0], a[1], a[2], ..., a[n-1]]` 1 time results in the array `[a[n-1], a[0], a[1], a[2], ..., a[n-2]]`.
+
+Given the sorted rotated array `nums` that may contain **duplicates**, return *the minimum element of this array*.
+
+You must decrease the overall operation steps as much as possible.
+
+**Example 1:**
+
+```
+Input: nums = [1,3,5]
+Output: 1
+```
+
+**Example 2:**
+
+```
+Input: nums = [2,2,2,0,1]
+Output: 0
+```
+
+**Constraints:**
+
+-   `n == nums.length`
+-   `1 <= n <= 5000`
+-   `-5000 <= nums[i] <= 5000`
+-   `nums` is sorted and rotated between `1` and `n` times.
+
+### Standard Solution
+
+#### Solution #1 Variant of Binary Search
+
+*   Compare the pivot element to the element pointed by the upper bound pointer
+*   We use the upper bound of the search scope as the reference for the comparison with the pivot element, while in the classical binary search the reference would be the desired value.
+*   When the result of the comparison is equal (*i.e.* Case #3), we further move the upper bound, while in the classical binary search normally we would return the value immediately.
+
+```java
+public int findMin(int[] nums) {
+    int low = 0, high = nums.length - 1;
+    while (low < high){
+        int mid = low + (high - low) / 2;
+        if (nums[mid] > nums[high]){
+            low = mid + 1;
+        }
+        else if (nums[mid] < nums[high]) {
+            high = mid;
+        }
+        // change the edge value since it is valid
+        else {
+            high--;
+        }
+    }
+    return nums[low];
+}
+```
+
+-   Time complexity: on average $\mathcal{O}(\log_{2}{N})$ where N is the length of the array, since in general, it is a binary search algorithm. However, in the worst case where the array contains identical elements (*i.e.* case #3 `nums[pivot]==nums[high]`), the algorithm would deteriorate to iterating each element, as a result, the time complexity becomes $\mathcal{O}(N)$.
+-   Space complexity: $\mathcal{O}(1)$, it's a constant space solution.
+
+## Median of Two Sorted Array(Hard #4)
+
+**Question**: Given two sorted arrays `nums1` and `nums2` of size `m` and `n` respectively, return **the median** of the two sorted arrays.
+
+The overall run time complexity should be `O(log (m+n))`.
+
+**Example 1:**
+
+```
+Input: nums1 = [1,3], nums2 = [2]
+Output: 2.00000
+Explanation: merged array = [1,2,3] and median is 2.
+```
+
+**Example 2:**
+
+```
+Input: nums1 = [1,2], nums2 = [3,4]
+Output: 2.50000
+Explanation: merged array = [1,2,3,4] and median is (2 + 3) / 2 = 2.5.
+```
+
+**Constraints:**
+
+-   `nums1.length == m`
+-   `nums2.length == n`
+-   `0 <= m <= 1000`
+-   `0 <= n <= 1000`
+-   `1 <= m + n <= 2000`
+-   `-106 <= nums1[i], nums2[i] <= 106`
+
+### My Solution
+
+```java
+public double findMedianSortedArrays(int[] nums1, int[] nums2) {
+    int length = nums1.length + nums2.length;
+    int[] nums = new int[length];
+    for (int i = 0; i < nums1.length; i++){
+        nums[i] = nums1[i];
+    }
+    for (int i = nums1.length; i < length; i++){
+        nums[i] = nums2[i - nums1.length];
+    }
+    Arrays.sort(nums);
+    double median = 0.0;
+    // find the median of the aggregated array
+    if (length % 2 == 1){
+        median = nums[length/ 2];
+    }
+    else {
+        median = ((double)nums[(length - 1)/ 2] + (double)nums[(length - 1) / 2 + 1]) / 2;
+    }
+    return median;
+}
+```
+
+### Other Solution
+
+*   Binary search and compare two value
+
+```java
+public double findMedianSortedArrays(int[] nums1, int[] nums2) {
+    int index1 = 0;
+    int index2 = 0;
+    int med1 = 0;
+    int med2 = 0;
+    for (int i=0; i<=(nums1.length+nums2.length)/2; i++) {
+        med1 = med2;
+        if (index1 == nums1.length) {
+            med2 = nums2[index2];
+            index2++;
+        } else if (index2 == nums2.length) {
+            med2 = nums1[index1];
+            index1++;
+        } else if (nums1[index1] < nums2[index2] ) {
+            med2 = nums1[index1];
+            index1++;
+        }  else {
+            med2 = nums2[index2];
+            index2++;
+        }
+    }
+
+    // the median is the average of two numbers
+    if ((nums1.length+nums2.length)%2 == 0) {
+        return (float)(med1+med2)/2;
+    }
+    return med2;
+}
+```
+
+## Find k-th Smallest Pair Distance (Hard #719)
+
+**Question**: The **distance of a pair** of integers `a` and `b` is defined as the absolute difference between `a` and `b`.
+
+Given an integer array `nums` and an integer `k`, return *the* `kth` *smallest **distance among all the pairs*** `nums[i]` *and* `nums[j]` *where* `0 <= i < j < nums.length`.
+
+**Example 1:**
+
+```
+Input: nums = [1,3,1], k = 1
+Output: 0
+Explanation: Here are all the pairs:
+(1,3) -> 2
+(1,1) -> 0
+(3,1) -> 2
+Then the 1st smallest distance pair is (1,1), and its distance is 0.
+```
+
+**Example 2:**
+
+```
+Input: nums = [1,1,1], k = 2
+Output: 0
+```
+
+**Example 3:**
+
+```
+Input: nums = [1,6,1], k = 3
+Output: 5
+```
+
+**Constraints:**
+
+-   `n == nums.length`
+-   `2 <= n <= 104`
+-   `0 <= nums[i] <= 106`
+-   `1 <= k <= n * (n - 1) / 2`
+
+### Standard Solution
+
+#### Solution #1 Binary Search
+
+*   Find low distance, and high distance, use binary search
+
+```java
+public int smallestDistancePair(int[] nums, int k) {
+    // sort the array and then do the binary search
+    Arrays.sort(nums);
+
+    int lo = 0;
+    int hi = nums[nums.length - 1] - nums[0];
+    while (lo < hi) {
+        int mi = (lo + hi) / 2;
+        int count = 0, left = 0;
+        for (int right = 0; right < nums.length; right++){
+            // find out how many count of pairs with distance <= mi
+            while (nums[right] - nums[left] > mi) left++;
+            count += right - left;
+        }
+        // count = number of pairs with distance <= mi
+        if (count >= k) hi = mi;
+        else lo = mi + 1;
+    }
+    return lo;
+}
+```
+
+-   Time Complexity: $O(N \log{W} + N \log{N})$, where N is the length of `nums`, and W*W* is equal to `nums[nums.length - 1] - nums[0]`. The $\log W$ factor comes from our binary search, and we do $O(N)$ work inside our call to `possible` (or to calculate `count` in Java). The final $O(N\log N)$ factor comes from sorting.
+-   Space Complexity: $O(1)$. No additional space is used except for integer variables.
