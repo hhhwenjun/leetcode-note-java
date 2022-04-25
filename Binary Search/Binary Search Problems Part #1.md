@@ -618,3 +618,103 @@ public int smallestDistancePair(int[] nums, int k) {
 
 -   Time Complexity: $O(N \log{W} + N \log{N})$, where N is the length of `nums`, and W*W* is equal to `nums[nums.length - 1] - nums[0]`. The $\log W$ factor comes from our binary search, and we do $O(N)$ work inside our call to `possible` (or to calculate `count` in Java). The final $O(N\log N)$ factor comes from sorting.
 -   Space Complexity: $O(1)$. No additional space is used except for integer variables.
+
+## Split Array Largest Sum (Hard #410)
+
+**Question**: Given an array `nums` which consists of non-negative integers and an integer `m`, you can split the array into `m` non-empty continuous subarrays.
+
+Write an algorithm to minimize the largest sum among these `m` subarrays.
+
+**Example 1:**
+
+```
+Input: nums = [7,2,5,10,8], m = 2
+Output: 18
+Explanation:
+There are four ways to split nums into two subarrays.
+The best way is to split it into [7,2,5] and [10,8],
+where the largest sum among the two subarrays is only 18.
+```
+
+**Example 2:**
+
+```
+Input: nums = [1,2,3,4,5], m = 2
+Output: 9
+```
+
+**Example 3:**
+
+```
+Input: nums = [1,4,4], m = 3
+Output: 4 
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 1000`
+-   `0 <= nums[i] <= 106`
+-   `1 <= m <= min(50, nums.length)`
+
+### Standard Solution
+
+#### Solution #1 Binary Search
+
+*   Not only use binary search on array index but also use it for value search
+*   Check if the target value converge
+
+```java
+private int minimumSubarraysRequired(int[] nums, int maxSumAllowed) {
+    int currentSum = 0;
+    int splitsRequired = 0;
+    for (int element : nums) {
+        // Add element only if the sum doesn't exceed maxSumAllowed
+        if (currentSum + element <= maxSumAllowed) {
+            currentSum += element;
+        } else {
+            // If the element addition makes sum more than maxSumAllowed
+            // Increment the splits required and reset sum
+            currentSum = element;
+            splitsRequired++;
+        }
+    }
+    // Return the number of subarrays, which is the number of splits + 1
+    return splitsRequired + 1;
+}
+
+public int splitArray(int[] nums, int m) {
+    // Find the sum of all elements and the maximum element
+    int sum = 0;
+    int maxElement = Integer.MIN_VALUE;
+    for (int element : nums) {
+        sum += element;
+        maxElement = Math.max(maxElement, element);
+    }
+    // Define the left and right boundary of binary search
+    int left = maxElement;
+    int right = sum;
+    int minimumLargestSplitSum = 0;
+    while (left <= right) {
+        // Find the mid value
+        int maxSumAllowed = left + (right - left) / 2;
+        // Find the minimum splits. If splitsRequired is less than
+        // or equal to m move towards left i.e., smaller values
+        if (minimumSubarraysRequired(nums, maxSumAllowed) <= m) {
+            right = maxSumAllowed - 1;
+            minimumLargestSplitSum = maxSumAllowed;
+        } else {
+            // Move towards right if splitsRequired is more than m
+            left = maxSumAllowed + 1;
+        }
+    }
+    return minimumLargestSplitSum;
+}
+```
+
+-   Time complexity: $O(N \cdot \log(S))$, where N is the length of the array and S is the sum of integers in the array.
+
+    The total number of iterations in the binary search is $\log(S)$, and for each such iteration, we call `minimumSubarraysRequired` which takes $O(N)$ time. Hence, the time complexity is equal to $O(N \cdot \log(S))$.
+
+-   Space complexity: $O(1)$
+
+    We do not use any data structures that require more than constant extra space.
