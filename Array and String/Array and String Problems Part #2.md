@@ -1232,3 +1232,52 @@ public void reflect(int[][] matrix) {
 
 -   Time complexity: $\mathcal{O}(M)$. We perform two steps; transposing the matrix, and then reversing each row. Transposing the matrix has a cost of $\mathcal{O}(M)$ because we're moving the value of each cell once. Reversing each row also has a cost of $\mathcal{O}(M)$, because again we're moving the value of each cell once.
 -   Space complexity: $\mathcal{O}(1)$ because we do not use any other additional data structures.
+
+## Jump Game II (Medium #45)
+
+**Question**: Given an array of non-negative integers `nums`, you are initially positioned at the first index of the array.
+
+Each element in the array represents your maximum jump length at that position.
+
+Your goal is to reach the last index in the minimum number of jumps.
+
+You can assume that you can always reach the last index.
+
+**Example 1:**
+
+```
+Input: nums = [2,3,1,1,4]
+Output: 2
+Explanation: The minimum number of jumps to reach the last index is 2. Jump 1 step from index 0 to 1, then 3 steps to the last index.
+```
+
+**Example 2:**
+
+```
+Input: nums = [2,3,0,1,4]
+Output: 2
+```
+
+### Standard Solution
+
+#### Solution #1 Greedy
+
+*   Each time we find the farthest point of the current point, compare the farthest
+*   When reaching the end of the farthest jump, add 1 to the jumps.
+
+```java
+public int jump(int[] nums) {
+    int jumps = 0, currentJumpEnd = 0, farthest = 0;
+    for (int i = 0; i < nums.length - 1; i++){
+        farthest = Math.max(farthest, i + nums[i]);
+        if (i == currentJumpEnd){
+            jumps++;
+            currentJumpEnd = farthest;
+        }
+    }
+    return jumps;
+}
+```
+
+-   Time Complexity: $O(N)$ because there are N elements in the array and we visit each element in the array only once.
+-   Space Complexity: $O(1)$ because we don't use any additional data structures.
