@@ -349,3 +349,162 @@ public int tribonacci(int n){
 
 -   Time complexity: $\mathcal{O}(N)$
 -   Space complexity: $\mathcal{O}(1)$
+
+## Delete and Earn (Medium #740)
+
+**Question**: You are given an integer array `nums`. You want to maximize the number of points you get by performing the following operation any number of times:
+
+-   Pick any `nums[i]` and delete it to earn `nums[i]` points. Afterwards, you must delete **every** element equal to `nums[i] - 1` and **every** element equal to `nums[i] + 1`.
+
+Return *the **maximum number of points** you can earn by applying the above operation some number of times*.
+
+**Example 1:**
+
+```
+Input: nums = [3,4,2]
+Output: 6
+Explanation: You can perform the following operations:
+- Delete 4 to earn 4 points. Consequently, 3 is also deleted. nums = [2].
+- Delete 2 to earn 2 points. nums = [].
+You earn a total of 6 points.
+```
+
+**Example 2:**
+
+```
+Input: nums = [2,2,3,3,3,4]
+Output: 9
+Explanation: You can perform the following operations:
+- Delete a 3 to earn 3 points. All 2's and 4's are also deleted. nums = [3,3].
+- Delete a 3 again to earn 3 points. nums = [3].
+- Delete a 3 once more to earn 3 points. nums = [].
+You earn a total of 9 points.
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 2 * 104`
+-   `1 <= nums[i] <= 104`
+
+### My Solution
+
+```java
+private Map<Integer, Integer> points;
+private Map<Integer, Integer> sum;
+
+public int deleteAndEarn(int[] nums) {
+    points = new HashMap<>();
+    sum = new HashMap<>();
+    Arrays.sort(nums);
+    for (int num : nums){
+        points.put(num, points.getOrDefault(num, 0) + num);
+    }
+    return findSum(nums[nums.length - 1]);
+}
+
+public int findSum(int num){
+    if (num == 0){
+        return 0;
+    }
+    // prevent stack over flow to negative num
+    if (num == 1){
+        return points.getOrDefault(1, 0);
+    }
+    if (sum.containsKey(num)){
+        return sum.get(num);
+    }
+    int current = points.getOrDefault(num, 0);
+    sum.put(num, Math.max(findSum(num - 1), findSum(num - 2) + current));
+    return sum.get(num);
+}
+```
+
+### Standard Solution
+
+*   A slight modification of house robber problem
+
+#### Solution #1 Top-down Dynamic Programming
+
+*   Similar to my solution
+*   Start with the largest number, each time compare the previous ones and add the current points
+*   Use a hashmap to record the total points you can get from each number
+*   Use recursion to continuously record the maximum points you can get if you choose to drop the current number
+*   Fit dynamic programming because of the sub-optimal solutions for each step
+
+```java
+private HashMap<Integer, Integer> points = new HashMap<>();
+private HashMap<Integer, Integer> cache = new HashMap<>();
+
+private int maxPoints(int num) {
+    // Check for base cases
+    if (num == 0) {
+        return 0;
+    }
+
+    if (num == 1) {
+        return points.getOrDefault(1, 0);
+    }
+
+    if (cache.containsKey(num)) {
+        return cache.get(num);
+    }
+
+    // Apply recurrence relation
+    int gain = points.getOrDefault(num, 0);
+    cache.put(num, Math.max(maxPoints(num - 1), maxPoints(num - 2) + gain));
+    return cache.get(num);
+}
+
+public int deleteAndEarn(int[] nums) {
+    int maxNumber = 0;
+
+    // Precompute how many points we gain from taking an element
+    for (int num : nums) {
+        points.put(num, points.getOrDefault(num, 0) + num);
+        maxNumber = Math.max(maxNumber, num);
+    }
+
+    return maxPoints(maxNumber);
+}
+```
+
+-   Time complexity: $O(N + k)$
+
+    To populate `points`, we need to iterate through `nums` once, which costs $O(N)$ time. Then, we call `maxPoints(maxNumber)`. This call will repeatedly call `maxPoints` until we get down to our base cases. Because of `cache`, already solved sub-problems will only cost $O(1)$ time. Since `maxNumber = k`, we will solve `k` unique sub-problems so, this recursion will cost $O(k)$ time. Our final time complexity is $O(N + k)$
+
+-   Space complexity: $O(N + k)$
+
+    The extra space we use is the hash table `points`, the recursion call stack needed to find `maxPoints(maxNumber)`, and the hash table `cache`.
+
+    The size of `points` is equal to the number of unique elements in `nums`. In the worst case, where every element in `nums` is unique, this will take $O(N)$ space. The recursion call stack will also grow up to size `k`, since we start our recursion at `maxNumber`, and we don't start returning values until our base cases at `0` and `1`. Lastly, `cache` will store the answer for all states, from `2` to `maxNumber`, which means it also grows up to `k` size. Our final space complexity is $O(N + 2 \cdot k) = O(N + k)$
+
+#### Solution #2 Bottom-up Dynamic Programming
+
+*   A similar solution to the above problem
+*   Use another array iteratively to update the max points and take the place of recursion
+
+```java
+public int deleteAndEarn(int[] nums){
+	HashMap<Integer, Integer> points = new HashMap<>();
+    int maxNumber = 0;
+    
+    // precompute how many points we gain from taking an element
+    for (int num : nums){
+        points.put(num, points.getOrDefault(num, 0) + num);
+        maxNumber = Math.max(maxNumber, num);
+    }
+    // declare our array along with base cases
+    int[] maxPoints = new int[maxNumber + 1];
+    maxPoints[1] = points.getOrDefault(1, 0);
+    // from lowest number to the highest number
+    for (int num = 2; num < maxPoints.length; num++){
+        // apply recurrence relation
+        int gain = points.getOrDefault(num, 0);
+        maxPoints[num] = Math.max(maxPoints[num - 1], maxPoints[num - 2] + gain);
+    }
+    return maxPoints[maxNumber];
+}
+```
+
+*   Time complexity: $O(N + k)$
+*   Space complexity: $O(N + k)$
