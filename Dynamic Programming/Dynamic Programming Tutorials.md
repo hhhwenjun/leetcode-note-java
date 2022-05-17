@@ -8,6 +8,8 @@
 *   **Top-down and Bottom-up**
     *   Fibonacci sequence
     *   Memoization(recursion)
+    *   **Memoization** is where we add caching to a function (that has no side effects). In dynamic programming, it is typically used on **recursive** functions for a **top-down** solution that starts with the initial problem and then recursively calls itself to solve smaller problems.
+    *   **Tabulation** uses a table to keep track of subproblem results and works in a **bottom-up** manner: solving the smallest subproblems before the large ones, in an **iterative** manner. Often, people use the words "tabulation" and "dynamic programming" interchangeably.
 *   **When to use DP**
     *   **The first characteristic** that is common in DP problems is that the problem will ask for the optimum value (maximum or minimum) of something, or the number of ways there are to do something. (Sometimes it also should use greedy)
         *   What is the minimum cost of doing...
@@ -63,6 +65,18 @@ public int climbStairs(int n) {
     return dp[n];
 }
 ```
+
+### Top-down to Bottom-up
+
+*   A top-down algorithm is easier to implement than bottom-up
+*   But bottom-up usually is more efficient than top-down in terms of runtime
+*   **Conversion**:
+    *   Start with a completed top-down implementation.
+    *   Initialize an array $\text{dp}$ that is sized according to your state variables. 
+    *   Set your base cases, the same as the ones you are using in your top-down function.
+    *   Write a for-loop(s) that iterate over your state variables. If you have multiple state variables, you will need nested for-loops. These loops should **start iterating from the base cases**.
+    *   Each iteration of the inner-most loop represents a given state and is equivalent to a function call to the same state in top-down.
+    *   $\text{dp}$ is now an array populated with the answer to the original problem for all possible states.
 
 ### House Robber Example
 
@@ -508,3 +522,593 @@ public int deleteAndEarn(int[] nums){
 
 *   Time complexity: $O(N + k)$
 *   Space complexity: $O(N + k)$
+
+## Maximum Score from Performing Multiplication Operations (Medium 1770)
+
+**Question**: You are given two integer arrays `nums` and `multipliers` of size `n` and `m` respectively, where `n >= m`. The arrays are **1-indexed**.
+
+You begin with a score of `0`. You want to perform **exactly** `m` operations. On the `ith` operation **(1-indexed)**, you will:
+
+-   Choose one integer `x` from **either the start or the end** of the array `nums`.
+-   Add `multipliers[i] * x` to your score.
+-   Remove `x` from the array `nums`.
+
+Return *the **maximum** score after performing* `m` *operations.*
+
+**Example 1:**
+
+```
+Input: nums = [1,2,3], multipliers = [3,2,1]
+Output: 14
+Explanation: An optimal solution is as follows:
+- Choose from the end, [1,2,3], adding 3 * 3 = 9 to the score.
+- Choose from the end, [1,2], adding 2 * 2 = 4 to the score.
+- Choose from the end, [1], adding 1 * 1 = 1 to the score.
+The total score is 9 + 4 + 1 = 14.
+```
+
+**Example 2:**
+
+```
+Input: nums = [-5,-3,-3,-2,7,1], multipliers = [-10,-5,3,4,6]
+Output: 102
+Explanation: An optimal solution is as follows:
+- Choose from the start, [-5,-3,-3,-2,7,1], adding -5 * -10 = 50 to the score.
+- Choose from the start, [-3,-3,-2,7,1], adding -3 * -5 = 15 to the score.
+- Choose from the start, [-3,-2,7,1], adding -3 * 3 = -9 to the score.
+- Choose from the end, [-2,7,1], adding 1 * 4 = 4 to the score.
+- Choose from the end, [-2,7], adding 7 * 6 = 42 to the score. 
+The total score is 50 + 15 - 9 + 4 + 42 = 102.
+```
+
+**Constraints:**
+
+-   `n == nums.length`
+-   `m == multipliers.length`
+-   `1 <= m <= 103`
+-   `m <= n <= 105`
+-   `-1000 <= nums[i], multipliers[i] <= 1000`
+
+### Standard Solution
+
+*   Need to break it down into sub-problems, each time we compare the current left value and right value, and the corresponding next steps of the choices.
+*   We can create a 2D array to record the cumulative sum of the values
+*   We can find that though we need to compare the left and right multiplication values, we only need to consider one order of the multipliers
+*   Recursion: top-down / Iteration: bottom-up
+
+#### Solution #1 Top-down DP
+
+*   Create a 2D array to record the cumulative sum of values
+*   Use left and right to indicate the location or array, use $i$ to point to the multipliers
+
+```java
+private int n, m;
+private int[] nums, multipliers;
+private int[][] memo;
+
+public int dp(int i, int left){
+    // need to have left, right pointer indicate left/right end
+    if (i == m){
+        // reach the end of multipliers
+        return 0;
+    }
+    int mult = multipliers[i];
+    int right = n - 1 - (i - left);
+    // not complete the calculation on this position
+    if (memo[i][left] == 0){
+        memo[i][left] = Math.max(mult * nums[left] + dp(i + 1, left + 1),
+                                mult * nums[right] + dp(i + 1, left));
+    }
+    return memo[i][left];
+}
+
+public int maximumScore(int[] nums, int[] multipliers) {
+    n = nums.length;
+    m = multipliers.length;
+    this.nums = nums;
+    this.multipliers = multipliers;
+    this.memo = new int[n][m];
+    // start from [0][0] in the matrix
+    return dp(0, 0);
+}
+```
+
+*   Time and space complexity can be $O(m^2)$
+*   Can be quite slow
+
+#### Solution #2 Bottom-up Solution
+
+*   Similar idea with solution 1 but shorter in length
+
+```java
+public int maximumScore(int[] nums, int[] multipliers){
+    int n = nums.length;
+    int m = multipliers.length;
+    int[][] dp = new int[m + 1][m + 1];
+    
+    for (int i = m - 1; i >= 0; i--){
+        for (int left = i; left >= 0; left--){
+            int mult = multipliers[i];
+            int right = n - 1 - (i - left);
+            dp[i][left] = Math.max(mult * nums[left] + dp[i + 1][left + 1],
+                                  mult * nums[right] + dp[i + 1][left]);
+        }
+    }
+    return dp[0][0];
+}
+```
+
+*   Time and space complexity can be $O(m^2)$
+
+## Word Break (Medium #139)
+
+**Question**: Given a string `s` and a dictionary of strings `wordDict`, return `true` if `s` can be segmented into a space-separated sequence of one or more dictionary words.
+
+**Note** that the same word in the dictionary may be reused multiple times in the segmentation. 
+
+**Example 1:**
+
+```
+Input: s = "leetcode", wordDict = ["leet","code"]
+Output: true
+Explanation: Return true because "leetcode" can be segmented as "leet code".
+```
+
+**Example 2:**
+
+```
+Input: s = "applepenapple", wordDict = ["apple","pen"]
+Output: true
+Explanation: Return true because "applepenapple" can be segmented as "apple pen apple".
+Note that you are allowed to reuse a dictionary word.
+```
+
+**Example 3:**
+
+```
+Input: s = "catsandog", wordDict = ["cats","dog","sand","and","cat"]
+Output: false
+```
+
+**Constraints:**
+
+-   `1 <= s.length <= 300`
+-   `1 <= wordDict.length <= 1000`
+-   `1 <= wordDict[i].length <= 20`
+-   `s` and `wordDict[i]` consist of only lowercase English letters.
+-   All the strings of `wordDict` are **unique**.
+
+### Standard Solution
+
+#### Solution #1 Brute Force
+
+*   Use recursion and backtracking, at each position of the string to decide whether to break the word or not
+
+```java
+public boolean wordBreak(String s, List<String> wordDict){
+    return wordBreakRecur(s, new HashSet<>(wordDict), 0);
+}
+private boolean wordBreakRecur(String s, Set<String> wordDict, int start){
+    if (start == s.length()){
+        return start;
+    }
+    for (int end = start + 1; end <= s.length(); end++){
+        if (wordDict.contains(s.substring(start, end)) && wordBreakRecur(s, wordDict, end)){
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+-   Time complexity: $O(2^n)$. Given a string of length $n$, there are $n + 1$ ways to split it into two parts. At each step, we have a choice: to split or not to split. In the worse case, when all choices are to be checked, that results in $O(2^n)$.
+-   Space complexity: $O(n)$. The depth of the recursion tree can go to $n$.
+
+#### Solution #2 Recursion with Memoization
+
+*   **Memoization**: use an array `memo` to store the result of the subproblems
+
+```java
+public boolean wordBreak(String s, List<String> wordDict){
+    // boolean memoization array
+    return wordBreakMemo(s, new HashSet<>(wordDict), 0, new Boolean[s.length()]);
+}
+private boolean wordBreakMemo(String s, Set<String> wordDict, int start, Boolean[] memo){
+    if (start == s.length()){
+        return true;
+    }
+    if (memo[start] != null){
+        return memo[start];
+    }
+    for (int end = start + 1; end <= s.length(); end++){
+        if (wordDict.contains(s.substring(start, end)) && wordBreakMemo(s, wordDict, end, memo)){
+            return memo[start] = true;
+        }
+    }
+    return memo[start] = false;
+}
+```
+
+-   Time complexity: $O(n^3)$. The size of the recursion tree can go up to $n^2$.
+-   Space complexity: $O(n)$. The depth of the recursion tree can go up to n.
+
+#### Solution #3 Dynamic Programming
+
+*   The bottom-up method with memoization
+
+```java
+public boolean wordBreak(String s, List<String> wordDict) {
+    Set<String> wordDictSet = new HashSet<>(wordDict);
+    boolean[] dp = new boolean[s.length() + 1];
+    dp[0] = true;
+    for (int i = 1; i <= s.length(); i++) {
+        for (int j = 0; j < i; j++) {
+            if (dp[j] && wordDictSet.contains(s.substring(j, i))) {
+                dp[i] = true;
+                break;
+            }
+        }
+    }
+    return dp[s.length()];
+}
+```
+
+-   Time complexity: $O(n^3)$. There are two nested loops and substring computation at each iteration. Overall that results in $O(n^3)$ time complexity.
+-   Space complexity: $O(n)$. The length of p array is $n+1$
+
+## Longest Common Subsequence (Medium #1143)
+
+**Question**: Given two strings `text1` and `text2`, return *the length of their longest **common subsequence**.* If there is no **common subsequence**, return `0`.
+
+A **subsequence** of a string is a new string generated from the original string with some characters (can be none) deleted without changing the relative order of the remaining characters.
+
+-   For example, `"ace"` is a subsequence of `"abcde"`.
+
+A **common subsequence** of two strings is a subsequence that is common to both strings.
+
+**Example 1:**
+
+```
+Input: text1 = "abcde", text2 = "ace" 
+Output: 3  
+Explanation: The longest common subsequence is "ace" and its length is 3.
+```
+
+**Example 2:**
+
+```
+Input: text1 = "abc", text2 = "abc"
+Output: 3
+Explanation: The longest common subsequence is "abc" and its length is 3.
+```
+
+**Example 3:**
+
+```
+Input: text1 = "abc", text2 = "def"
+Output: 0
+Explanation: There is no such common subsequence, so the result is 0.
+```
+
+**Constraints:**
+
+-   `1 <= text1.length, text2.length <= 1000`
+-   `text1` and `text2` consist of only lowercase English characters.
+
+### Standard Solution
+
+#### Solution #1 Memoization
+
+*   Use a 2D memoization array to store the maximal length of a substring from each location
+*   Assume text2 is the shorter string
+
+![Image showing subproblem LCS("ctgattag", "tcg")](https://leetcode.com/problems/longest-common-subsequence/Figures/1143/subproblem_1.png)
+
+```java
+class Solution {
+    
+  private int[][] memo;
+  private String text1;
+  private String text2;
+    
+  public int longestCommonSubsequence(String text1, String text2) {
+    // Make the memo big enough to hold the cases where the pointers
+    // go over the edges of the strings.
+    this.memo = new int[text1.length() + 1][text2.length() + 1];
+    // We need to initialise the memo array to -1's so that we know
+    // whether or not a value has been filled in. Keep the base cases
+    // as 0's to simplify the later code a bit.
+    for (int i = 0; i < text1.length(); i++) {
+      for (int j = 0; j < text2.length(); j++) {
+        this.memo[i][j] = -1;
+      }
+    }
+    this.text1 = text1;
+    this.text2 = text2;
+    return memoSolve(0, 0);
+  }
+
+  private int memoSolve(int p1, int p2) {        
+    // Check whether or not we've already solved this subproblem.
+    // This also covers the base cases where p1 == text1.length
+    // or p2 == text2.length.
+    if (memo[p1][p2] != -1) {
+      return memo[p1][p2];
+    }
+
+    // Option 1: we don't include text1[p1] in the solution.
+    int option1 = memoSolve(p1 + 1, p2);
+
+    // Option 2: We include text1[p1] in the solution, as long as
+    // a match for it in text2 at or after p2 exists.
+    int firstOccurence = text2.indexOf(text1.charAt(p1), p2);
+    int option2 = 0;
+    if (firstOccurence != -1) {
+        // next one start from the common index + 1
+      option2 = 1 + memoSolve(p1 + 1, firstOccurence + 1);
+    }
+
+    // Add the best answer to the memo before returning it.
+    memo[p1][p2] = Math.max(option1, option2);
+    return memo[p1][p2];
+  }
+}
+```
+
+-   Time complexity: $O(M \cdot N^2)$.
+
+    We analyze a memoized-recursive function by looking at how many unique subproblems it will solve, and then what the cost of solving each subproblem is.
+
+    The input parameters to the recursive function are a pair of integers; representing a position in each string. There are M possible positions for the first string and N for the second string. Therefore, this gives us $M \cdot N$ possible pairs of integers, and is the number of subproblems to be solved.
+
+    Solving each subproblem requires, in the worst case, an $O(N)$ operation; searching for a character in a string of length N. This gives us a total of $(M \cdot N^2)$.
+
+-   Space complexity: $O(M \cdot N)$.
+
+    We need to store the answer for each of the $M \cdot N$ subproblems. Each subproblem takes $O(1)$ space to store. This gives us a total of $O(M \cdot N)$.
+
+#### Solution #2 Improved Memoization
+
+*   An improved version of the solution #1
+
+```java
+class Solution {
+    
+  private int[][] memo;
+  private String text1;
+  private String text2;
+    
+  public int longestCommonSubsequence(String text1, String text2) {
+    // Make the memo big enough to hold the cases where the pointers
+    // go over the edges of the strings.
+    this.memo = new int[text1.length() + 1][text2.length() + 1];
+    // We need to initialise the memo array to -1's so that we know
+    // whether or not a value has been filled in. Keep the base cases
+    // as 0's to simplify the later code a bit.
+    for (int i = 0; i < text1.length(); i++) {
+      for (int j = 0; j < text2.length(); j++) {
+        this.memo[i][j] = -1;
+      }
+    }
+    this.text1 = text1;
+    this.text2 = text2;
+    return memoSolve(0, 0);
+  }
+
+  private int memoSolve(int p1, int p2) {        
+    // Check whether or not we've already solved this subproblem.
+    // This also covers the base cases where p1 == text1.length
+    // or p2 == text2.length.
+    if (memo[p1][p2] != -1) {
+      return memo[p1][p2];
+    }
+
+    // Recursive cases.
+    int answer = 0;
+    if (text1.charAt(p1) == text2.charAt(p2)) {
+      answer = 1 + memoSolve(p1 + 1, p2 + 1);
+    } else {
+      answer = Math.max(memoSolve(p1, p2 + 1), memoSolve(p1 + 1, p2));
+    }
+    
+    // Add the best answer to the memo before returning it.
+    memo[p1][p2] = answer;
+    return memo[p1][p2];
+  }
+}
+```
+
+-   Time complexity: $O(M \cdot N)$.
+
+    This time, solving each subproblem has a cost of $O(1)$. Again, there are $M \cdot N$ subproblems, and so we get a total time complexity of $O(M \cdot N)$.
+
+-   Space complexity: $O(M \cdot N)$.
+
+    We need to store the answer for each of the $M \cdot N$ subproblems.
+
+## Maximal Square (Medium #221)
+
+**Question**: Given an `m x n` binary `matrix` filled with `0`'s and `1`'s, *find the largest square containing only* `1`'s *and return its area*.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2020/11/26/max1grid.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: matrix = [["1","0","1","0","0"],["1","0","1","1","1"],["1","1","1","1","1"],["1","0","0","1","0"]]
+Output: 4
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2020/11/26/max2grid.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: matrix = [["0","1"],["1","0"]]
+Output: 1
+```
+
+**Example 3:**
+
+```
+Input: matrix = [["0"]]
+Output: 0
+```
+
+**Constraints:**
+
+-   `m == matrix.length`
+-   `n == matrix[i].length`
+-   `1 <= m, n <= 300`
+-   `matrix[i][j]` is `'0'` or `'1'`.
+
+### My Solution
+
+*   Works but is way too complicated, exceed the limited time
+
+```java
+public int maximalSquare(char[][] matrix) {
+    // sliding window in square
+    int m = matrix.length;
+    int n = matrix[0].length;
+    int length = m > n ? n : m;
+
+    int res = 0;
+    for (int i = length; i >= 1; i--){
+        for (int row = 0; row + i <= m; row++){
+            for (int col = 0; col + i <= n; col++){
+                int indicator = 0;
+                for (int rowIndex = row; rowIndex < row + i; rowIndex++){
+                    for (int colIndex = col; colIndex < col + i; colIndex++){
+                        if (matrix[rowIndex][colIndex] == '0'){
+                            indicator = 0;
+                            break;
+                        }
+                        indicator++;
+                    }
+                }
+                if (indicator == i * i){
+                res = indicator;
+                break;
+                }
+            }
+
+        }
+        if (res != 0){
+            break;
+        }
+    }
+    return res;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Dynamic Programming
+
+*   Create a 2D array table, store the maximal square found so far at this position
+*   Add the minimal previous value to get the current maximal square data 
+
+<img src="https://leetcode.com/media/original_images/221_Maximal_Square.PNG?raw=true" alt="Max Square" style="zoom: 67%;" />
+
+```java
+public int maximalSquare(char[][] matrix) {
+    int rows = matrix.length, cols = matrix[0].length;
+    int[][] dp = new int[rows + 1][cols + 1];
+    int maxsqlen = 0;
+    for (int i = 1; i <= rows; i++){
+        for (int j = 1; j <= cols; j++){
+            if (matrix[i - 1][j - 1] == '1'){
+                dp[i][j] = Math.min(Math.min(dp[i][j - 1], dp[i - 1][j]), dp[i - 1][j - 1]) + 1;
+                maxsqlen = Math.max(maxsqlen, dp[i][j]);
+            }
+        }
+    }
+    return maxsqlen * maxsqlen;
+}
+```
+
+-   Time complexity: $O(mn)$. Single-pass.
+-   Space complexity: $O(mn)$. Another matrix of the same size is used for dp.
+
+## Unique Paths (Medium #62)
+
+**Question**: There is a robot on an `m x n` grid. The robot is initially located at the **top-left corner** (i.e., `grid[0][0]`). The robot tries to move to the **bottom-right corner** (i.e., `grid[m - 1][n - 1]`). The robot can only move either down or right at any point in time.
+
+Given the two integers `m` and `n`, return *the number of possible unique paths that the robot can take to reach the bottom-right corner*.
+
+The test cases are generated so that the answer will be less than or equal to `2 * 109`.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2018/10/22/robot_maze.png)
+
+```
+Input: m = 3, n = 7
+Output: 28
+```
+
+**Example 2:**
+
+```
+Input: m = 3, n = 2
+Output: 3
+Explanation: From the top-left corner, there are a total of 3 ways to reach the bottom-right corner:
+1. Right -> Down -> Down
+2. Down -> Down -> Right
+3. Down -> Right -> Down
+```
+
+**Constraints:**
+
+-   `1 <= m, n <= 100`
+
+### My Solution
+
+```java
+public int uniquePaths(int m, int n) {
+    // we can create a 2D array to record the path number to current point
+    int[][] path = new int[m + 1][n + 1];
+    if (m == 1 || n == 1){
+        return 1;
+    }
+    // base cases
+    path[2][1] = 1;
+    path[1][2] = 1;
+    // other cases are sum of other locations to current one
+    for (int i = 1; i <= m; i++){
+        for (int j = 1; j <= n; j++){
+            if (i + j <= 3){
+                continue;
+            }
+            path[i][j] = path[i][j - 1] + path[i - 1][j];
+        }
+    }
+    return path[m][n];
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Dynamic Programming
+
+*   Similar to my solution
+
+```java
+public int uniquePaths(int m, int n){
+	int[][] d = new int[m][n];
+    
+    for (int[] arr : d){ // loop through the 2d array
+        Arrays.fill(arr, 1);
+    }
+    for (int col = 1; col < m; col++){
+        for (int row = 1; row < n; row++){
+            d[col][row] = d[col - 1][row] + d[col][row - 1];
+        }
+    }
+    return d[m - 1][n - 1];
+}
+```
+
+-   Time complexity: $\mathcal{O}(N \times M)$
+-   Space complexity: $\mathcal{O}(N \times M)$

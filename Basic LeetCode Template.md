@@ -79,3 +79,7 @@ int binarySearch(int[] nums, int target) {
 }
 ```
 
+## Dynamic Programming
+
+*   **Top-down**: Recursion + Memoization(usually hashmap)
+*   **Bottom-up**: Create an array to cumulatively store values or flags
