@@ -78,6 +78,12 @@ public int climbStairs(int n) {
     *   Each iteration of the inner-most loop represents a given state and is equivalent to a function call to the same state in top-down.
     *   $\text{dp}$ is now an array populated with the answer to the original problem for all possible states.
 
+### Time and Space Complexity
+
+*   DP is that we never repeat calculations, whether, by tabulation or memoization, we only compute a state once.
+*   The time complexity of a DP algorithm is directly tied to the number of possible states.
+*   If computing each state requires F time, and there are n possible states, then the time complexity of a DP algorithm is $O(n \cdot F)$. 
+
 ### House Robber Example
 
 *   **DP problem**: asking for the maximum of something, and our current decisions will affect which options are available for our future decisions.
@@ -1112,3 +1118,98 @@ public int uniquePaths(int m, int n){
 
 -   Time complexity: $\mathcal{O}(N \times M)$
 -   Space complexity: $\mathcal{O}(N \times M)$
+
+## Coin Change (Medium #322)
+
+**Question**: You are given an integer array `coins` representing coins of different denominations and an integer `amount` representing a total amount of money.
+
+Return *the fewest number of coins that you need to make up that amount*. If that amount of money cannot be made up by any combination of the coins, return `-1`.
+
+You may assume that you have an infinite number of each kind of coin.
+
+**Example 1:**
+
+```
+Input: coins = [1,2,5], amount = 11
+Output: 3
+Explanation: 11 = 5 + 5 + 1
+```
+
+**Example 2:**
+
+```
+Input: coins = [2], amount = 3
+Output: -1
+```
+
+**Example 3:**
+
+```
+Input: coins = [1], amount = 0
+Output: 0
+```
+
+**Constraints:**
+
+-   `1 <= coins.length <= 12`
+-   `1 <= coins[i] <= 231 - 1`
+-   `0 <= amount <= 104`
+
+### Standard Solution
+
+#### Solution #1 Dynamic Programming - Top-down
+
+*   Use an array to find at each number, how many coins we need to have - memoization
+*   Loop through the coins and use recursion to find the minimum number of coins that are needed
+*   Each time add 1 to the count
+
+```java
+  public int coinChange(int[] coins, int amount) {
+    if (amount < 1) return 0;
+    return coinChange(coins, amount, new int[amount]);
+  }
+
+  private int coinChange(int[] coins, int rem, int[] count) {
+    if (rem < 0) return -1;
+    if (rem == 0) return 0;
+    if (count[rem - 1] != 0) return count[rem - 1];
+    int min = Integer.MAX_VALUE;
+    for (int coin : coins) {
+      int res = coinChange(coins, rem - coin, count);
+      if (res >= 0 && res < min)
+        min = 1 + res;
+    }
+    count[rem - 1] = (min == Integer.MAX_VALUE) ? -1 : min;
+    return count[rem - 1];
+  }
+```
+
+-   Time complexity: $O(S*n)$. where S is the amount, and n is the denomination count. In the worst case, the recursive tree of the algorithm has a height of S and the algorithm solves only S subproblems because it caches precalculated solutions in a table. Each subproblem is computed with n iterations, one by coin denomination. Therefore there is $O(S*n)$ time complexity.
+-   Space complexity: $O(S)$, where S is the amount to change. We use extra space for the memoization table.
+
+#### Solution #2 Dynamic Programming - Bottom up
+
+*   Use an array with 1 more length of the coins array
+*   Keep finding the minimum of the coin count
+
+<img src="https://leetcode.com/media/original_images/322_coin_change_table.png" alt="Bottom-up approach using a table to build up the solution to F6." style="zoom:33%;" />
+
+```java
+public int coinChnage(int[] coins, int amount){
+    int max = amount + 1;
+    int[] dp = new int[amount + 1];
+    Arrays.fill(dp, max); // fill with the possible max counts
+    dp[0] = 0;
+    for (int i = 1; i <= amount; i++){
+        for (int j = 0; j < coins.length; j++){
+            if (coins[j] <= i){
+                dp[i] = Math.min(dp[i], dp[i - coins[j]] + 1);
+            }
+        }
+    }
+    return dp[amount] > amount ? -1 : dp[amount];
+}
+```
+
+-   Time complexity: $O(S*n)$. On each step, the algorithm finds the next $*F(i)$ in n iterations, where $1\leq i \leq S$. Therefore in total, the iterations are $S*n$.
+-   Space complexity: $O(S)$. We use extra space for the memoization table.
