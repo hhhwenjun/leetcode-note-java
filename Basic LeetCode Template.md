@@ -83,3 +83,12 @@ int binarySearch(int[] nums, int target) {
 
 *   **Top-down**: Recursion + Memoization(usually hashmap)
 *   **Bottom-up**: Create an array to cumulatively store values or flags
+
+*   Usually used in:
+    *   Maximum/minimum problems
+    *   How many ways
+    *   The result depends on optimal sub-problems solutions
+*   **Process**:
+    *   State variables: what decisions are there to make, what information is needed
+    *   The recurrence relation to transition between states
+    *   Base cases

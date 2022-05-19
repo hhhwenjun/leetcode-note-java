@@ -77,6 +77,9 @@ public int climbStairs(int n) {
     *   Write a for-loop(s) that iterate over your state variables. If you have multiple state variables, you will need nested for-loops. These loops should **start iterating from the base cases**.
     *   Each iteration of the inner-most loop represents a given state and is equivalent to a function call to the same state in top-down.
     *   $\text{dp}$ is now an array populated with the answer to the original problem for all possible states.
+*   **Recurrence**
+    *   The recurrence relation: $dp(i)=min(dp(i - 1) + cost[i - 1], dp(i - 2) + cost[i - 2])$
+    *   Multiple step: $dp(i)=min(dp(j) + cost[j])$ for all $\text{(i - k)} \leq \text{j} < \text{i}(i - k)≤j<i$
 
 ### Time and Space Complexity
 
@@ -1213,3 +1216,116 @@ public int coinChnage(int[] coins, int amount){
 
 -   Time complexity: $O(S*n)$. On each step, the algorithm finds the next $*F(i)$ in n iterations, where $1\leq i \leq S$. Therefore in total, the iterations are $S*n$.
 -   Space complexity: $O(S)$. We use extra space for the memoization table.
+
+## Minimum Difficulty of a Job Schedule (Hard #1335)
+
+**Question**: You want to schedule a list of jobs in `d` days. Jobs are dependent (i.e To work on the `ith` job, you have to finish all the jobs `j` where `0 <= j < i`).
+
+You have to finish **at least** one task every day. The difficulty of a job schedule is the sum of difficulties of each day of the `d` days. The difficulty of a day is the maximum difficulty of a job done on that day.
+
+You are given an integer array `jobDifficulty` and an integer `d`. The difficulty of the `ith` job is `jobDifficulty[i]`.
+
+Return *the minimum difficulty of a job schedule*. If you cannot find a schedule for the jobs return `-1`.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2020/01/16/untitled.png" alt="img" style="zoom:50%;" />
+
+```
+Input: jobDifficulty = [6,5,4,3,2,1], d = 2
+Output: 7
+Explanation: First day you can finish the first 5 jobs, total difficulty = 6.
+Second day you can finish the last job, total difficulty = 1.
+The difficulty of the schedule = 6 + 1 = 7 
+```
+
+**Example 2:**
+
+```
+Input: jobDifficulty = [9,9,9], d = 4
+Output: -1
+Explanation: If you finish a job per day you will still have a free day. you cannot find a schedule for the given jobs.
+```
+
+**Example 3:**
+
+```
+Input: jobDifficulty = [1,1,1], d = 3
+Output: 3
+Explanation: The schedule is one job per day. total difficulty will be 3.
+```
+
+**Constraints:**
+
+-   `1 <= jobDifficulty.length <= 300`
+-   `0 <= jobDifficulty[i] <= 1000`
+-   `1 <= d <= 10`
+
+### Standard Solution
+
+*   2D array to find the optimal at the position, two state variables: day and difficulty
+*   2D array: need to fill the array with -1, then in recursion, if the memo is -1, we do the operations
+*   The 2D array would be 1 column or 1 row larger than the state variables
+*   In recursion, do the `Math.min()/Math.max()`
+
+#### Solution #1 Top-down Implementation
+
+```java
+class Solution {
+    private int n, d;
+    private int[][] memo;
+    private int[] jobDifficulty;
+    private int[] hardestJobRemaining;
+    
+    private int dp(int i, int day) {
+        // Base case, it's the last day so we need to finish all the jobs
+        if (day == d) {
+            return hardestJobRemaining[i];
+        }
+        
+        if (memo[i][day] == -1) {
+            int best = Integer.MAX_VALUE;
+            int hardest = 0;
+            // Iterate through the options and choose the best
+            for (int j = i; j < n - (d - day); j++) {
+                hardest = Math.max(hardest, jobDifficulty[j]);
+                // Recurrence relation
+                best = Math.min(best, hardest + dp(j + 1, day + 1));
+            }
+            memo[i][day] = best;
+        }
+        
+        return memo[i][day];
+    }
+    
+    public int minDifficulty(int[] jobDifficulty, int d) {
+        n = jobDifficulty.length;
+        // If we cannot schedule at least one job per day, 
+        // it is impossible to create a schedule
+        if (n < d) {
+            return -1;
+        }
+        
+        hardestJobRemaining = new int[n];
+        int hardestJob = 0;
+        for (int i = n - 1; i >= 0; i--) {
+            hardestJob = Math.max(hardestJob, jobDifficulty[i]);
+            hardestJobRemaining[i] = hardestJob;
+        }
+        
+        // Initialize memo array with value of -1.
+        memo = new int[n][d + 1];
+        for (int i = 0; i < n; i++) {
+            Arrays.fill(memo[i], -1);
+        }
+        
+        this.d = d;
+        this.jobDifficulty = jobDifficulty;
+        return dp(0, 1);
+    }
+}
+```
+
+*   Time complexity (both algorithms): $O(d \cdot (n - d)^2)$
+
+*   Space complexity (top-down): $O((n - d) \cdot d)$
