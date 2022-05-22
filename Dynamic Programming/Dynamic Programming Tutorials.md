@@ -1465,3 +1465,127 @@ private int binarySearch(ArrayList<Integer> sub, int num){
 -   Space complexity: $O(N)$
 
     When the input is strictly increasing, the `sub` array will be the same size as the input.
+
+## Best Time to Buy and Sell Stock (Easy #121)
+
+**Question**: You are given an array `prices` where `prices[i]` is the price of a given stock on the `ith` day.
+
+You want to maximize your profit by choosing a **single day** to buy one stock and choosing a **different day in the future** to sell that stock.
+
+Return *the maximum profit you can achieve from this transaction*. If you cannot achieve any profit, return `0`.
+
+**Example 1:**
+
+```
+Input: prices = [7,1,5,3,6,4]
+Output: 5
+Explanation: Buy on day 2 (price = 1) and sell on day 5 (price = 6), profit = 6-1 = 5.
+Note that buying on day 2 and selling on day 1 is not allowed because you must buy before you sell.
+```
+
+**Example 2:**
+
+```
+Input: prices = [7,6,4,3,1]
+Output: 0
+Explanation: In this case, no transactions are done and the max profit = 0.
+```
+
+**Constraints:**
+
+-   `1 <= prices.length <= 105`
+-   `0 <= prices[i] <= 104`
+
+### My Solution
+
+*   Works but would exceed time limit
+
+```java
+public int maxProfit(int[] prices) {
+    // dynamic programming: start with 0
+    int[] profit = new int[prices.length];
+
+    profit[0] = 0;
+    int max = 0;
+    for (int i = 1; i < prices.length; i++){
+        for (int j = 0; j < i; j++){
+            if (prices[i] > prices[j]){
+                max = Math.max(max, prices[i] - prices[j]);
+                profit[i] = Math.max(profit[i], prices[i] - prices[j]);
+            }
+        }
+    }
+    return max;
+}
+```
+
+*   Second attempt only need one-pass
+
+```java
+public int maxProfit(int[] prices) {
+    // dynamic programming: start with 0
+    int[] profit = new int[prices.length];
+    int min = prices[0];
+    int max = 0;
+    int benefit = 0;
+    for (int i = 1; i < prices.length; i++){
+        if (prices[i] < min){
+            min = prices[i];
+            max = 0;
+            continue;
+        }
+        if (prices[i] >= max){
+            max = prices[i];
+            benefit = Math.max(max - min, benefit);
+        }
+    }
+    return benefit;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Brute Force
+
+*   Similar to first solution, compare every pair of value
+
+```java
+public int maxProfit(int[] prices){
+    int maxprofit = 0;
+    for (int i = 0; i < prices.length - 1; i++){
+        for (int j = i + 1; j < prices.length; j++){
+            int profit = prices[j] - prices[i];
+            if (profit > maxprofit){
+                maxprofit = profit;
+            }
+        }
+    }
+    return maxprofit;
+}
+```
+
+-   Time complexity: $O(n^2)$. Loop runs $\dfrac{n (n-1)}{2}$ times.
+-   Space complexity: $O(1)$. Only two variables - $\text{maxprofit}$ and $\text{profit}$ are used.
+
+#### Solution #2 One pass
+
+*   Similar to the second solution
+
+```java
+public int maxProfit(int[] prices){
+    int minprice = Integer.MAX_VALUE;
+    int maxprofit = 0;
+    for (int i = 0; i < prices.length; i++){
+        if (prices[i] < minprice){
+            minprice = prices[i];
+        }
+        else if (prices[i] - minprice > maxprofit){
+            maxprofit = prices[i] - minprice;
+        }
+    }
+    return maxprofit;
+}
+```
+
+-   Time complexity: $O(n)$. Only a single pass is needed.
+-   Space complexity: $O(1)$. Only two variables are used.
