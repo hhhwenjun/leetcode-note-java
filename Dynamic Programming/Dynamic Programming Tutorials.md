@@ -87,6 +87,11 @@ public int climbStairs(int n) {
 *   The time complexity of a DP algorithm is directly tied to the number of possible states.
 *   If computing each state requires F time, and there are n possible states, then the time complexity of a DP algorithm is $O(n \cdot F)$. 
 
+### State Reduction
+
+*   Reduce the state dimension, usually comes from trick or observation.
+*   State reductions for space complexity usually only apply to bottom-up implementations, while improving time complexity by reducing the number of state variables applies to both implementations.
+
 ### House Robber Example
 
 *   **DP problem**: asking for the maximum of something, and our current decisions will affect which options are available for our future decisions.
@@ -1589,3 +1594,301 @@ public int maxProfit(int[] prices){
 
 -   Time complexity: $O(n)$. Only a single pass is needed.
 -   Space complexity: $O(1)$. Only two variables are used.
+
+## Best Time to Buy and Sell Stock IV (Hard #188)
+
+**Question**: You are given an integer array `prices` where `prices[i]` is the price of a given stock on the `ith` day, and an integer `k`.
+
+Find the maximum profit you can achieve. You may complete at most `k` transactions.
+
+**Note:** You may not engage in multiple transactions simultaneously (i.e., you must sell the stock before you buy again).
+
+**Example 1:**
+
+```
+Input: k = 2, prices = [2,4,1]
+Output: 2
+Explanation: Buy on day 1 (price = 2) and sell on day 2 (price = 4), profit = 4-2 = 2.
+```
+
+**Example 2:**
+
+```
+Input: k = 2, prices = [3,2,6,5,0,3]
+Output: 7
+Explanation: Buy on day 2 (price = 2) and sell on day 3 (price = 6), profit = 6-2 = 4. Then buy on day 5 (price = 0) and sell on day 6 (price = 3), profit = 3-0 = 3.
+```
+
+**Constraints:**
+
+-   `0 <= k <= 100`
+-   `0 <= prices.length <= 1000`
+-   `0 <= prices[i] <= 1000`
+
+### Standard Solution
+
+*   For dynamic programming, need to find out how many state variables and actions we can have
+*   State variables: day, transaction remaining, holding a stock or not
+*   Actions: buy stock, sell the stock, do nothing
+*   When encountering a new cell in the `memo` table, we perform the three actions, and compare them
+*   Both solutions has complexity
+    *   Time complexity: $O(nk)$
+    *   Space complexity: $O(nk)$
+
+#### Solution #1 Top-down solution
+
+```java
+private int[] prices;
+private int[][][] memo;
+
+private int dp(int i, int transactionsRemaining, int holding){
+    // base cases
+    if (transactionsRemaining == 0 || i == prices.length){
+        return 0;
+    }
+    if (memo[i][transactionsRemaining][holding] == 0){
+        // simply go to the next day
+        int doNothing = dp(i + 1, transactionsRemaining, holding);
+        int doSomething;
+
+        if (holding == 1){
+            // sell stock
+            doSomething = prices[i] + dp(i + 1, transactionsRemaining - 1, 0);
+        }
+        else {
+            // buy stock
+            doSomething = -prices[i] + dp(i + 1, transactionsRemaining, 1);
+        }
+        // recurrence relation, choose the most profitable option
+        memo[i][transactionsRemaining][holding] = Math.max(doNothing, doSomething);
+    }
+    return memo[i][transactionsRemaining][holding];
+}
+public int maxProfit(int k, int[] prices) {
+    // three states: buy stock, sell stock, do nothing
+    // dp: day, transaction remaining, holding stock or not
+    // base case: out of transactions
+    this.prices = prices;
+    this.memo = new int[prices.length][k + 1][2];
+    return dp(0, k, 0);
+}
+```
+
+#### Solution #2 Bottom-up Solution
+
+```java
+public int maxProfit(int k, int[] prices){
+    int n = prices.length;
+    int dp[][][] = new int[n + 1][k + 1][2];
+    // from back to the front
+    for (int i = n - 1; i >= 0; i--){
+        for (int transactionsRemaining = 1; transactionsRemaining <= k; transactionsRemaining++){
+            for (int holding = 0; holding < n; holding++){
+                int doNothing = dp[i + 1][transactionsRemaining][holding];
+                int doSomething;
+                if (holding == 1){
+                    // sell stock
+                    doSomething = prices[i] + dp[i + 1][transactionsRemaining - 1][0];
+                } else {
+                    // buy stock
+                    doSomething = -prices[i] + dp[i + 1][transactionsRemaining][1];
+                }
+                // recurrence relation
+                dp[i][transactionsRemaining][holding] = Math.max(doNothing, doSomething);
+            }
+        }
+    }
+    return dp[0][k][0];
+}
+```
+
+## Best Time to Buy and Sell Stock with Cooldown (Medium #309)
+
+**Question**: You are given an array `prices` where `prices[i]` is the price of a given stock on the `ith` day.
+
+Find the maximum profit you can achieve. You may complete as many transactions as you like (i.e., buy one and sell one share of the stock multiple times) with the following restrictions:
+
+-   After you sell your stock, you cannot buy stock on the next day (i.e., cooldown one day).
+
+**Note:** You may not engage in multiple transactions simultaneously (i.e., you must sell the stock before you buy again).
+
+**Example 1:**
+
+```
+Input: prices = [1,2,3,0,2]
+Output: 3
+Explanation: transactions = [buy, sell, cooldown, buy, sell]
+```
+
+**Example 2:**
+
+```
+Input: prices = [1]
+Output: 0
+```
+
+**Constraints:**
+
+-   `1 <= prices.length <= 5000`
+-   `0 <= prices[i] <= 1000`
+
+### My Solution
+
+*   State variables: day and holding stock or not
+*   Two state variables - 2D memo array
+*   Start with 0 (actually end), then stop when the day adds to the length
+*   Perform the three actions when we find the cell is empty in memo array
+*   The time and space complexity should be both $O(n)$
+
+```java
+int[][] memo;
+int[] prices;
+public int maxProfit(int[] prices) {
+    this.prices = prices;
+    // state variables: day, holding
+    this.memo = new int[prices.length + 1][2];
+    // actions complete: cooldown(do nothing), buy, sell
+    return dp(0, 0);
+}
+
+public int dp(int day, int holding){
+    if (day == prices.length){
+        return 0;
+    }
+    // we find the cell has not been modified
+    if (memo[day][holding] == 0){
+        int doNothing = dp(day + 1, holding);
+        int doSomething;
+
+        if (holding == 1){
+            // sell the stock
+            doSomething = prices[day] + ((day + 2) >= prices.length ? 0 :dp(day + 2, 0));
+        }
+        else {
+            // buy a stock
+            doSomething = -prices[day] + dp(day + 1, 1);
+        }
+        memo[day][holding] = Math.max(doNothing, doSomething);
+    }
+    return memo[day][holding];
+}
+```
+
+#### Solution #1 DP with State Machine
+
+*   Use three states to present the action: sell, buy, reset
+
+<img src="https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/Figures/309/309_state_machine.png" alt="state machine" style="zoom:50%;" />
+
+```java
+public int maxProfit(int[] prices){
+    int sold = Integer.MIN_VALUE, held = Integer.MIN_VALUE, reset = 0;
+    for (int price : prices){
+        int preSold = sold;
+        sold = held + price;
+        held = Math.max(held, reset - price);
+        reset = Math.max(reset, preSold);
+    }
+}
+```
+
+-   Time Complexity: $\mathcal{O}(N)$ where N is the length of the input price list.
+    -   We have one loop over the input list, and the operation within one iteration takes constant time.
+-   Space Complexity: $\mathcal{O}(1)$, constant memory is used regardless of the size of the input.
+
+## Paint Fence (Medium #276)
+
+**Question**: You are painting a fence of `n` posts with `k` different colors. You must paint the posts following these rules:
+
+-   Every post must be painted **exactly one** color.
+-   There **cannot** be three or more **consecutive** posts with the same color.
+
+Given the two integers `n` and `k`, return *the **number of ways** you can paint the fence*.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/02/28/paintfenceex1.png" alt="img" style="zoom:50%;" />
+
+```
+Input: n = 3, k = 2
+Output: 6
+Explanation: All the possibilities are shown.
+Note that painting all the posts red or all the posts green is invalid because there cannot be three posts in a row with the same color.
+```
+
+**Example 2:**
+
+```
+Input: n = 1, k = 1
+Output: 1
+```
+
+**Example 3:**
+
+```
+Input: n = 7, k = 2
+Output: 42
+```
+
+**Constraints:**
+
+-   `1 <= n <= 50`
+-   `1 <= k <= 105`
+-   The testcases are generated such that the answer is in the range `[0, 231 - 1]` for the given `n` and `k`.
+
+### Standard Solution
+
+#### Solution #1 Top-down Dynamic Programming (Recursion + Memoization)
+
+*   Use hash map, standard solution:
+    *   If the map has the key, return
+    *   If not, put the key and its value, then return
+    *   Base cases
+*   In `i` position, we have `k - 1` option for choosing the colors, 1 is the consecutive same color
+
+```java
+private HashMap<Integer, Integer> memo = new HashMap<Integer, Integer>();
+public int numWays(int n, int k){
+    return totalWays(n, k);
+}
+private int totalWays(int i, int k){
+    if (i == 1) return k;
+    if (i == 2) return k * k;
+    
+    // check if we have already calculated totalWays(i)
+    // if contains, return the map value
+    if (memo.containsKey(i)){
+        return memo.get(i);
+    }
+    // if not contains, store the key and value
+    // use the recurrence relation to calculate totalWays(i)
+    memo.put(i, (k - 1) * (totalWays(i - 1, k) + totalWays(i - 2, k)));
+    // again, return the value
+    return memo.get(i);
+}
+```
+
+-   Time complexity: $O(n)$. `totalWays` gets called with each index from `n` to `3`. Because of our memoization, each call will only take O(1)*O*(1) time.
+-   Space complexity: $O(n)$. The extra space used by this algorithm is the recursion call stack. For example, `totalWays(50)` will call `totalWays(49)`, which calls `totalWays(48)` etc., all the way down until the base cases at `totalWays(1)` and `totalWays(2)`. In addition, our hash map `memo` will be of size `n` at the end, since we populate it with every index from `n` to `3`.
+
+#### Solution #2 Bottom-up Solution
+
+```java
+public int numWays(int n, int k) {
+    // Base cases for the problem to avoid index out of bound issues
+    if (n == 1) return k;
+    if (n == 2) return k * k;
+
+    int totalWays[] = new int[n + 1];
+    totalWays[1] = k;
+    totalWays[2] = k * k;
+
+    for (int i = 3; i <= n; i++) {
+        totalWays[i] = (k - 1) * (totalWays[i - 1] + totalWays[i - 2]);
+    }
+
+    return totalWays[n];
+}
+```
+
+*   Time and space complexity is the same as the previous solution
