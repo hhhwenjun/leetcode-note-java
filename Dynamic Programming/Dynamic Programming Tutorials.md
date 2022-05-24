@@ -1222,6 +1222,91 @@ public int coinChnage(int[] coins, int amount){
 -   Time complexity: $O(S*n)$. On each step, the algorithm finds the next $*F(i)$ in n iterations, where $1\leq i \leq S$. Therefore in total, the iterations are $S*n$.
 -   Space complexity: $O(S)$. We use extra space for the memoization table.
 
+## Coin Change 2 (Medium #518)
+
+**Question**: You are given an integer array `coins` representing coins of different denominations and an integer `amount` representing a total amount of money.
+
+Return *the number of combinations that make up that amount*. If that amount of money cannot be made up by any combination of the coins, return `0`.
+
+You may assume that you have an infinite number of each kind of coin.
+
+The answer is **guaranteed** to fit into a signed **32-bit** integer.
+
+**Example 1:**
+
+```
+Input: amount = 5, coins = [1,2,5]
+Output: 4
+Explanation: there are four ways to make up the amount:
+5=5
+5=2+2+1
+5=2+1+1+1
+5=1+1+1+1+1
+```
+
+**Example 2:**
+
+```
+Input: amount = 3, coins = [2]
+Output: 0
+Explanation: the amount of 3 cannot be made up just with coins of 2.
+```
+
+**Example 3:**
+
+```
+Input: amount = 10, coins = [10]
+Output: 1 
+```
+
+**Constraints:**
+
+-   `1 <= coins.length <= 300`
+-   `1 <= coins[i] <= 5000`
+-   All the values of `coins` are **unique**.
+-   `0 <= amount <= 5000`
+
+### Standard Solution
+
+#### Solution #1 Dynamic Programming
+
+*   When the amount is 0, we have 1 option, no coin is also an option (Initialization)
+*   Then in the for loop, each time we add on the combinations without the current coin.
+
+```java
+public int change(int amount, int[] coins) {
+    int[] memo = new int[amount + 1];
+    // no coins is still an option
+    memo[0] = 1;
+    for (int coin : coins){
+        for (int j = coin; j <= amount; j++){
+            // find how many ways we have before adding the coin
+            memo[j] += memo[j - coin];
+        }
+    }
+    return memo[amount];
+}
+```
+
+```java
+// based on the 2D array solution derives the 1D array solution
+public int change(int amount, int[] coins) {
+    int[][] dp = new int[coins.length+1][amount+1];
+    dp[0][0] = 1;
+
+    for (int i = 1; i <= coins.length; i++) {
+        dp[i][0] = 1;
+        for (int j = 1; j <= amount; j++) {
+            dp[i][j] = dp[i-1][j] + (j >= coins[i-1] ? dp[i][j-coins[i-1]] : 0);
+        }
+    }
+    return dp[coins.length][amount];
+}
+```
+
+*   Time complexity: $\mathcal{O}(N \times \textrm{amount})$, where N is a length of coins array.
+*   Space complexity: $\mathcal{O}(\textrm{amount})$ to keep dp array.
+
 ## Minimum Difficulty of a Job Schedule (Hard #1335)
 
 **Question**: You want to schedule a list of jobs in `d` days. Jobs are dependent (i.e To work on the `ith` job, you have to finish all the jobs `j` where `0 <= j < i`).
@@ -1892,3 +1977,183 @@ public int numWays(int n, int k) {
 ```
 
 *   Time and space complexity is the same as the previous solution
+
+## Decode Ways (Medium #91)
+
+**Question**: A message containing letters from `A-Z` can be **encoded** into numbers using the following mapping:
+
+```
+'A' -> "1"
+'B' -> "2"
+...
+'Z' -> "26"
+```
+
+To **decode** an encoded message, all the digits must be grouped then mapped back into letters using the reverse of the mapping above (there may be multiple ways). For example, `"11106"` can be mapped into:
+
+-   `"AAJF"` with the grouping `(1 1 10 6)`
+-   `"KJF"` with the grouping `(11 10 6)`
+
+Note that the grouping `(1 11 06)` is invalid because `"06"` cannot be mapped into `'F'` since `"6"` is different from `"06"`.
+
+Given a string `s` containing only digits, return *the **number** of ways to **decode** it*.
+
+The test cases are generated so that the answer fits in a **32-bit** integer.
+
+**Example 1:**
+
+```
+Input: s = "12"
+Output: 2
+Explanation: "12" could be decoded as "AB" (1 2) or "L" (12).
+```
+
+**Example 2:**
+
+```
+Input: s = "226"
+Output: 3
+Explanation: "226" could be decoded as "BZ" (2 26), "VF" (22 6), or "BBF" (2 2 6).
+```
+
+**Example 3:**
+
+```
+Input: s = "06"
+Output: 0
+Explanation: "06" cannot be mapped to "F" because of the leading zero ("6" is different from "06").
+```
+
+**Constraints:**
+
+-   `1 <= s.length <= 100`
+-   `s` contains only digits and may contain leading zero(s).
+
+### My Solution
+
+```java
+public int numDecodings(String s) {
+    // range of the number is 1 - 26
+    int[] memo = new int[s.length()];
+    // first number if within range, should has 1 decoding way
+    memo[0] = (s.charAt(0) - '0' == 0) ? 0 : 1;
+    if (memo[0] == 0){
+        return 0;
+    }
+    if (s.length() == 1){
+        return 1;
+    }
+    int last = s.charAt(0) - '0', current = s.charAt(1) - '0';
+    if (last * 10 + current <= 26 && current != 0){
+        memo[1] = memo[0] + 1;
+    }
+    else {
+        memo[1] = memo[0];
+    }
+    if ((last < 1 || last > 2) && current == 0) return 0;
+    last = s.charAt(1) - '0';
+    for (int i = 2; i < s.length(); i++){
+
+        current = s.charAt(i) - '0';
+        if (current != 0){
+            memo[i] = memo[i - 1];
+        }
+        if (last > 0 && last * 10 + current < 27){
+            memo[i] += memo[i - 2]; // almost twice combinations
+        }
+        if ((last < 1 || last > 2) && current == 0) return 0;
+        last = current;
+    }
+    return memo[s.length() - 1];
+}
+```
+
+*   The time and space complexity should be both $O(n)$
+
+### Standard Solution
+
+#### Solution #1 Recursive Approach with Memoization
+
+```java
+class Solution {
+
+    Map<Integer, Integer> memo = new HashMap<>();
+
+    public int numDecodings(String s) {
+        return recursiveWithMemo(0, s);
+    }
+    
+    private int recursiveWithMemo(int index, String str) {
+        // Have we already seen this substring?
+        if (memo.containsKey(index)) {
+            return memo.get(index);
+        }
+        
+        // If you reach the end of the string
+        // Return 1 for success.
+        if (index == str.length()) {
+            return 1;
+        }
+
+        // If the string starts with a zero, it can't be decoded
+        if (str.charAt(index) == '0') {
+            return 0;
+        }
+
+        if (index == str.length() - 1) {
+            return 1;
+        }
+
+
+        int ans = recursiveWithMemo(index + 1, str);
+        if (Integer.parseInt(str.substring(index, index + 2)) <= 26) {
+             ans += recursiveWithMemo(index + 2, str);
+         }
+
+        // Save for memoization
+        memo.put(index, ans);
+
+        return ans;
+    }
+}
+```
+
+-   Time Complexity: $O(N)$, where N is length of the string. Memoization helps in pruning the recursion tree and hence decoding for an index only once. Thus this solution is linear time complexity.
+-   Space Complexity: $O(N)$. The dictionary used for memoization would take the space equal to the length of the string. There would be an entry for each index value. The recursion stack would also be equal to the length of the string.
+
+#### Solution #2 Iterative Approach
+
+*   Similar idea to my solution
+*   Initialization of the beginning is 1, it does not depend on the string value
+*   If can be decoded in two digits, then we know we can add the previous two-digit combinations
+
+```java
+class Solution {
+    public int numDecodings(String s) {
+        // DP array to store the subproblem results
+        int[] dp = new int[s.length() + 1];
+        dp[0] = 1;
+        
+        // Ways to decode a string of size 1 is 1. Unless the string is '0'.
+        // '0' doesn't have a single digit decode.
+        dp[1] = s.charAt(0) == '0' ? 0 : 1;
+
+        for(int i = 2; i < dp.length; i++) {
+            // Check if successful single digit decode is possible.
+            if (s.charAt(i - 1) != '0') {
+               dp[i] = dp[i - 1];  
+            }
+            
+            // Check if successful two digit decode is possible.
+            int twoDigit = Integer.valueOf(s.substring(i - 2, i));
+            if (twoDigit >= 10 && twoDigit <= 26) {
+                dp[i] += dp[i - 2];
+            }
+        }
+        return dp[s.length()];
+    }
+}
+```
+
+-   Time Complexity: $O(N)$, where N is length of the string. We iterate the length of `dp` array which is N+1*N*+1.
+-   Space Complexity: $O(N)$. The length of the DP array.
