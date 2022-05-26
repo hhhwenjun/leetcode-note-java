@@ -1102,6 +1102,27 @@ public int uniquePaths(int m, int n) {
 }
 ```
 
+```java
+// second attempt
+public int uniquePaths(int m, int n) {
+    int[][] path = new int[m][n];
+    // fill all the cell with 1
+    for (int[] singlePath : path){
+        Arrays.fill(singlePath, 1);
+    }
+    if (m == 1 || n == 1){
+        return 1;
+    }
+    // path number = upper path + left path
+    for (int i = 1; i < m; i++){
+        for (int j = 1; j < n; j++){
+            path[i][j] = path[i - 1][j] + path[i][j - 1];
+        }
+    }
+    return path[m - 1][n - 1];
+}
+```
+
 ### Standard Solution
 
 #### Solution #1 Dynamic Programming
@@ -1126,6 +1147,132 @@ public int uniquePaths(int m, int n){
 
 -   Time complexity: $\mathcal{O}(N \times M)$
 -   Space complexity: $\mathcal{O}(N \times M)$
+
+## Unique Paths II (Medium #63)
+
+**Question**: You are given an `m x n` integer array `grid`. There is a robot initially located at the **top-left corner** (i.e., `grid[0][0]`). The robot tries to move to the **bottom-right corner** (i.e., `grid[m-1][n-1]`). The robot can only move either down or right at any point in time.
+
+An obstacle and space are marked as `1` or `0` respectively in `grid`. A path that the robot takes cannot include **any** square that is an obstacle.
+
+Return *the number of possible unique paths that the robot can take to reach the bottom-right corner*.
+
+The testcases are generated so that the answer will be less than or equal to `2 * 109`.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2020/11/04/robot1.jpg" alt="img" style="zoom: 67%;" />
+
+```
+Input: obstacleGrid = [[0,0,0],[0,1,0],[0,0,0]]
+Output: 2
+Explanation: There is one obstacle in the middle of the 3x3 grid above.
+There are two ways to reach the bottom-right corner:
+1. Right -> Right -> Down -> Down
+2. Down -> Down -> Right -> Right
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2020/11/04/robot2.jpg)
+
+```
+Input: obstacleGrid = [[0,1],[0,0]]
+Output: 1
+```
+
+**Constraints:**
+
+-   `m == obstacleGrid.length`
+-   `n == obstacleGrid[i].length`
+-   `1 <= m, n <= 100`
+-   `obstacleGrid[i][j]` is `0` or `1`.
+
+### My Solution
+
+*   Each obstacle we record it as 0 when counting cumulative path ways in memo matrix
+
+```java
+public int uniquePathsWithObstacles(int[][] obstacleGrid) {
+    int m = obstacleGrid.length;
+    int n = obstacleGrid[0].length;
+    int[][] path = new int[m][n];
+    // initialization, start with 1
+    path[0][0] = 1;
+    // path = upper path count + left path count
+    // but if obstacle, it has to be 0
+    for (int i = 0; i < m; i++){
+        for (int j = 0; j < n; j++){
+            // if the spot is an obstacle
+            if (obstacleGrid[i][j] == 1){
+                path[i][j] = 0;
+            }
+            // if the spot is not on the upper or left edge
+            else if (i != 0 && j != 0) {
+                path[i][j] = path[i - 1][j] + path[i][j - 1];
+            }
+            // if the spot is on the edges
+            else if (i == 0 && j!= 0){
+                path[i][j] = path[i][j - 1];
+            }
+            else if (j == 0 && i != 0){
+                path[i][j] = path[i - 1][j];
+            }
+        }
+    }
+    return path[m - 1][n - 1];
+}
+```
+
+*   The space and time complexity should be both $O(M*N)$
+
+### Standard Solution
+
+#### Solution #1 Dynamic Programming
+
+*   Similar idea to my solution, but using the provided 2D array, so the space complexity can be kept in $O(1)$
+
+```java
+public int uniquePathsWithObstacles(int[][] obstaclGrid){
+    int R = obstacleGrid.length;
+    int C = obstacleGrid[0].length;
+    
+    // If the starting cell has an obstacle, then simply return as there would be
+    // no paths to the destination
+    if (obstacleGrid[0][0] == 1){
+        return 0;
+    }
+    
+    // Number of ways of reaching the starting cell = 1.
+    obstacleGrid[0][0] = 1;
+    
+    // Filling the values for the first column and row
+    for (int i = 1; i < R; i++){
+        obstacleGrid[i][0] = (obstacleGrid[i][0] == 0 && obstacleGrid[i - 1][0] == 1) ? 1 : 0;
+    }
+    for (int i = 1; i < C; i++){
+        obstacleGrid[0][i] = (obstacleGrid[0][i] == 0 && obstacleGrid[0][i - 1] == 1) ? 1 : 0;
+    }
+    
+    // Starting from cell(1,1) fill up the values
+    // No. of ways of reaching cell[i][j] = cell[i - 1][j] + cell[i][j - 1]
+    // i.e. From above and left.
+    for (int i = 1; i < R; i++) {
+        for (int j = 1; j < C; j++) {
+            if (obstacleGrid[i][j] == 0) {
+                obstacleGrid[i][j] = obstacleGrid[i - 1][j] + obstacleGrid[i][j - 1];
+            } else {
+                obstacleGrid[i][j] = 0;
+            }
+        }
+    }
+
+    // Return value stored in rightmost bottommost cell. That is the destination.
+    return obstacleGrid[R - 1][C - 1];
+}
+```
+
+-   Time Complexity: $O(M \times N)$. The rectangular grid given to us is of size $M \times N$ and we process each cell just once.
+-   Space Complexity: $O(1)$. We are utilizing the `obstacleGrid` as the DP array. Hence, no extra space.
 
 ## Coin Change (Medium #322)
 
