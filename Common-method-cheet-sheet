@@ -1,0 +1,3 @@
+## Char to Int ##
+`char - '0'`
+`Character.getNumericValue(char)`
