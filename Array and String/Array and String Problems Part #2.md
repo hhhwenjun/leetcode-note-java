@@ -1378,3 +1378,218 @@ public boolean isPalindrome(String s){
 
 -   Time complexity: $O(n)$, in length n of the string. We traverse over each character at-most-once, until the two pointers meet in the middle, or when we break and return early.
 -   Space complexity: $O(1)$. No extra space is required, at all.
+
+## Check if Number Has Equal Digit Count and Digit Value (Easy #2283)
+
+**Question**: You are given a **0-indexed** string `num` of length `n` consisting of digits.
+
+Return `true` *if for **every** index* `i` *in the range* `0 <= i < n`*, the digit* `i` *occurs* `num[i]` *times in* `num`*, otherwise return* `false`.
+
+**Example 1:**
+
+```
+Input: num = "1210"
+Output: true
+Explanation:
+num[0] = '1'. The digit 0 occurs once in num.
+num[1] = '2'. The digit 1 occurs twice in num.
+num[2] = '1'. The digit 2 occurs once in num.
+num[3] = '0'. The digit 3 occurs zero times in num.
+The condition holds true for every index in "1210", so return true.
+```
+
+**Example 2:**
+
+```
+Input: num = "030"
+Output: false
+Explanation:
+num[0] = '0'. The digit 0 should occur zero times, but actually occurs twice in num.
+num[1] = '3'. The digit 1 should occur three times, but actually occurs zero times in num.
+num[2] = '0'. The digit 2 occurs zero times in num.
+The indices 0 and 1 both violate the condition, so return false. 
+```
+
+**Constraints:**
+
+-   `n == num.length`
+-   `1 <= n <= 10`
+-   `num` consists of digits.
+
+### My Solution
+
+*   Brute force method, the time complexity is $O(n^2)$, the space complexity is $O(n)$
+*   **Important**: The character itself represents the number
+    *   **Do not use** `Integer.valueOf` or `Integer.parseInt`: it only shows you the character number, not the integer it represents
+    *   **Do use** `char - '0' ` or `Character.getNumericValue()` to transfer the character value to the numeric value
+
+```java
+public boolean digitCount(String num) {
+    // brute force
+    int n = num.length();
+    int count = 0;
+    char[] charArry = num.toCharArray();
+    for (int i = 0; i < n; i++){
+        count = 0;
+        int expect = Character.getNumericValue(charArry[i]);
+        for (int j = 0; j < n; j++){
+            int current = Character.getNumericValue(charArry[j]);
+            if (current == i){
+                count++;
+            }
+        }
+        if (count != expect){
+            return false;
+        }
+    }
+    return true;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Create a Digit Array
+
+*   Use a 0-9 digit array to count the number of occurence
+
+```java
+public boolean digitCount(String num){
+    int[] freq = new int[10]; // 0 - 9
+    for (char c : num.toCharArray()){
+        freq[c - '0']++; // count the occurence
+    }
+    for (int i = 0; i < num.length(); i++){
+        if (num.charAt(i) - '0' != freq[i]) return false; // compare with the digit map
+    }
+    return true;
+}
+```
+
+*   the time complexity is $O(n)$, the space complexity is $O(n)$
+
+## Sender with Largest Word Count (Medium #2284)
+
+**Question**: You have a chat log of `n` messages. You are given two string arrays `messages` and `senders` where `messages[i]` is a **message** sent by `senders[i]`.
+
+A **message** is list of **words** that are separated by a single space with no leading or trailing spaces. The **word count** of a sender is the total number of **words** sent by the sender. Note that a sender may send more than one message.
+
+Return *the sender with the **largest** word count*. If there is more than one sender with the largest word count, return *the one with the **lexicographically largest** name*.
+
+**Note:**
+
+-   Uppercase letters come before lowercase letters in lexicographical order.
+-   `"Alice"` and `"alice"` are distinct.
+
+**Example 1:**
+
+```
+Input: messages = ["Hello userTwooo","Hi userThree","Wonderful day Alice","Nice day userThree"], senders = ["Alice","userTwo","userThree","Alice"]
+Output: "Alice"
+Explanation: Alice sends a total of 2 + 3 = 5 words.
+userTwo sends a total of 2 words.
+userThree sends a total of 3 words.
+Since Alice has the largest word count, we return "Alice".
+```
+
+**Example 2:**
+
+```
+Input: messages = ["How is leetcode for everyone","Leetcode is useful for practice"], senders = ["Bob","Charlie"]
+Output: "Charlie"
+Explanation: Bob sends a total of 5 words.
+Charlie sends a total of 5 words.
+Since there is a tie for the largest word count, we return the sender with the lexicographically larger name, Charlie.
+```
+
+**Constraints:**
+
+-   `n == messages.length == senders.length`
+-   `1 <= n <= 104`
+-   `1 <= messages[i].length <= 100`
+-   `1 <= senders[i].length <= 10`
+-   `messages[i]` consists of uppercase and lowercase English letters and `' '`.
+-   All the words in `messages[i]` are separated by **a single space**.
+-   `messages[i]` does not have leading or trailing spaces.
+-   `senders[i]` consists of uppercase and lowercase English letters only.
+
+### My Solution
+
+*   Use hash map to store the sender with message word count
+*   Each time trim the message and split with space, put into the map
+*   Loop through the map to find the max sender
+*   Time complexity: $O(n * m)$, $n$ is the number of messages, and $m$ is the word number of each message
+*   Space complexity: $O(n)$, we use a hashmap to store the senders and word count
+
+```java
+public String largestWordCount(String[] messages, String[] senders) {
+    // create a hash map to match the senders and word count
+    Map<String, Integer> countMap = new HashMap<>();
+    // both messages and senders should has same length
+    int n = messages.length;
+    for (int i = 0; i < n; i++){
+        String sender = senders[i];
+        String message = messages[i];
+        // clean the messages and count its length
+        String[] messageArry = message.split("\\s+");
+        int stringCount = 0;
+        for (String msg : messageArry){
+            msg.trim();
+            if (!msg.equals(" ")){
+                stringCount++;
+            }
+        }
+        if (countMap.containsKey(sender)){
+            countMap.put(sender, countMap.get(sender) + stringCount);
+        }
+        else {
+            countMap.put(sender, stringCount);
+        }
+    }
+    int maxLength = 0;
+    int preMax = 0;
+    String maxSender = "";
+    // loop through the map to find max sender
+    for (Map.Entry<String, Integer> entry : countMap.entrySet()){
+        //maxLength = Math.max(maxLength, entry.getValue());
+        if (entry.getValue() > maxLength){
+            maxSender = entry.getKey();
+            maxLength = entry.getValue();
+        }
+        else if (entry.getValue() == maxLength){
+            if (entry.getKey().compareTo(maxSender) > 0){
+                maxSender = entry.getKey();
+            }
+        }
+    }
+    return maxSender;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Using HashMap
+
+*   Same idea as my solution, but shorter and more efficient
+
+```java
+public String largestWordCount(String[] messages, String[] senders) {
+    HashMap<String,Integer> hm=new HashMap<>();
+    int max=0;
+    String name="";
+    for(int i=0;i<messages.length;i++){
+        String[] words=messages[i].split(" ");
+        int freq=hm.getOrDefault(senders[i],0)+words.length;
+        hm.put(senders[i],freq);
+        if(hm.get(senders[i])>max){ // keep compare to the max number
+            max=hm.get(senders[i]);
+            name=senders[i];
+        }
+        else if(hm.get(senders[i])==max && name.compareTo(senders[i])<0){ // compare the string
+            name=senders[i];
+        } 
+    }
+    return name;
+}
+```
+
+*   Time and space complexity is the same as my solution

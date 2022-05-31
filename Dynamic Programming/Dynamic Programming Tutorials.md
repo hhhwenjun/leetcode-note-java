@@ -2028,6 +2028,110 @@ public int maxProfit(int[] prices){
     -   We have one loop over the input list, and the operation within one iteration takes constant time.
 -   Space Complexity: $\mathcal{O}(1)$, constant memory is used regardless of the size of the input.
 
+## Best Time to Buy and Sell Stock with Transaction Fee (Medium #714)
+
+**Question**: You are given an array `prices` where `prices[i]` is the price of a given stock on the `ith` day, and an integer `fee` representing a transaction fee.
+
+Find the maximum profit you can achieve. You may complete as many transactions as you like, but you need to pay the transaction fee for each transaction.
+
+**Note:** You may not engage in multiple transactions simultaneously (i.e., you must sell the stock before you buy again).
+
+**Example 1:**
+
+```
+Input: prices = [1,3,2,8,4,9], fee = 2
+Output: 8
+Explanation: The maximum profit can be achieved by:
+- Buying at prices[0] = 1
+- Selling at prices[3] = 8
+- Buying at prices[4] = 4
+- Selling at prices[5] = 9
+The total profit is ((8 - 1) - 2) + ((9 - 4) - 2) = 8.
+```
+
+**Example 2:**
+
+```
+Input: prices = [1,3,7,5,10,3], fee = 3
+Output: 6
+```
+
+**Constraints:**
+
+-   `1 <= prices.length <= 5 * 104`
+-   `1 <= prices[i] < 5 * 104`
+-   `0 <= fee < 5 * 104`
+
+### My Solution
+
+```java
+private int[] prices;
+private int[][] memo;
+private int fee;
+
+public int maxProfit(int[] prices, int fee) {
+    this.prices = prices;
+    this.fee = fee;
+    // use dp:
+    // two state variables: day, holding stock or not
+    // two actions: buy, sell
+    memo = new int[prices.length + 1][2];
+    return dp(0, 0);
+}
+
+public int dp(int day, int holding){
+    // base case: no profit
+    if (day == prices.length){
+        return 0;
+    }
+    // we find the cell has not been modified
+    if (memo[day][holding] == 0){
+        int doNothing = dp(day + 1, holding);
+        int doSomething;
+
+        // do something we have two actions
+        // 1 - holding stock, 0 - does not hold
+        if (holding == 1){
+            // sell the stock?
+            doSomething = prices[day] - fee + dp(day + 1, 0);
+        }
+        else {
+            // buy a stock?
+            doSomething = -prices[day] + dp(day + 1, 1);
+        }
+        memo[day][holding] = Math.max(doNothing, doSomething);
+    }
+    return memo[day][holding];
+}
+```
+
+*   Use the memoization template, two state variables, and two actions
+*   The time and space complexity should be both $O(n)$
+
+### Standard Solution
+
+#### Solution #1 Dynamic Programming
+
+*   If I am holding a share after today, then either I am just continuing holding the share I had yesterday, or that I held no share yesterday, but bought in one share today: `hold = max(hold, cash - prices[i])`
+*   If I am not holding a share after today, then either I did not hold a share yesterday, or I held a share yesterday but I decided to sell it out today: `cash = max(cash, hold + prices[i] - fee)`.
+*   Make sure `fee` is only incurred once.
+
+```java
+public int maxProfit(int[] prices, int fee){
+    int cash = 0, hold = -prices[0];
+    for (int i = 1; i < prices.length; i++){
+        // two cases: yesterday I did not buy, no hold/ has a hold, sell
+        cash = Math.max(cash, hold + prices[i] - fee);
+        // two cases: today I hold / buy a stock
+        hold = Math.max(hold, cash - prices[i]);
+    }
+    return cash;
+}
+```
+
+-   Time Complexity: $O(N)$, where N is the number of prices.
+-   Space Complexity: $O(1)$, the space used by `cash` and `hold`.
+
 ## Paint Fence (Medium #276)
 
 **Question**: You are painting a fence of `n` posts with `k` different colors. You must paint the posts following these rules:

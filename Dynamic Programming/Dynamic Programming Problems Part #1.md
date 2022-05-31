@@ -513,3 +513,113 @@ public int minFallingPathSum(int[][] matrix){
 
 *   Time and space complexity is same as my solution
 
+## Paint House (Medium #256)
+
+**Question**: There is a row of `n` houses, where each house can be painted one of three colors: red, blue, or green. The cost of painting each house with a certain color is different. You have to paint all the houses such that no two adjacent houses have the same color.
+
+The cost of painting each house with a certain color is represented by an `n x 3` cost matrix `costs`.
+
+-   For example, `costs[0][0]` is the cost of painting house `0` with the color red; `costs[1][2]` is the cost of painting house 1 with color green, and so on...
+
+Return *the minimum cost to paint all houses*. 
+
+**Example 1:**
+
+```
+Input: costs = [[17,2,17],[16,16,5],[14,3,19]]
+Output: 10
+Explanation: Paint house 0 into blue, paint house 1 into green, paint house 2 into blue.
+Minimum cost: 2 + 5 + 3 = 10.
+```
+
+**Example 2:**
+
+```
+Input: costs = [[7,6,2]]
+Output: 2
+```
+
+**Constraints:**
+
+-   `costs.length == n`
+-   `costs[i].length == 3`
+-   `1 <= n <= 100`
+-   `1 <= costs[i][j] <= 20`
+
+### My Solution
+
+*   Using the template of memoization + dynamic programming
+*   Consider the key: how to create and get the key for hashmap
+*   It is a simplified version for brute force recursion:
+    *   The time complexity: $O(n)$ - basically it is $3 * 2 * n$
+    *   The space complexity: $O(n)$ - the hashmap 
+
+```java
+// hashmap: house, cost - two state variables
+private HashMap<String, Integer> memo = new HashMap<>();
+private int[][] costs;
+
+public int minCost(int[][] costs) {
+    this.costs = costs;
+    return Math.min(Math.min(paintCost(0, 0), paintCost(0, 1)), paintCost(0, 2));
+}
+
+// using recursion and dynamic programming to determine the cost
+public int paintCost(int day, int color){
+    if (day == costs.length){
+        return 0;
+    }
+    if (memo.containsKey(getKey(day, color))){
+        return memo.get(getKey(day, color));
+    }
+    // the cost at current day and color
+    int totalCost = costs[day][color];
+    if (color == 0){
+        // red color
+        totalCost += Math.min(paintCost(day + 1, 1), paintCost(day + 1, 2));
+    }
+    else if (color == 1){
+        // blue color
+        totalCost += Math.min(paintCost(day + 1, 0), paintCost(day + 1, 2));
+    }
+    else {
+        // green color
+        totalCost += Math.min(paintCost(day + 1, 0), paintCost(day + 1, 1));
+    }
+    memo.put(getKey(day, color), totalCost);
+    return totalCost;
+}
+
+// helper method to create key for the house
+public String getKey(int day, int color){
+    return day + " " + color;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Memoization
+
+*   Same as my solution
+
+#### Solution #2 Dynamic Programming
+
+*   At each cell we only calculate the minimum cost to this location
+
+```java
+public int minCost(int[][] costs){
+    for (int n = costs.length - 2; n >= 0; n--){
+        // total cost of painting nth house red
+        costs[n][0] += Math.min(costs[n + 1][1], costs[n + 1][2]);
+        // total cost of painting the nth house green
+        costs[n][1] += Math.min(costs[n + 1][0], costs[n + 1][2]);
+        // total cost of painting the nth house blue
+        costs[n][2] += Math.min(costs[n + 1][0], costs[n + 1][1]);
+    }
+    if (costs.length == 0) return 0;
+    return Math.min(Math.min(costs[0][0], costs[0][1], costs[0][2]));
+}
+```
+
+*   Time Complexity: $O(n)$. Finding the minimum of two values and adding it to another value is an $O(1)$ operation. We are doing these $O(1)$ operations for $3 \cdot (n - 1)$ cells in the grid.
+*   Space Complexity: $O(1)$
