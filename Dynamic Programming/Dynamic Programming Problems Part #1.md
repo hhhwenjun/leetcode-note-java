@@ -623,3 +623,164 @@ public int minCost(int[][] costs){
 
 *   Time Complexity: $O(n)$. Finding the minimum of two values and adding it to another value is an $O(1)$ operation. We are doing these $O(1)$ operations for $3 \cdot (n - 1)$ cells in the grid.
 *   Space Complexity: $O(1)$
+
+## Paint House II (Hard #265)
+
+**Question**: There are a row of `n` houses, each house can be painted with one of the `k` colors. The cost of painting each house with a certain color is different. You have to paint all the houses such that no two adjacent houses have the same color.
+
+The cost of painting each house with a certain color is represented by an `n x k` cost matrix costs.
+
+-   For example, `costs[0][0]` is the cost of painting house `0` with color `0`; `costs[1][2]` is the cost of painting house `1` with color `2`, and so on...
+
+Return *the minimum cost to paint all houses*.
+
+**Example 1:**
+
+```
+Input: costs = [[1,5,3],[2,9,4]]
+Output: 5
+Explanation:
+Paint house 0 into color 0, paint house 1 into color 2. Minimum cost: 1 + 4 = 5; 
+Or paint house 0 into color 2, paint house 1 into color 0. Minimum cost: 3 + 2 = 5.
+```
+
+**Example 2:**
+
+```
+Input: costs = [[1,3],[2,4]]
+Output: 5
+```
+
+**Constraints:**
+
+-   `costs.length == n`
+-   `costs[i].length == k`
+-   `1 <= n <= 100`
+-   `2 <= k <= 20`
+-   `1 <= costs[i][j] <= 20`
+
+**Follow up:** Could you solve it in `O(nk)` runtime?
+
+### My Solution
+
+*   At each row start from the second row, we find the minimum value in last row for the current cell
+*   Find the minimum cost at the last row of the table
+*   Another way: only record the minimum cost and the second minimum cost for each row
+*   The time complexity is $O(n * k ^ 2)$ where $n$ is the row number, and $k$ is the column number
+*   The space complexity is $O(1)$ since we do not use extra space for storage
+
+```java
+public int minCostII(int[][] costs) {
+    int n = costs.length;
+    int k = costs[0].length;
+
+    // loop through all the houses, calculate min costs sum for each house
+    for (int i = 1; i < n; i++){
+        for (int j = 0; j < k; j++){
+            // find the optimal in the last row
+            int min = Integer.MAX_VALUE;
+            for (int l = 0; l < k; l++){
+                if (j == l) continue;
+                if (costs[i - 1][l] < min){
+                    min = costs[i - 1][l];
+                }
+            }
+            costs[i][j] += min;
+        }
+    }
+    int minCost = Integer.MAX_VALUE;
+    for (int j = 0; j < k; j++){
+        if (minCost > costs[n - 1][j]){
+            minCost = costs[n - 1][j];
+        }
+    }
+    return minCost;
+}
+```
+
+### Standard Soltuion
+
+#### Solution #1 Dynamic Programming
+
+*   Same as my solution
+
+<img src="https://leetcode.com/problems/paint-house-ii/Figures/265/dynamic_programming_1.png" alt="Choosing the best path to house 1, red." style="zoom:50%;" />
+
+```java
+public int minCostII(int[][] costs) {
+    if (costs.length == 0) return 0;
+    int k = costs[0].length;
+    int n = costs.length;
+
+    for (int house = 1; house < n; house++) {
+        for (int color = 0; color < k; color++) {
+            int min = Integer.MAX_VALUE;
+            for (int previousColor = 0; previousColor < k; previousColor++) {
+                if (color == previousColor) continue;
+                min = Math.min(min, costs[house - 1][previousColor]);
+            }
+            costs[house][color] += min;
+        }
+    }
+
+    // Find the minimum in the last row.
+    int min = Integer.MAX_VALUE;
+    for (int c : costs[n - 1]) {
+        min = Math.min(min, c);
+    }
+    return min;
+}
+```
+
+-   Time complexity: $O(n \cdot k ^ 2)$
+
+    We iterate over each of the $n \cdot k$ cells. For each of the cells, we're finding the minimum of the $k$ values in the row above, excluding the one that is in the same column. This operation is $O(k)$. Multiplying this out, we get $O(n \cdot k ^ 2)$.
+
+-   Space complexity: $O(1)$ if done in-place, $O(n \cdot k)$ if input is copied.
+
+#### Solution #2 Dynamic Programming with Optimized Time
+
+*   Each row we record the minimum cost and the second minimum cost
+
+<img src="https://leetcode.com/problems/paint-house-ii/Figures/265/dynamic_programming_2.png" alt="We're only ever adding 2 different numbers." style="zoom: 67%;" />
+
+```java
+public int minCostII(int[][] costs){
+    if (costs.length == 0) return 0;
+    int k = costs[0].length;
+    int n = costs.length;
+    
+    for (int house = 1; house < n; house++){
+        // Find the minimum and second minimum color in the previous row
+        int minColor = -1; int secondMinColor = -1;
+        for (int color = 0; color < k; color++){
+            int cost = costs[house - 1][color];
+            if (minColor == -1 || cost < costs[house - 1][minColor]){
+                secondMinColor = minColor;
+                minColor = color;
+            }
+            else if (secondMinColor == -1 || cost < costs[house - 1][secondMinColor]){
+                secondMinColor = color;
+            }
+        }
+        // and now calculate the new costs for the current row.
+        for (int color = 0; color < k; color++){
+            if (color == minColor){
+                costs[house][color] += costs[house - 1][secondMinColor];
+            }
+            else {
+                costs[house][color] += costs[house - 1][minColor];
+            }
+        }
+    }
+    // Find the minimum in the last row
+    int min = Integer.MAX_VALUE;
+    for (int c : costs[n - 1]){
+        min = Math.min(min, c);
+    }
+    return min;
+}
+```
+
+*   Time complexity: $O(n \cdot k)$.
+*   Space complexity: $O(1)$
