@@ -1118,3 +1118,125 @@ public int countVowelPermutation(int n) {
 
 -   Time complexity: $O(N)$ (N equals the input length `n`). This is because iterating from `1` to `n` will take $O(N)$ time. The initializations take constant time. Putting them together gives us $O(N)$ time.
 -   Space complexity: $O(1)$. This is because we don't use any additional data structures to store data.
+
+## Maximum Length of Repeated Subarray (Medium #718)
+
+**Question**: Given two integer arrays `nums1` and `nums2`, return *the maximum length of a subarray that appears in **both** arrays*.
+
+**Example 1:**
+
+```
+Input: nums1 = [1,2,3,2,1], nums2 = [3,2,1,4,7]
+Output: 3
+Explanation: The repeated subarray with maximum length is [3,2,1].
+```
+
+**Example 2:**
+
+```
+Input: nums1 = [0,0,0,0,0], nums2 = [0,0,0,0,0]
+Output: 5
+```
+
+**Constraints:**
+
+-   `1 <= nums1.length, nums2.length <= 1000`
+-   `0 <= nums1[i], nums2[i] <= 100`
+
+### Standard Solution
+
+#### Solution #1 Dynamic Programming
+
+*   Use dimension of the two arrays to create a 2D memo array
+*   If number in two arrays equals, add 1 to the responding cell in 2D memo
+*   Cumulatively add 1 if subarray is equal (template of DP)
+*   The hard part is to transfer the question to the memo array and its dp process
+
+```java
+public int findLength(int[] nums1, int[] nums2) {
+    int ans = 0;
+    int[][] memo = new int[nums1.length + 1][nums2.length + 1];
+    for (int i = nums1.length - 1; i >= 0; i--){
+        for (int j = nums2.length - 1; j >= 0; j--){
+            if (nums1[i] == nums2[j]){
+                // if they are same, add to the cell, also cumulate the results
+                memo[i][j] = memo[i + 1][j + 1] + 1;
+                // compare to keep finding the maximum length
+                if (ans < memo[i][j]) ans = memo[i][j];
+            }
+        }
+    }
+    return ans;
+}
+```
+
+-   Time Complexity: $O(M*N)$, where $M$, $N$ are the lengths of `A, B`.
+-   Space Complexity: $O(M*N)$, the space used by `dp`.
+
+## Number of Dice Rolls With Target Sum (Medium #1155)
+
+**Question**: You have `n` dice and each die has `k` faces numbered from `1` to `k`.
+
+Given three integers `n`, `k`, and `target`, return *the number of possible ways (out of the* `kn` *total ways)* *to roll the dice so the sum of the face-up numbers equals* `target`. Since the answer may be too large, return it **modulo** `109 + 7`.
+
+**Example 1:**
+
+```
+Input: n = 1, k = 6, target = 3
+Output: 1
+Explanation: You throw one die with 6 faces.
+There is only one way to get a sum of 3.
+```
+
+**Example 2:**
+
+```
+Input: n = 2, k = 6, target = 7
+Output: 6
+Explanation: You throw two dice, each with 6 faces.
+There are 6 ways to get a sum of 7: 1+6, 2+5, 3+4, 4+3, 5+2, 6+1.
+```
+
+**Example 3:**
+
+```
+Input: n = 30, k = 30, target = 500
+Output: 222616187
+Explanation: The answer must be returned modulo 109 + 7. 
+```
+
+**Constraints:**
+
+-   `1 <= n, k <= 30`
+-   `1 <= target <= 1000`
+
+### Standard Solution
+
+#### Solution #1 Memoization
+
+*   Use memoization to record the number of ways at each die.
+*   The time complexity should be $O(n * k)$ and space complexity should be $O(n)$ for hashmap.
+
+```java
+Map<String, Integer> countMap = new HashMap<>();
+public int numRollsToTarget(int n, int k, int target) {
+    long MOD = 1000000007;
+    // the base cases
+    if (target < n || n * k < target) return 0;
+    if (n == 1) return (target <= k) ? 1 : 0;
+
+    String key = n + " " + target;
+    if (countMap.containsKey(key)){
+        return countMap.get(key);
+    }
+    // if does not contain key
+    int sum = 0;
+    for (int i = 1; i <= k; i++){
+        sum += numRollsToTarget(n - 1, k, target - i);
+        sum %= MOD;
+    }
+    countMap.put(key, sum);
+    return countMap.get(key);
+}
+```
+
