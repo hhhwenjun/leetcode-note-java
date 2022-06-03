@@ -784,3 +784,337 @@ public int minCostII(int[][] costs){
 
 *   Time complexity: $O(n \cdot k)$.
 *   Space complexity: $O(1)$
+
+## Paint House III (Hard #1473)
+
+**Question**: There is a row of `m` houses in a small city, each house must be painted with one of the `n` colors (labeled from `1` to `n`), some houses that have been painted last summer should not be painted again.
+
+A neighborhood is a maximal group of continuous houses that are painted with the same color.
+
+-   For example: `houses = [1,2,2,3,3,2,1,1]` contains `5` neighborhoods `[{1}, {2,2}, {3,3}, {2}, {1,1}]`.
+
+Given an array `houses`, an `m x n` matrix `cost` and an integer `target` where:
+
+-   `houses[i]`: is the color of the house `i`, and `0` if the house is not painted yet.
+-   `cost[i][j]`: is the cost of paint the house `i` with the color `j + 1`.
+
+Return *the minimum cost of painting all the remaining houses in such a way that there are exactly* `target` *neighborhoods*. If it is not possible, return `-1`.
+
+**Example 1:**
+
+```
+Input: houses = [0,0,0,0,0], cost = [[1,10],[10,1],[10,1],[1,10],[5,1]], m = 5, n = 2, target = 3
+Output: 9
+Explanation: Paint houses of this way [1,2,2,1,1]
+This array contains target = 3 neighborhoods, [{1}, {2,2}, {1,1}].
+Cost of paint all houses (1 + 1 + 1 + 1 + 5) = 9.
+```
+
+**Example 2:**
+
+```
+Input: houses = [0,2,1,2,0], cost = [[1,10],[10,1],[10,1],[1,10],[5,1]], m = 5, n = 2, target = 3
+Output: 11
+Explanation: Some houses are already painted, Paint the houses of this way [2,2,1,2,2]
+This array contains target = 3 neighborhoods, [{2,2}, {1}, {2,2}]. 
+Cost of paint the first and last house (10 + 1) = 11.
+```
+
+**Example 3:**
+
+```
+Input: houses = [3,1,2,3], cost = [[1,1,1],[1,1,1],[1,1,1],[1,1,1]], m = 4, n = 3, target = 3
+Output: -1
+Explanation: Houses are already painted with a total of 4 neighborhoods [{3},{1},{2},{3}] different of target = 3. 
+```
+
+**Constraints:**
+
+-   `m == houses.length == cost.length`
+-   `n == cost[i].length`
+-   `1 <= m <= 100`
+-   `1 <= n <= 20`
+-   `1 <= target <= m`
+-   `0 <= houses[i] <= n`
+-   `1 <= cost[i][j] <= 104`
+
+### Standard Solution
+
+#### Solution #1 Top-down Dynamic Programming - Memoization
+
+*   Use 3D array, state variables: house, neighborhood, color
+*   Each time count the neighborhood number 
+
+```java
+// assgin the size as per maximum value for different params
+Integer[][][] memo = new Integer[100][100][21];
+// maximum cost possible plus 1
+final int MAX_COST = 1000001;
+
+public int findMinCost(int[] houses, int[][] cost, int targetCount, int currIndex, int neighborhoodCount, int prevHouseColor){
+    if (currIndex == houses.length){
+        // if all houses are traversed, check if the neighbor count is as expected or not
+        return neighborhoodCount == targetCount ? 0 : MAX_COST;
+    }
+    if (neighborhoodCount > targetCount){
+        // if the neighborhoods as more than the threshold, we can't have target neighborhoods
+        return MAX_COST;
+    }
+    // we have already calcualted the answer so no need to go into recursion
+    if (memo[currIndex][neighborhoodCount][prevHouseColor] != null){
+        return memo[currIndex][neighborhoodCount][prevHouseColor];
+    }
+    int minCost = MAX_COST;
+    // if the house is already painted, update the values accordingly
+    if (houses[currIndex] != 0){
+        int newNeighborhoodCount = neighborhoodCount + (houses[currIndex] != prevHouseColor ? 1 : 0);
+        minCost = findMinCost(houses, cost, targetCount, currIndex + 1, newNeighborhoodCount, houses[currIndex]);
+    }
+    else {
+        int totalColors = cost[0].length;
+
+        // if the house is not painted, try every possible color and store the minimum cost
+        for (int color = 1; color <= totalColors; color++){
+            int newNeighborhoodCount = neighborhoodCount + (color != prevHouseColor ? 1 : 0);
+            int currCost = cost[currIndex][color - 1] + findMinCost(houses, cost, targetCount, currIndex + 1, 
+                                                                   newNeighborhoodCount, color);
+            minCost = Math.min(minCost, currCost);
+        }
+    }
+    // return the minimum cost and also storing it for future reference (memoization)
+    return memo[currIndex][neighborhoodCount][prevHouseColor] = minCost;
+}
+public int minCost(int[] houses, int[][] cost, int m, int n, int target) {
+    int answer = findMinCost(houses, cost, target, 0, 0, 0);
+    // return -1 if the answer is MAX_COST as it implies no answer possible
+    return answer == MAX_COST ? -1 : answer;
+}
+```
+
+*   M is the number of houses, N is the number of colors and T is the number of target neighborhoods.
+
+-   Time complexity: $O(M \cdot T \cdot N^2)$
+
+    Each state is defined by the values `currIndex`, `neighborhoodCount`, and `prevHouseColor`. Hence, there will be $M \cdot T \cdot N$ possible states, and in the worst-case scenario, we must visit most of the states to solve the original problem. Each recursive call requires $O(N)$ time as we might need to iterate over all the colors. Thus, the total time complexity is equal to $O(M \cdot T \cdot N^2)$.
+
+-   Space complexity: $O(M \cdot T \cdot N)$
+
+    The memoization results are stored in the table `memo` with size $M \cdot T \cdot N$. Also, stack space in the recursion is equal to the maximum number of active functions. The maximum number of active functions will be at most $M$ i.e., one function call for every house. Hence, the space complexity is $O(M \cdot T \cdot N)$.
+
+## Best Time to Buy and Sell Stock II (Medium #122)
+
+**Question**: You are given an integer array `prices` where `prices[i]` is the price of a given stock on the `ith` day.
+
+On each day, you may decide to buy and/or sell the stock. You can only hold **at most one** share of the stock at any time. However, you can buy it then immediately sell it on the **same day**.
+
+Find and return *the **maximum** profit you can achieve*. 
+
+**Example 1:**
+
+```
+Input: prices = [7,1,5,3,6,4]
+Output: 7
+Explanation: Buy on day 2 (price = 1) and sell on day 3 (price = 5), profit = 5-1 = 4.
+Then buy on day 4 (price = 3) and sell on day 5 (price = 6), profit = 6-3 = 3.
+Total profit is 4 + 3 = 7.
+```
+
+**Example 2:**
+
+```
+Input: prices = [1,2,3,4,5]
+Output: 4
+Explanation: Buy on day 1 (price = 1) and sell on day 5 (price = 5), profit = 5-1 = 4.
+Total profit is 4.
+```
+
+**Example 3:**
+
+```
+Input: prices = [7,6,4,3,1]
+Output: 0
+Explanation: There is no way to make a positive profit, so we never buy the stock to achieve the maximum profit of 0.
+```
+
+**Constraints:**
+
+-   `1 <= prices.length <= 3 * 104`
+-   `0 <= prices[i] <= 104`
+
+### My Solution
+
+```java
+int[] prices;
+int[][] memo;
+public int maxProfit(int[] prices) {
+    // dp: consider the state variables and actions
+    // state: day, hold/unhold
+    // actions: buy/sell
+    this.prices = prices;
+    memo = new int[prices.length + 1][2];
+    return dp(0, 0);
+}
+// using recursion to find the best profit
+public int dp(int day, int hold){
+    // hold: 0 is unhold, 1 is holding a stock
+    // base case: reach the end of days
+    if (day == prices.length){
+        return 0;
+    }
+
+    // check if the memo already has record
+    if (memo[day][hold] == 0){
+        int doNothing = dp(day + 1, hold);
+        int doSomething;
+
+        // actions: buy/sell, but we can do it in the same day
+        if (hold == 0){
+            // buy a stock
+            doSomething = -prices[day] + dp(day + 1, 1);
+        }
+        else {
+            // sell a stock
+            doSomething = prices[day] + dp(day + 1, 0);
+        }
+        memo[day][hold] = Math.max(doSomething, doNothing);
+    }
+    return memo[day][hold];
+}
+```
+
+```java
+// second attempt, use state variables to store the value
+public int maxProfit(int[] prices) {
+    int cash = 0, hold = -prices[0]; // if we buy the first stock
+    for (int i = 0; i < prices.length; i++){
+        cash = Math.max(cash, hold + prices[i]); // make decision if we sell
+        hold = Math.max(hold, cash - prices[i]); // make decision if we buy
+    }
+    return cash;
+} 
+```
+
+### Standard Solution
+
+#### Solution #1 Simple One Pass
+
+*   Keep on adding the profit obtained from every consecutive transaction
+*   Each time we find the profit is larger than the previous one, add on the profit
+
+```java
+public int maxProfit(int[] prices){
+    int maxprofit = 0;
+    for (int i = 1; i < prices.length; i++){
+        if (prices[i] > prices[i - 1]){
+            maxprofit += prices[i] - prices[i - 1];
+        }
+    }
+    return maxprofit;
+}
+```
+
+-   Time complexity: $O(n)$. Single pass.
+-   Space complexit: $O(1)$. Constant space needed.
+
+## Count Vowels Permutation (Hard #1220)
+
+**Question**: Given an integer `n`, your task is to count how many strings of length `n` can be formed under the following rules:
+
+-   Each character is a lower case vowel (`'a'`, `'e'`, `'i'`, `'o'`, `'u'`)
+-   Each vowel `'a'` may only be followed by an `'e'`.
+-   Each vowel `'e'` may only be followed by an `'a'` or an `'i'`.
+-   Each vowel `'i'` **may not** be followed by another `'i'`.
+-   Each vowel `'o'` may only be followed by an `'i'` or a `'u'`.
+-   Each vowel `'u'` may only be followed by an `'a'.`
+
+Since the answer may be too large, return it modulo `10^9 + 7.`
+
+**Example 1:**
+
+```
+Input: n = 1
+Output: 5
+Explanation: All possible strings are: "a", "e", "i" , "o" and "u".
+```
+
+**Example 2:**
+
+```
+Input: n = 2
+Output: 10
+Explanation: All possible strings are: "ae", "ea", "ei", "ia", "ie", "io", "iu", "oi", "ou" and "ua".
+```
+
+**Example 3:** 
+
+```
+Input: n = 5
+Output: 68
+```
+
+**Constraints:**
+
+-   `1 <= n <= 2 * 10^4`
+
+### My Solution
+
+```java
+public int countVowelPermutation(int n) {
+    if (n <= 0) return 0;
+    // initialize the base case, when n = 1
+    long aVowel = 1, eVowel = 1, iVowel = 1, oVowel = 1, uVowel = 1;
+    long MOD = 1000000007;
+    // given integer n, the length of vowel is n
+    for (int i = 1; i < n; i++){
+        // each time set the previous permutation number, add to the current number
+        long aPreVowel = aVowel;
+        long ePreVowel = eVowel;
+        long iPreVowel = iVowel;
+        long oPreVowel = oVowel;
+        long uPreVowel = uVowel;
+
+        // Sum up the vowel number to the current 
+        aVowel = ePreVowel%MOD + uPreVowel%MOD + iPreVowel%MOD;
+        eVowel = aPreVowel%MOD + iPreVowel%MOD;
+        iVowel = ePreVowel%MOD + oPreVowel%MOD;
+        oVowel = iPreVowel%MOD;
+        uVowel = oPreVowel%MOD + iPreVowel%MOD;
+    }
+    long res = (aVowel%MOD + eVowel%MOD + iVowel%MOD + uVowel%MOD + oVowel%MOD)%MOD;
+    return (int)res;
+}
+```
+
+*   Time complexity should be $O(n)$ and the space complexity should be $O(1)$
+
+### Standard Solution
+
+#### Solution #1 Bottom-up Solution with Optimized Space
+
+*   Similar to my solution
+*   Use constant variables to cumulatively store values
+
+```java
+public int countVowelPermutation(int n) {
+    long aCount = 1, eCount = 1, iCount = 1, oCount = 1, uCount = 1;
+    int MOD = 1000000007;
+
+    for (int i = 1; i < n; i++) {
+        long aCountNew = (eCount + iCount + uCount) % MOD;
+        long eCountNew = (aCount + iCount) % MOD;
+        long iCountNew = (eCount + oCount) % MOD;
+        long oCountNew = (iCount) % MOD;
+        long uCountNew = (iCount + oCount) % MOD;
+        aCount = aCountNew;
+        eCount = eCountNew;
+        iCount = iCountNew;
+        oCount = oCountNew;
+        uCount = uCountNew;
+    }
+    long result = (aCount + eCount + iCount + oCount + uCount)  % MOD;
+    return (int)result;
+}
+```
+
+-   Time complexity: $O(N)$ (N equals the input length `n`). This is because iterating from `1` to `n` will take $O(N)$ time. The initializations take constant time. Putting them together gives us $O(N)$ time.
+-   Space complexity: $O(1)$. This is because we don't use any additional data structures to store data.
