@@ -1240,3 +1240,100 @@ public int numRollsToTarget(int n, int k, int target) {
 }
 ```
 
+## Domino and Tromino Tiling (Medium #790)
+
+**Question**: You have two types of tiles: a `2 x 1` domino shape and a tromino shape. You may rotate these shapes.
+
+![img](https://assets.leetcode.com/uploads/2021/07/15/lc-domino.jpg)
+
+Given an integer n, return *the number of ways to tile an* `2 x n` *board*. Since the answer may be very large, return it **modulo** `109 + 7`.
+
+In a tiling, every square must be covered by a tile. Two tilings are different if and only if there are two 4-directionally adjacent cells on the board such that exactly one of the tilings has both squares occupied by a tile. 
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/07/15/lc-domino1.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: n = 3
+Output: 5
+Explanation: The five different ways are show above.
+```
+
+**Example 2:**
+
+```
+Input: n = 1
+Output: 1
+```
+
+**Constraints:**
+
+-   `1 <= n <= 1000`
+
+### Standard Solution
+
+*   The hard point is to transfer the information to recurrence relationship
+
+*   **Fully covered board**: All tiles on board are covered by a *domino* or a *tromino*.
+*   **Partially covered board**: Same as a **fully covered board**, except leave the tile in the upper-right corner (the top row of the rightmost column) uncovered. Note, a board with only the lower-right corner uncovered is also considered "partially covered." However, as we will discover soon, we do not need to keep track of which corner is uncovered because of symmetry.
+*   $f(k)$: The number of ways to **fully cover a board** of width k.
+*   $p(k)$: The number of ways to **partially cover a board** of width k.
+*   If $k$ is greater than 2, then we will make recursive calls to $f$ and $p$ according to the transition function
+    *   $f(k)=f(k−1)+f(k−2)+2∗p(k−1)$
+        *   Consider the $f(k−1)$ plus 1 vertical domino
+        *   Consider the $f(k−2)$ plus 2 horizontal dominos (not consider 2 vertical dominos because it would duplicate with the $f(k−1)$ Conditions)
+        *   Consider the $p(k−1)$ because they are partially covered, need to add 1 tromino. But we can add it in 2 ways, so multiply it by 2.
+    *   $p(k) = p(k-1) + f(k-2)$
+        *   For the tromino, we consider two cases. The first one is when $p(k−1)$ we need to add 1 tromino. **Does not** multiply by 2 because it would duplicate with the next case.
+        *   $f(k-2)$ considers that when we delete two space and make it partially cover, we need to add 1 tromino to reach the case.
+
+### Standard Solution
+
+#### Solution #1 Bottom-up
+
+```java
+public int numTilings(int n) {
+    int MOD = 1000000007;
+    // base cases
+    if (n <= 2) return n;
+    // # of ways to fully cover a board of width k
+    long[] f = new long[n + 1];
+    // # of ways to partially cover a board of width k
+    long[] p = new long[n + 1];
+    // initialize f and p with results for the base case scenarios
+    f[1] = 1L;
+    f[2] = 2L;
+    p[2] = 1L;
+    for (int k = 3; k < n + 1; k++){
+        f[k] = (f[k - 1] + f[k - 2] + 2 * p[k - 1])%MOD;
+        p[k] = (p[k - 1] + f[k - 2])%MOD;
+    }
+    return (int)f[n];
+}
+```
+
+*   Time complexity: $O(N)$. Array iteration requires $N-2$ iterations where each iteration takes constant time.
+*   Space complexity: $O(N)$. Two arrays of size $N+1$ are used to store the number of ways to fully and partially tile boards of various widths between 1 and N.
+
+*   We can shorten the method and make it $O(1)$ in space complexity.
+
+```java
+public int numTilings(int n) {
+    int MOD = 1_000_000_007;
+    if (n <= 2) {
+        return n;
+    }
+    long fPrevious = 1L;
+    long fCurrent = 2L;
+    long pCurrent = 1L;
+    for (int k = 3; k < n + 1; ++k) {
+        long tmp = fCurrent;
+        fCurrent = (fCurrent + fPrevious + 2 * pCurrent) % MOD;
+        pCurrent = (pCurrent + fPrevious) % MOD;
+        fPrevious = tmp;
+    }
+    return (int) (fCurrent);
+}
+```
+
