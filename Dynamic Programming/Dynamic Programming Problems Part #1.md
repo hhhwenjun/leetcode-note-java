@@ -1659,3 +1659,214 @@ public double champagneTower(int poured, int query_row, int query_glass) {
 
 -   Time Complexity: $O(R^2)$, where R is the number of rows. As this is fixed, we can consider this complexity to be $O(1)$.
 -   Space Complexity: $O(R^2)$, or $O(1)$ by the reasoning above.
+
+## Unique Binary Search Trees (Medium #96)
+
+**Question**: Given an integer `n`, return *the number of structurally unique **BST'**s (binary search trees) which has exactly* `n` *nodes of unique values from* `1` *to* `n`.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/01/18/uniquebstn3.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: n = 3
+Output: 5
+```
+
+**Example 2:**
+
+```
+Input: n = 1
+Output: 1
+```
+
+**Constraints:**
+
+-   `1 <= n <= 19`
+
+### Standard Solution
+
+#### Solution #1 Dynamic Programming
+
+*   Define two functions
+    *   $G(n)$: the number of unique BST for a sequence of length `n`.
+    *   $F(i, n)$: the number of unique BST, where the number `i` is served as the root of BST$ (1 \leq i \leq n$).
+
+<img src="https://leetcode.com/problems/unique-binary-search-trees/Figures/96_BST.png" alt="img" style="zoom:50%;" />
+
+*   For example, $F(3, 7)$, the number of unique BST tree with the number `3` as its root. To construct a unique BST out of the entire sequence `[1, 2, 3, 4, 5, 6, 7]` with `3` as the root, which is to say, we need to construct a subtree out of its left subsequence `[1, 2]` and another subtree out of the right subsequence `[4, 5, 6, 7]`, and then combine them together (*i.e.* cartesian product). Now the tricky part is that we could consider the number of unique BST out of sequence `[1,2]` as $G(2)$, and the number of unique BST out of sequence `[4, 5, 6, 7]` as $G(4)$. For $G(n)$, it does not matter the content of the sequence, but the length of the sequence. Therefore, $F(3,7) = G(2) \cdot G(4)$.
+
+```java
+public int numTrees(int n) {
+    int[] dp = new int[n + 1];
+    dp[0] = 1;
+    dp[1] = 1;
+    for (int i = 2; i <= n; i++){
+        for (int j = 1; j <= i; j++){
+            dp[i] += dp[j - 1] * dp[i - j];
+        }
+    }
+    return dp[n];
+}
+```
+
+-   Time complexity: the main computation of the algorithm is done at the statement with `G[i]`. So the time complexity is essentially the number of iterations for the statement, which is $\sum_{i=2}^{n} i = \frac{(2+n)(n-1)}{2}$, to be exact, therefore the time complexity is $O(N^2)$
+-   Space complexity: The space complexity of the above algorithm is mainly the storage to keep all the intermediate solutions, therefore $O(N)$.
+
+## Triangle (Medium #120)
+
+**Question**: Given a `triangle` array, return *the minimum path sum from top to bottom*.
+
+For each step, you may move to an adjacent number of the row below. More formally, if you are on index `i` on the current row, you may move to either index `i` or index `i + 1` on the next row.
+
+**Example 1:**
+
+```
+Input: triangle = [[2],[3,4],[6,5,7],[4,1,8,3]]
+Output: 11
+Explanation: The triangle looks like:
+   2
+  3 4
+ 6 5 7
+4 1 8 3
+The minimum path sum from top to bottom is 2 + 3 + 5 + 1 = 11 (underlined above).
+```
+
+**Example 2:**
+
+```
+Input: triangle = [[-10]]
+Output: -10
+```
+
+**Constraints:**
+
+-   `1 <= triangle.length <= 200`
+-   `triangle[0].length == 1`
+-   `triangle[i].length == triangle[i - 1].length + 1`
+-   `-104 <= triangle[i][j] <= 104`
+
+### My Solution
+
+```java
+public int minimumTotal(List<List<Integer>> triangle) {
+    int length = triangle.size();
+    // use the triangle list itself as the memo
+    for (int i = 1; i < length; i++){
+        int listSize = triangle.get(i).size();
+        for (int j = 0; j < listSize; j++){
+            if (j - 1 < 0){
+                triangle.get(i).set(j, Integer.valueOf(triangle.get(i).get(0) + 
+                                                       triangle.get(i - 1).get(0)));
+            }
+            else if (j == listSize - 1){
+                triangle.get(i).set(j, Integer.valueOf(triangle.get(i).get(j) + 
+                                                       triangle.get(i - 1).get(j - 1)));
+            }
+            else {
+                triangle.get(i).set(j, Integer.valueOf(Math.min(triangle.get(i).get(j) + 
+                                                                triangle.get(i - 1).get(j),
+                                                                triangle.get(i).get(j) + 
+                                                                triangle.get(i - 1).get(j - 1))));
+            }
+        }
+    }
+    int res = Collections.min(triangle.get(length - 1));
+    return res;
+}
+```
+
+*   Since we do it in a nested for loop, so the time complexity is $O(n^2)$
+*   But we do not need extra space for storage, so the space complexity is $O(1)$
+
+### Standard Solution
+
+#### Solution #1 DP in-place
+
+*   Same idea as my solution
+
+<img src="https://leetcode.com/problems/triangle/Figures/120/triangle_coordinates.png" alt="img" style="zoom:50%;" />
+
+*   Three situations:
+    *   If `row == 0`: This is the top of the triangle: it stays the same.
+    *   If `col == 0`: There is only one cell above, located at `(row - 1, col)`.
+    *   If `col == row`: There is only one cell above, located at `(row - 1, col - 1)`.
+    *   In all other cases: There are two cells above, located at `(row - 1, col - 1`) and `(row - 1, col)` .
+
+```java
+public int minimumTotal(List<List<Integer>> triangle) {
+    for (int row = 1; row < triangle.size(); row++) {
+        for (int col = 0; col <= row; col++) {
+            int smallestAbove = Integer.MAX_VALUE;           
+            if (col > 0) {
+                smallestAbove = triangle.get(row - 1).get(col - 1);
+            } 
+            if (col < row) {
+                smallestAbove = Math.min(smallestAbove, triangle.get(row - 1).get(col));
+            }
+            int path = smallestAbove + triangle.get(row).get(col);
+            triangle.get(row).set(col, path);
+        }
+    }
+    return Collections.min(triangle.get(triangle.size() - 1));
+}
+```
+
+-   Time Complexity: $O(n^2)$.
+
+    A triangle with $n$ rows and $n$ columns contain $\dfrac{n (n + 1)}{2} = \dfrac{n^2 + n}{2}$ cells. Recall that in big O notation, we ignore the less significant terms. This gives us $O\bigg(\dfrac{n^2 + n}{2}\bigg) = O(n^2)$ cells. For each cell, we are performing a constant number of operations, therefore giving us a total time complexity of $O(n^2)$.
+
+-   Space Complexity: $O(1)$.
+
+    As we're overwriting the input, we don't need any collections to store our calculations.
+
+#### Solution #2 DP Bottom-up, Flip Triangle Upside Down
+
+<img src="https://leetcode.com/problems/triangle/Figures/120/upside_down_triangle_coordinates.png" alt="img" style="zoom:50%;" />
+
+*   It turns the code a lot simpler
+*    Where `(row, col)` is the current cell, the cells below are located at `(row + 1, col)` and `(row + 1, col + 1)`. At the end, the answer will be in `triangle[0][0]`.
+
+```java
+public int minimumTotal(List<List<Integer>> triangle) {        
+    for (int row = triangle.size() - 2; row >= 0; row--) {
+        for (int col = 0; col <= row; col++) {
+            int bestBelow = Math.min(
+                triangle.get(row + 1).get(col), 
+                triangle.get(row + 1).get(col + 1));
+            triangle.get(row).set(col, bestBelow + triangle.get(row).get(col));
+        }
+    }
+    return triangle.get(0).get(0);
+}
+```
+
+*   The in-place implementation has the same complexity analysis as Approach 1
+
+#### Solution #3 Memoization
+
+```java
+private Map<String, Integer> memoTable;
+private List<List<Integer>> triangle;
+
+private int minPath(int row, int col) {
+    String params = row + ":" + col;
+    if (memoTable.containsKey(params)) {
+        return memoTable.get(params);
+    } 
+    int path = triangle.get(row).get(col);
+    if (row < triangle.size() - 1) {
+        path += Math.min(minPath(row + 1, col), minPath(row + 1, col + 1));
+    }
+    memoTable.put(params, path);
+    return path;
+}
+
+public int minimumTotal(List<List<Integer>> triangle) {
+    this.triangle = triangle;
+    memoTable = new HashMap<>();
+    return minPath(0, 0);
+}
+```
+
+*   Both time and space complexity is $O(n^2)$​. Each time a base case cell is reached, there will be a path of n cells on the run-time stack, going from the triangle tip, down to that base case cell. This means that there is $O(n)$ space on the run-time stack. Each time a subproblem is solved (a call to `minPath`), its result is stored in a memoization table. We determined above that there are $O(n^2)$ such subproblems, giving a total space complexity of $O(n^2)$ for the memoization table.
