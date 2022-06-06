@@ -1337,3 +1337,325 @@ public int numTilings(int n) {
 }
 ```
 
+## Minimum Cost For Tickets (Medium #983)
+
+**Question**: You have planned some train traveling one year in advance. The days of the year in which you will travel are given as an integer array `days`. Each day is an integer from `1` to `365`.
+
+Train tickets are sold in **three different ways**:
+
+-   a **1-day** pass is sold for `costs[0]` dollars,
+-   a **7-day** pass is sold for `costs[1]` dollars, and
+-   a **30-day** pass is sold for `costs[2]` dollars.
+
+The passes allow that many days of consecutive travel.
+
+-   For example, if we get a **7-day** pass on day `2`, then we can travel for `7` days: `2`, `3`, `4`, `5`, `6`, `7`, and `8`.
+
+Return *the minimum number of dollars you need to travel every day in the given list of days*.
+
+**Example 1:**
+
+```
+Input: days = [1,4,6,7,8,20], costs = [2,7,15]
+Output: 11
+Explanation: For example, here is one way to buy passes that lets you travel your travel plan:
+On day 1, you bought a 1-day pass for costs[0] = $2, which covered day 1.
+On day 3, you bought a 7-day pass for costs[1] = $7, which covered days 3, 4, ..., 9.
+On day 20, you bought a 1-day pass for costs[0] = $2, which covered day 20.
+In total, you spent $11 and covered all the days of your travel.
+```
+
+**Example 2:**
+
+```
+Input: days = [1,2,3,4,5,6,7,8,9,10,30,31], costs = [2,7,15]
+Output: 17
+Explanation: For example, here is one way to buy passes that lets you travel your travel plan:
+On day 1, you bought a 30-day pass for costs[2] = $15 which covered days 1, 2, ..., 30.
+On day 31, you bought a 1-day pass for costs[0] = $2 which covered day 31.
+In total, you spent $17 and covered all the days of your travel.
+```
+
+**Constraints:**
+
+-   `1 <= days.length <= 365`
+-   `1 <= days[i] <= 365`
+-   `days` is in strictly increasing order.
+-   `costs.length == 3`
+-   `1 <= costs[i] <= 1000`
+
+### My Solution
+
+*   Use the top-down recursion method to find values
+*   The hardest part is to transfer the question and extract information for recurrence relationship
+
+```java
+private Set<Integer> daySet;
+private int[] costs;
+private Integer[] memo;
+
+public int mincostTickets(int[] days, int[] costs) {
+    this.costs = costs;
+    memo = new Integer[366];
+    daySet = new HashSet<>();
+    // day number is non-duplicated
+    for (int day : days){
+        daySet.add(day);
+    }
+    return dp(1);
+}
+
+public int dp(int day){
+    // base case of recursion
+    if (day > 365) return 0;
+
+    if (memo[day] != null){
+        return memo[day];
+    }
+    int ans = 0;
+    if (daySet.contains(day)){
+        ans = Math.min(dp(day + 1) + costs[0],
+                       Math.min(dp(day + 7) + costs[1],
+                               dp(day + 30) + costs[2]));
+    }
+    else {
+        ans = dp(day + 1); // no need to travel today
+    }
+    memo[day] = ans;
+    return ans;
+}
+```
+
+-   Time Complexity: $O(W)$, where $W = 365$ is the maximum numbered day in your travel plan.
+-   Space Complexity: $O(W)$
+
+### Standard Solution
+
+#### Solution #1 Dynamic Programming (Window Variant)
+
+*   Similar idea but using a for loop to loop through the cost array
+*   Record what days we can skip and then add the cost for passes
+
+```java
+int[] days, costs;
+Integer[] memo;
+int[] durations = new int[]{1, 7, 30};
+
+public int mincostTickets(int[] days, int[] costs) {
+    this.days = days;
+    this.costs = costs;
+    memo = new Integer[days.length];
+    return dp(0);
+}
+
+public int dp(int i) {
+    if (i >= days.length)
+        return 0;
+    if (memo[i] != null)
+        return memo[i];
+    int ans = Integer.MAX_VALUE;
+    int j = i;
+    for (int k = 0; k < 3; ++k) {
+        // record what days we should skip
+        while (j < days.length && days[j] < days[i] + durations[k])
+            j++;
+        // add the cost and compare with min cost
+        ans = Math.min(ans, dp(j) + costs[k]);
+    }
+    memo[i] = ans;
+    return ans;
+}
+```
+
+-   Time Complexity: $O(N)$, where N is the number of unique days in your travel plan.
+-   Space Complexity: $O(N)$.
+
+## Interleaving String (Medium #97)
+
+**Question**: Given strings `s1`, `s2`, and `s3`, find whether `s3` is formed by an **interleaving** of `s1` and `s2`.
+
+An **interleaving** of two strings `s` and `t` is a configuration where they are divided into **non-empty** substrings such that:
+
+-   `s = s1 + s2 + ... + sn`
+-   `t = t1 + t2 + ... + tm`
+-   `|n - m| <= 1`
+-   The **interleaving** is `s1 + t1 + s2 + t2 + s3 + t3 + ...` or `t1 + s1 + t2 + s2 + t3 + s3 + ...`
+
+**Note:** `a + b` is the concatenation of strings `a` and `b`.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2020/09/02/interleave.jpg)
+
+```
+Input: s1 = "aabcc", s2 = "dbbca", s3 = "aadbbcbcac"
+Output: true
+```
+
+**Example 2:**
+
+```
+Input: s1 = "aabcc", s2 = "dbbca", s3 = "aadbbbaccc"
+Output: false
+```
+
+**Example 3:**
+
+```
+Input: s1 = "", s2 = "", s3 = ""
+Output: true
+```
+
+**Constraints:**
+
+-   `0 <= s1.length, s2.length <= 100`
+-   `0 <= s3.length <= 200`
+-   `s1`, `s2`, and `s3` consist of lowercase English letters.
+
+### My Solution
+
+```java
+// incorrect solution, always check s1 over s2, would be wrong in some cases
+public boolean isInterleave(String s1, String s2, String s3) {
+    // 1. Interleaving: loop through s3, use two pointers point to s1 and s2
+    // 2. If s1/s2 match the current character, move forward the current pointer(find the char in string)
+    // 3. At the end, check if we traverse all the char in s1 and s2, if true-> true, if false-> false
+
+    int index1 = 0, index2 = 0, index3 = 0;
+    while (index3 < s3.length()){
+        char currentChar = s3.charAt(index3);
+        if (index1 < s1.length() && s1.charAt(index1) == currentChar){
+            index1++;
+        }
+        else if (index2 < s2.length() && s2.charAt(index2) == currentChar){
+            index2++;
+        }
+        else {
+            return false;
+        }
+        index3++;
+    }
+    return index1 == s1.length() && index2 == s2.length();
+}
+```
+
+```java
+// second attempt, dynamic programming top-down with recursion
+private String s1, s2, s3;
+private int[][] memo;
+
+public boolean isInterleave(String s1, String s2, String s3) {
+    if (s1.length() + s2.length() != s3.length()) return false;
+    // dp: state variables: s1, s2
+    // create a 2D memo for recording states: true - 1, false - 0
+    this.s1 = s1;
+    this.s2 = s2;
+    this.s3 = s3;
+
+    memo = new int[s1.length()][s2.length()];
+    for (int i = 0; i < s1.length(); i++){
+        Arrays.fill(memo[i], -1);
+    }
+    return isInterleave(0, 0, 0);
+}
+
+public boolean isInterleave(int index1, int index2, int index3){
+    // base case: reach to the end of either s1 or s2
+    if (index1 == s1.length()){
+        return s2.substring(index2).equals(s3.substring(index3));
+    }
+    if (index2 == s2.length()){
+        return s1.substring(index1).equals(s3.substring(index3));
+    }
+    // check if we have memo about the current situation
+    if (memo[index1][index2] != -1){
+        return memo[index1][index2] == 1 ? true : false;
+    }
+    boolean res = false;
+    // then we need to do something to fill the memo and connect with future string
+    // connect with the next char in corresponding string, return boolean to determine results
+    if (s3.charAt(index3) == s1.charAt(index1) && isInterleave(index1 + 1, index2, index3 + 1) ||
+       s3.charAt(index3) == s2.charAt(index2) && isInterleave(index1, index2 + 1, index3 + 1)){
+        memo[index1][index2] = 1;
+        res = true;
+    }
+    else {
+        memo[index1][index2] = 0;
+    }
+    return res;
+}
+```
+
+*   The second attempt is the memoization method with recursion
+*   Recursion input is the index of the strings, either way, works return true and store the value in memo
+*   Time complexity: $\mathcal{O}(m \cdot n)$, where m is the length of s1 and n is the length of $s2$. That's a consequence of the fact that each `(i, j)` combination is computed only once.
+*   Space complexity: $\mathcal{O}(m \cdot n)$ to keep double array `memo`.
+
+## Champagne Tower (Medium #799)
+
+**Question**: We stack glasses in a pyramid, where the **first** row has `1` glass, the **second** row has `2` glasses, and so on until the 100th row. Each glass holds one cup of champagne.
+
+Then, some champagne is poured into the first glass at the top. When the topmost glass is full, any excess liquid poured will fall equally to the glass immediately to the left and right of it. When those glasses become full, any excess champagne will fall equally to the left and right of those glasses, and so on. (A glass at the bottom row has its excess champagne fall on the floor.)
+
+For example, after one cup of champagne is poured, the top most glass is full. After two cups of champagne are poured, the two glasses on the second row are half full. After three cups of champagne are poured, those two cups become full - there are 3 full glasses total now. After four cups of champagne are poured, the third row has the middle glass half full, and the two outside glasses are a quarter full, as pictured below.
+
+<img src="https://s3-lc-upload.s3.amazonaws.com/uploads/2018/03/09/tower.png" alt="img" style="zoom: 33%;" />
+
+Now after pouring some non-negative integer cups of champagne, return how full the `jth` glass in the `ith` row is (both `i` and `j` are 0-indexed.)
+
+**Example 1:**
+
+```
+Input: poured = 1, query_row = 1, query_glass = 1
+Output: 0.00000
+Explanation: We poured 1 cup of champange to the top glass of the tower (which is indexed as (0, 0)). There will be no excess liquid so all the glasses under the top glass will remain empty.
+```
+
+**Example 2:**
+
+```
+Input: poured = 2, query_row = 1, query_glass = 1
+Output: 0.50000
+Explanation: We poured 2 cups of champange to the top glass of the tower (which is indexed as (0, 0)). There is one cup of excess liquid. The glass indexed as (1, 0) and the glass indexed as (1, 1) will share the excess liquid equally, and each will get half cup of champange.
+```
+
+**Example 3:**
+
+```
+Input: poured = 100000009, query_row = 33, query_glass = 17
+Output: 1.00000
+```
+
+**Constraints:**
+
+-   `0 <= poured <= 109`
+-   `0 <= query_glass <= query_row < 100`
+
+### Standard Solution
+
+#### Solution #1 Simulation
+
+*   Keep track of the total amount of champagne that flows through a glass
+*   Use a 2D array for memo, bottom-up solution
+*   In general, if a glass has flow-through `X`, then `Q = (X - 1.0) / 2.0` quantity of champagne will equally flow left and right.
+*   A glass at `(r, c)` will have excess champagne flow towards `(r+1, c)` and `(r+1, c+1)`.
+
+```java
+public double champagneTower(int poured, int query_row, int query_glass) {
+    double[][] A = new double[102][102];
+    A[0][0] = (double) poured;
+    for (int r = 0; r <= query_row; ++r) {
+        for (int c = 0; c <= r; ++c) {
+            double q = (A[r][c] - 1.0) / 2.0;
+            if (q > 0) {
+                A[r+1][c] += q;
+                A[r+1][c+1] += q;
+            }
+        }
+    }
+    return Math.min(1, A[query_row][query_glass]);
+}
+```
+
+-   Time Complexity: $O(R^2)$, where R is the number of rows. As this is fixed, we can consider this complexity to be $O(1)$.
+-   Space Complexity: $O(R^2)$, or $O(1)$ by the reasoning above.
