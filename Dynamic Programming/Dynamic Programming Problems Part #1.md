@@ -1870,3 +1870,252 @@ public int minimumTotal(List<List<Integer>> triangle) {
 ```
 
 *   Both time and space complexity is $O(n^2)$​. Each time a base case cell is reached, there will be a path of n cells on the run-time stack, going from the triangle tip, down to that base case cell. This means that there is $O(n)$ space on the run-time stack. Each time a subproblem is solved (a call to `minPath`), its result is stored in a memoization table. We determined above that there are $O(n^2)$ such subproblems, giving a total space complexity of $O(n^2)$ for the memoization table.
+
+## Palindrome Partitioning (Medium #131)
+
+**Question**: Given a string `s`, partition `s` such that every substring of the partition is a **palindrome**. Return all possible palindrome partitioning of `s`.
+
+A **palindrome** string is a string that reads the same backward as forward.
+
+**Example 1:**
+
+```
+Input: s = "aab"
+Output: [["a","a","b"],["aa","b"]]
+```
+
+**Example 2:**
+
+```
+Input: s = "a"
+Output: [["a"]]
+```
+
+**Constraints:**
+
+-   `1 <= s.length <= 16`
+-   `s` contains only lowercase English letters.
+
+### My Solution
+
+*   A very good example of backtracking 
+*   Need to understand more about backtracking and complexity analysis
+
+```java
+List<List<String>> res;
+
+public List<List<String>> partition(String s) {
+    // boolean memoization
+    res = new ArrayList<List<String>>();
+    partition(s, 0, new ArrayList<String>());
+    return res;
+}
+
+// helper method to partition the words
+public void partition(String s, int start, List<String> currentList){
+    if (start >= s.length()){
+        res.add(new ArrayList<String>(currentList));
+    }
+    for (int end = start; end < s.length(); end++){
+        if (isPalindrome(s.substring(start, end + 1))){
+            currentList.add(s.substring(start, end + 1));
+            partition(s, end + 1, currentList);
+            // backtrack and remove the current result
+            currentList.remove(currentList.size() - 1);
+        }
+    }
+}
+
+// helper method, check if the word is palindrome
+public boolean isPalindrome(String s){
+    // two pointers
+    int low = 0, high = s.length() - 1;
+    while (low < high){
+        if (s.charAt(low) != s.charAt(high)){
+            return false;
+        }
+        low++;
+        high--;
+    }
+    return true;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Backtracking
+
+*   Backtracking is also a kind of DFS. In-Depth First Search, we recursively expand potential candidates until the defined goal is achieved.
+*   **Backtracking steps**: 
+    *   *Choose*: Choose the potential candidate. Here, our potential candidates are all substrings that could be generated from the given string.
+    *   *Constraint*: Define a constraint that must be satisfied by the chosen candidate. In this case, the constraint is that the string must be a *palindrome*.
+    *   *Goal*: We must define the goal that determines if have found the required solution and we must backtrack. Here, our goal is achieved if we have reached the end of the string
+
+```java
+public List<List<String>> partition(String s) {
+    List<List<String>> result = new ArrayList<List<String>>();
+    dfs(0, result, new ArrayList<String>(), s);
+    return result;
+}
+
+void dfs(int start, List<List<String>> result, List<String> currentList, String s) {
+    if (start >= s.length()) result.add(new ArrayList<String>(currentList));
+    for (int end = start; end < s.length(); end++) {
+        if (isPalindrome(s, start, end)) {
+            // add current substring in the currentList
+            currentList.add(s.substring(start, end + 1));
+            dfs(end + 1, result, currentList, s);
+            // backtrack and remove the current substring from currentList
+            currentList.remove(currentList.size() - 1);
+        }
+    }
+}
+
+boolean isPalindrome(String s, int low, int high) {
+    while (low < high) {
+        if (s.charAt(low++) != s.charAt(high--)) return false;
+    }
+    return true;
+}
+```
+
+-   Time Complexity: $\mathcal{O}(N \cdot 2^{N})$ where $N$ is the length of string $s$. This is the worst-case time complexity when all the possible substrings are palindrome.
+
+-   Example, if = s = `aaa`, the recursive tree can be illustrated as follows:
+
+    <img src="https://leetcode.com/problems/palindrome-partitioning/Figures/131/time_complexity.png" alt="img" style="zoom:50%;" />
+
+    Hence, there could be $2^{N}$ possible substrings in the worst case. For each substring, it takes $\mathcal{O}(N)$ time to generate substring and determine if it is a palindrome or not. This gives us time complexity as $\mathcal{O}(N \cdot 2^{N})$
+
+*   Space Complexity: $\mathcal{O}(N)$, where N is the length of the string $s$. This space will be used to store the recursion stack. For s = `aaa`, the maximum depth of the recursive call stack is 3 which is equivalent to $N$.
+
+#### Solution #2 Backtracking with Dynamic Programming
+
+*   Use a boolean 2D array to keep track of palindrome
+
+<img src="https://leetcode.com/problems/palindrome-partitioning/Figures/131/palindrome_dp.png" alt="img" style="zoom:50%;" />
+
+*   Let N*N* be the length of the string. To determine if a substring starting at the index $\text{start}$ and ending at the index $\text{end}$ is a palindrome or not, we use a 2 Dimensional array $\text{dp}$ of size $N \cdot N$ 
+*   `dp[start][end]=true` , if the substring beginning at index $\text{start}$ and ending at index $\text{end}$ is a palindrome.
+
+```java
+public List<List<String>> partition(String s) {
+    int len = s.length();
+    boolean[][] dp = new boolean[len][len];
+    List<List<String>> result = new ArrayList<>();
+    dfs(result, s, 0, new ArrayList<>(), dp);
+    return result;
+}
+
+void dfs(List<List<String>> result, String s, int start, List<String> currentList, boolean[][] dp) {
+    if (start >= s.length()) result.add(new ArrayList<>(currentList));
+    for (int end = start; end < s.length(); end++) {
+        if (s.charAt(start) == s.charAt(end) && (end - start <= 2 || dp[start + 1][end - 1])) {
+            dp[start][end] = true;
+            currentList.add(s.substring(start, end + 1));
+            dfs(result, s, end + 1, currentList, dp);
+            currentList.remove(currentList.size() - 1);
+        }
+    }
+}
+```
+
+-   Time Complexity: $\mathcal{O}(N \cdot 2^{N})$, where N is the length of string s. In the worst case, there could be $2^{N}$ possible substrings and it will take $\mathcal{O}(N)$ to generate each substring using `substr` as in *Approach 1*. However, we are eliminating one additional iteration to check if substring is a palindrome or not.
+-   Space Complexity: $\mathcal{O}(N \cdot N)$, where N is the length of the string s. The recursive call stack would require N space as in *Approach 1*. Additionally, we also use a 2-dimensional array $\text{dp}$ of size $N \cdot N$ .This gives us total space complexity as $\mathcal{O}(N \cdot N) + \mathcal{O}(N) = \mathcal{O}(N \cdot N)$
+
+## Maximum Product Subarray (Medium #152)
+
+**Question**: Given an integer array `nums`, find a contiguous non-empty subarray within the array that has the largest product, and return *the product*.
+
+The test cases are generated so that the answer will fit in a **32-bit** integer.
+
+A **subarray** is a contiguous subsequence of the array.
+
+**Example 1:**
+
+```
+Input: nums = [2,3,-2,4]
+Output: 6
+Explanation: [2,3] has the largest product 6.
+```
+
+**Example 2:**
+
+```
+Input: nums = [-2,0,-1]
+Output: 0
+Explanation: The result cannot be 2, because [-2,-1] is not a subarray.
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 2 * 104`
+-   `-10 <= nums[i] <= 10`
+-   The product of any prefix or suffix of `nums` is **guaranteed** to fit in a **32-bit** integer.
+
+### My Solution
+
+```java
+// Incorrect solution, can only solve "add" but not "product" situation. Basically Kadene's algorithm
+// for example [2,3,-2,4,5,6,7,1,-1,0,3,2] can only find [4,5,6,7] as the best
+// but it should be [2,3,-2,4,5,6,7,1,-1]
+public int maxProduct(int[] nums) {
+    int sum = 1, max = Integer.MIN_VALUE;
+    for (int num : nums){
+        sum = Math.max(sum * num, num);
+        max = Math.max(max, sum);
+    }
+    return max;
+}
+```
+
+```java
+// second attempt, a brute force method
+public int maxProduct(int[] nums) {
+    int res = nums[0];
+    for (int i = 0; i < nums.length; i++){
+        // since it is product, start with 1
+        int accu = 1;
+        for (int j = i; j < nums.length; j++){
+            // each time product the number, and compare with the max
+            accu *= nums[j];
+            res = Math.max(accu, res);
+        }
+    }
+    return res;
+}
+```
+
+*   With the brute force method, the time complexity is $O(N^2)$ and the space complexity is $O(1)$
+
+### Standard Solution
+
+#### Solution #1 Dynamic Programming
+
+*   **Zeros** will reset your combo chain. A high score that you have achieved will be recorded in the placeholder `result`.
+*   **Negative numbers** are a little bit tricky. A single negative number can flip the largest combo chain to a very small number.
+*   While going through numbers in `nums`, we will have to keep track of the maximum product up to that number (we will call `max_so_far`) and minimum product up to that number (we will call `min_so_far`). The reason behind keeping track of `max_so_far` is to keep track of the accumulated product of positive numbers. The reason behind keeping track of `min_so_far` is to properly handle negative numbers.
+
+```java
+public int maxProduct(int[] nums) {
+    if (nums.length == 0) return 0;
+
+    int max_so_far = nums[0];
+    int min_so_far = nums[0];
+    int result = max_so_far;
+
+    for (int i = 1; i < nums.length; i++) {
+        int curr = nums[i];
+        int temp_max = Math.max(curr, Math.max(max_so_far * curr, min_so_far * curr));
+        min_so_far = Math.min(curr, Math.min(max_so_far * curr, min_so_far * curr));
+
+        max_so_far = temp_max;
+
+        result = Math.max(max_so_far, result);
+    }
+    return result;
+}
+```
+
+-   Time complexity: $O(N)$ where N is the size of `nums`. The algorithm achieves linear runtime since we are going through `nums` only once.
+-   Space complexity: $O(1)$ since no additional space is consumed rather than variables that keep track of the maximum product so far, the minimum product so far, the current variable, temp variable, and placeholder variable for the result.

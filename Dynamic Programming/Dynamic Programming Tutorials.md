@@ -2021,6 +2021,7 @@ public int maxProfit(int[] prices){
         held = Math.max(held, reset - price);
         reset = Math.max(reset, preSold);
     }
+    return Math.max(sold, reset);
 }
 ```
 

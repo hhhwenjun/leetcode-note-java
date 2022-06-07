@@ -304,9 +304,70 @@ public int dp(int day, int holding){
 
 #### Template 1 - Changing States
 
-*   使用一些varibles来存储变量，在循环中不断更改value
+*   使用一些state varibles来存储变量，在循环中不断更改value，通常需要两个或以上
+*   通常使用`Math.min()`或者`Math.max()`来进行关系上的传递
+*   通常时间complexity为$O(n)$, 空间的complexity为$O(1)$
+*   **难点**： 如果寻找内部的recurrence relationship，这里可能会很难
+
+```java
+public int maxProfit(int[] prices){
+    // step 1: set up states and initial values, usually 0, min, max
+    int sold = Integer.MIN_VALUE, held = Integer.MIN_VALUE, reset = 0;
+    
+    // step 2: for loop
+    for (int price : prices){
+        int preSold = sold;
+    // step 3: states recurrence relationship
+        sold = held + price;
+        held = Math.max(held, reset - price);
+        reset = Math.max(reset, preSold);
+    }
+    // step 4: return and compare max and min
+    return Math.max(sold, reset);
+}
+```
+
+##### T 1.1 Kanede's Algorithm
+
+*   Goal: find maximum subarray - find the contiguous subarray (containing at least one number) which has the largest sum
+
+```java
+public int maxSubArray(int[] nums) {
+    // kadene's algorithm
+    int current = 0, max = Integer.MIN_VALUE;
+    for (int num : nums){
+        // should we abandon the previous values?
+        current = Math.max(num, current + num);
+        max = Math.max(max, current);
+    }
+    return max;
+}
+```
 
 #### Template 2 - Sum-up Array
 
 *   与memoization的做法相似，但是不需要进行recursion，而是使用for-loop
+*   通常时间complexity为$O(n)$, 空间的complexity为$O(1)$
+*   通常使用`Math.min()`或者`Math.max()`来进行关系上的传递
+*   在array的最后一行或列中寻找最大或最小
+*   **难点**： 如果寻找内部的recurrence relationship
 
+```java
+public int minCost(int[][] costs) {
+    // step 1: Use for loop 传递并递增信息，例如次数，cost，等
+    for (int n = costs.length - 2; n >= 0; n--) {
+        // step 2: 寻找array之中的递增联系以及关系，一直传递到最后一行
+        // Total cost of painting the nth house red.
+        costs[n][0] += Math.min(costs[n + 1][1], costs[n + 1][2]);
+        // Total cost of painting the nth house green.
+        costs[n][1] += Math.min(costs[n + 1][0], costs[n + 1][2]);
+        // Total cost of painting the nth house blue.
+        costs[n][2] += Math.min(costs[n + 1][0], costs[n + 1][1]);
+    }
+    if (costs.length == 0) return 0;   
+    // step 3: 在最后一行寻找答案
+    return Math.min(Math.min(costs[0][0], costs[0][1]), costs[0][2]);
+}
+```
+
+## Backtracking
