@@ -2119,3 +2119,249 @@ public int maxProduct(int[] nums) {
 
 -   Time complexity: $O(N)$ where N is the size of `nums`. The algorithm achieves linear runtime since we are going through `nums` only once.
 -   Space complexity: $O(1)$ since no additional space is consumed rather than variables that keep track of the maximum product so far, the minimum product so far, the current variable, temp variable, and placeholder variable for the result.
+
+## House Robber II (Medium #213)
+
+**Question**: You are a professional robber planning to rob houses along a street. Each house has a certain amount of money stashed. All houses at this place are **arranged in a circle.** That means the first house is the neighbor of the last one. Meanwhile, adjacent houses have a security system connected, and **it will automatically contact the police if two adjacent houses were broken into on the same night**.
+
+Given an integer array `nums` representing the amount of money of each house, return *the maximum amount of money you can rob tonight **without alerting the police***.
+
+**Example 1:**
+
+```
+Input: nums = [2,3,2]
+Output: 3
+Explanation: You cannot rob house 1 (money = 2) and then rob house 3 (money = 2), because they are adjacent houses.
+```
+
+**Example 2:**
+
+```
+Input: nums = [1,2,3,1]
+Output: 4
+Explanation: Rob house 1 (money = 1) and then rob house 3 (money = 3).
+Total amount you can rob = 1 + 3 = 4.
+```
+
+**Example 3:**
+
+```
+Input: nums = [1,2,3]
+Output: 3
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 100`
+-   `0 <= nums[i] <= 1000`
+
+### Standard Solution
+
+#### Solution #1 Dynamic Programming
+
+*   Use DP twice, either we rob `House[1]-House[n-1]` or `House[2]-House[n]`
+
+*   Start with 0 and start with 1, each option use DP to find the max benefit and compare them
+
+```java
+public int rob(int[] nums) {
+    // use house rubber solution twice
+    // if edge cases
+    if (nums.length == 0) return 0;
+    if (nums.length == 1) return nums[0];
+
+    int max1 = robHelper(nums, 0, nums.length - 2);
+    int max2 = robHelper(nums, 1, nums.length - 1);
+    return Math.max(max1, max2);
+}
+
+// dynamic programming, memoization
+public int robHelper(int[] nums, int start, int end){
+    int benefit1 = 0, benefit2 = 0;
+    for (int i = start; i <= end; i++){
+        int temp = benefit1;
+        benefit1 = Math.max(nums[i] + benefit2, benefit1); // current - 1 day
+        benefit2 = temp; // current - 2 day
+    }
+    return benefit1;
+}
+```
+
+-   Time complexity: $O(N)$ where N is the size of `nums`. We are accumulating results as we are scanning `nums`.
+-   Space complexity: $O(1)$ since we are not consuming additional space other than variables for two previous results and a temporary variable to hold one of the previous results.
+
+### House Robber III (Medium #337)
+
+**Question**: The thief has found himself a new place for his thievery again. There is only one entrance to this area, called `root`.
+
+Besides the `root`, each house has one and only one parent house. After a tour, the smart thief realized that all houses in this place form a binary tree. It will automatically contact the police if **two directly-linked houses were broken into on the same night**.
+
+Given the `root` of the binary tree, return *the maximum amount of money the thief can rob **without alerting the police***.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/03/10/rob1-tree.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: root = [3,2,3,null,3,null,1]
+Output: 7
+Explanation: Maximum amount of money the thief can rob = 3 + 3 + 1 = 7.
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2021/03/10/rob2-tree.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: root = [3,4,5,1,3,null,1]
+Output: 9
+Explanation: Maximum amount of money the thief can rob = 4 + 5 = 9.
+```
+
+**Constraints:**
+
+-   The number of nodes in the tree is in the range `[1, 104]`.
+-   `0 <= Node.val <= 104`
+
+### Standard Solution
+
+#### Solution #1 Recursion
+
+*   We have two options: rob current node, does not rob current node
+*   Rob current node: cannot rob its children
+*   Does not rob current node: can rob its children/does not rob current node
+*   We compare two options and choose the one with the highest benefit
+
+```java
+public int rob(TreeNode root){
+    int[] answer = helper(root);
+    // options: rob node, not rob node
+    return Math.max(answer[0], answer[1]);
+}
+
+public int helper(TreeNode node){
+    // base case
+    if (node == null){
+        return new int[]{0, 0};
+    }
+    int left[] = helper(node.left);
+    int right[] = helper(node.right);
+    // if we rob this node, we cannot rob its children
+    int rob = node.val + left[1] + right[1];
+    // else, we free to choose rob its children or not
+    int notRob = Math.max(left[0], left[1]) + Math.max(right[0], right[1]);
+
+    return new int[] { rob, notRob };
+}
+```
+
+-   Time complexity: $\mathcal{O}(N)$ since we visit all nodes once.
+-   Space complexity: $\mathcal{O}(N)$ since we need stacks to do recursion, and the maximum depth of the recursion is the height of the tree, which is $\mathcal{O}(N)$ in the worst case and $\mathcal{O}(\log(N))$ in the best case.
+
+#### Solution #2 Memoization + Recursion
+
+*   Use two hashmaps, one parent is robbed/parent is not robbed
+*   Idea is similar to the solution #1
+
+```java
+HashMap<TreeNode, Integer> robResult = new HashMap<>();
+HashMap<TreeNode, Integer> notRobResult = new HashMap<>();
+
+public int helper(TreeNode node, boolean parentRobbed) {
+    if (node == null) {
+        return 0;
+    }
+    if (parentRobbed) {
+        if (robResult.containsKey(node)) {
+            return robResult.get(node);
+        }
+        int result = helper(node.left, false) + helper(node.right, false);
+        robResult.put(node, result);
+        return result;
+    } else {
+        if (notRobResult.containsKey(node)) {
+            return notRobResult.get(node);
+        }
+        int rob = node.val + helper(node.left, true) + helper(node.right, true);
+        int notRob = helper(node.left, false) + helper(node.right, false);
+        int result = Math.max(rob, notRob);
+        notRobResult.put(node, result);
+        return result;
+    }
+}
+```
+
+-   Time complexity: $\mathcal{O}(N)$ since we run the `helper` function for all nodes once, and saved the results to prevent the second calculation.
+-   Space complexity: $\mathcal{O}(N)$ since we need two maps with the size of $\mathcal{O}(N)$ to store the results, and $\mathcal{O}(N)$ space for stacks to start recursion.
+
+## Arithmetic Slices (Medium #413)
+
+**Question**: An integer array is called arithmetic if it consists of **at least three elements** and if the difference between any two consecutive elements is the same.
+
+-   For example, `[1,3,5,7,9]`, `[7,7,7,7]`, and `[3,-1,-5,-9]` are arithmetic sequences.
+
+Given an integer array `nums`, return *the number of arithmetic **subarrays** of* `nums`.
+
+A **subarray** is a contiguous subsequence of the array.
+
+**Example 1:**
+
+```
+Input: nums = [1,2,3,4]
+Output: 3
+Explanation: We have 3 arithmetic slices in nums: [1, 2, 3], [2, 3, 4] and [1,2,3,4] itself.
+```
+
+**Example 2:**
+
+```
+Input: nums = [1]
+Output: 0
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 5000`
+-   `-1000 <= nums[i] <= 1000`
+
+### Standard Solution
+
+#### Solution #1 Brute Force
+
+```java
+public int numberOfArithmeticSlices(int[] A) {
+    int count = 0;
+    for (int s = 0; s < A.length - 2; s++) {
+        int d = A[s + 1] - A[s];
+        for (int e = s + 2; e < A.length; e++) {
+            if (A[e] - A[e - 1] == d)
+                count++;
+            else
+                break;
+        }
+    }
+    return count;
+}
+```
+
+-   Time complexity: $O(n^2)$. Two for loops are used.
+-   Space complexity: $O(1)$. Constant extra space is used.
+
+#### Solution #2 Dynamic Programming
+
+```java
+public int numberOfArithmeticSlices(int[] A) {
+    int[] dp = new int[A.length];
+    int sum = 0;
+    for (int i = 2; i < dp.length; i++) {
+        if (A[i] - A[i - 1] == A[i - 1] - A[i - 2]) {
+            dp[i] = 1 + dp[i - 1];
+            sum += dp[i];
+        }
+    }
+    return sum;
+}
+```
+
+-   Time complexity: $O(n)$. We traverse over the given A array with n*n* elements once only.
+-   Space complexity: $O(n)$. 1-D dp of size n is used.
