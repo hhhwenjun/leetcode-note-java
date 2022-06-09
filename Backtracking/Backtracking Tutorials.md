@@ -607,3 +607,232 @@ public void backtrack(int start, LinkedList<Integer> solution){
 *   Time complexity : $\mathcal{O}(k C_N^k)$, where $C_N^k = \frac{N!}{(N - k)! k!}$ is a number of combinations to build. `append / pop (add / removeLast)` operations are constant-time ones and the only consuming part here is to append the built combination of length k to the output.
 *   Space complexity: $\mathcal{O}(C_N^k)$ to keep all the combinations for an output.
 
+## Subsets (Medium #78)
+
+**Question**: Given an integer array `nums` of **unique** elements, return *all possible subsets (the power set)*.
+
+The solution set **must not** contain duplicate subsets. Return the solution in **any order**.
+
+**Example 1:**
+
+```
+Input: nums = [1,2,3]
+Output: [[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]
+```
+
+**Example 2:**
+
+```
+Input: nums = [0]
+Output: [[],[0]]
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 10`
+-   `-10 <= nums[i] <= 10`
+-   All the numbers of `nums` are **unique**.
+
+### My Solution
+
+```java
+// very good backtracking pratice problem
+List<List<Integer>> res;
+int[] nums;
+int k;
+public List<List<Integer>> subsets(int[] nums) {
+    res = new ArrayList<>();
+    this.nums = nums;
+    for (k = 0; k < nums.length + 1; k++){
+        backtracking(0, new ArrayList<>());
+    }
+    return res;
+}
+public void backtracking(int start, List<Integer> subset){
+    // base case
+    if (subset.size() == k){
+        res.add(new ArrayList(subset));
+        return;
+    }
+    for (int i = start; i < nums.length; i++){
+        subset.add(nums[i]);
+        backtracking(i + 1, subset);
+        subset.remove(subset.size() - 1);
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Backtracking
+
+*   The most classic solution for the problem. This problem is a good example of how backtracking work.
+*   Since the answers can have different lengths, we need to predefine k as the length. Loop through the length and get the answers. 
+*   If the current ArrayList reaches the length of k, then we stop and return.
+*   Same as the above my solution
+*   Time complexity: $\mathcal{O}(N \times 2^N)$ to generate all subsets and then copy them into the output list.
+*   Space complexity: $\mathcal{O}(N)$. We are using $O(N)$ space to maintain `curr`, and are modifying `curr` in-place with backtracking. Note that for space complexity analysis, we do not count space that is *only* used for the purpose of returning output, so the `output` array is ignored.
+
+#### Solution #2 Cascading
+
+*   Let's start from the empty subset in the output list. At each step one takes a new integer into consideration and generates new subsets from the existing ones. (Somehow similar to dynamic programming)
+
+<img src="https://leetcode.com/problems/subsets/Figures/78/recursion.png" alt="diff" style="zoom: 33%;" />
+
+```java
+// continuously expand the current subsets with new digit
+public List<List<Integer>> subsets(int[] nums) {
+    List<List<Integer>> output = new ArrayList();
+    output.add(new ArrayList<Integer>());
+
+    for (int num : nums) {
+      List<List<Integer>> newSubsets = new ArrayList();
+      for (List<Integer> curr : output) {
+        newSubsets.add(new ArrayList<Integer>(curr){{add(num);}});
+      }
+      for (List<Integer> curr : newSubsets) {
+        output.add(curr);
+      }
+    }
+    return output;
+}
+```
+
+-   Time complexity: $\mathcal{O}(N \times 2^N)$ to generate all subsets and then copy them into the output list.
+-   Space complexity: $\mathcal{O}(N \times 2^N)$. This is exactly the number of solutions for subsets multiplied by the number N of elements to keep for each subset.
+    -   For a given number, it could be present or absent (*i.e.* binary choice) in a subset solution. As a result, for N numbers, we would have in total $2^N$ choices (solutions).
+
+## Subsets II (Medium #90)
+
+**Question**: Given an integer array `nums` that may contain duplicates, return *all possible subsets (the power set)*.
+
+The solution set **must not** contain duplicate subsets. Return the solution in **any order**.
+
+**Example 1:**
+
+```
+Input: nums = [1,2,2]
+Output: [[],[1],[1,2],[1,2,2],[2],[2,2]]
+```
+
+**Example 2:**
+
+```
+Input: nums = [0]
+Output: [[],[0]]
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 10`
+-   `-10 <= nums[i] <= 10`
+
+### My Solution
+
+```java
+// incorrect solution
+List<List<Integer>> res;
+Set<List<Integer>> set;
+int[] nums;
+int k;
+
+public List<List<Integer>> subsetsWithDup(int[] nums) {
+    this.nums = nums;
+    res = new ArrayList<>();
+    set = new HashSet<>();
+    for (k = 0; k < nums.length + 1; k++){
+        backtracking(0, new ArrayList<Integer>());
+    }
+    return res;
+}
+
+// backtracking process
+public void backtracking(int start, List<Integer> subset){
+    // base case for recursion
+    if (subset.size() == k){
+        if (!set.contains(new ArrayList(subset))){
+            res.add(new ArrayList(subset));
+            set.add(new ArrayList(subset));
+        }
+        return;
+    }
+    // recurrence relationship
+    for (int i = start; i < nums.length; i++){
+        if (i != start && nums[i] == nums[i - 1]){
+            continue;
+        }
+        subset.add(nums[i]);
+        backtracking(start + 1, subset);
+        subset.remove(subset.size() - 1);
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Backtracking
+
+*   As demonstrated in the previous approaches, the key to this problem is figuring out how to avoid duplicate subsets.
+*   When designing our recursive function, there are two main points that we need to consider at each function call:
+    -   Whether the element under consideration has duplicates or not.
+    -   If the element has duplicates, which element among the duplicates should be considered while creating a subset.
+
+```java
+public List<List<Integer>> subsetsWithDup(int[] nums){
+    // sort the array - important
+    Arrays.sort(nums);
+    List<List<Integer>> subsets = new ArrayList<>();
+    List<Integer> currentSubset = new ArrayList<>();
+    
+    subsetsWithDupHelper(subsets, currentSubset, nums, 0);
+    return subsets;
+}
+private void subsetsWithDupHelper(List<List<Integer>> subsets, 
+                                  List<Integer> currentSubset, int[] nums, int index){
+    // add the subset formed so far to the subses list
+    subsets.add(new ArrayList<>(currentSubset));
+    
+    for (int i = index; i < nums.length; i++){
+        // if the current element is a duplicate, ignore
+        if (i != index && nums[i] == nums[i - 1]){
+            continue;
+        }
+        currentSubset.add(nums[i]);
+        subsetsWithDupHelper(subsets, currentSubset, nums, i + 1);
+        currentSubset.remove(currentSubset.size() - 1);
+    }
+}
+```
+
+*   Time complexity: $O(n \cdot 2 ^ n)$
+    *   As we can see in the diagram above, this approach does not generate any duplicate subsets. Thus, in the worst case (array consists of n distinct elements), the total number of recursive function calls will be $2 ^ n$
+*   Space complexity: $O(n)$
+    *   The space complexity of the sorting algorithm depends on the implementation of each programming language. For instance, in Java, the Arrays.sort() for primitives is implemented as a variant of the quicksort algorithm whose space complexity is $O(\log n)$
+
+#### Solution #2 Cascading
+
+*   Time complexity is the same
+*   Space complexity: $O(\log n)$. The space complexity of the sorting algorithm depends on the implementation of each programming language.
+
+```java
+public List<List<Integer>> subsetsWithDup(int[] nums) {
+    Arrays.sort(nums);
+    List<List<Integer>> subsets = new ArrayList<>();
+    subsets.add(new ArrayList<Integer>());
+
+    int subsetSize = 0;
+
+    for (int i = 0; i < nums.length; i++) {
+        int startingIndex = (i >= 1 && nums[i] == nums[i - 1]) ? subsetSize : 0;
+        // subsetSize refers to the size of the subset in the previous step. This value also indicates the starting index of the subsets generated in this step.
+        subsetSize = subsets.size();
+        for (int j = startingIndex; j < subsetSize; j++) {
+            List<Integer> currentSubset = new ArrayList<>(subsets.get(j));
+            currentSubset.add(nums[i]);
+            subsets.add(currentSubset);
+        }
+    }
+    return subsets;
+}
+```
+
