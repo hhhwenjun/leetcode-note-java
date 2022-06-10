@@ -697,3 +697,203 @@ Let N be the length of the input array. Hence, the number of permutations would 
     -   Since we applied recursion in the algorithm which consumes some extra space in the function call stack, we would need another $\mathcal{O}(N)$ space for the recursion.
     -   During the exploration, we keep a candidate of permutation along the way, which takes yet another $\mathcal{O}(N)$.
     -   To sum up, the total space complexity would be $\mathcal{O}(N) + \mathcal{O}(N) + \mathcal{O}(N) = \mathcal{O}(N)$
+
+## Restore IP Address (Medium #93)
+
+**Question**: A **valid IP address** consists of exactly four integers separated by single dots. Each integer is between `0` and `255` (**inclusive**) and cannot have leading zeros.
+
+-   For example, `"0.1.2.201"` and `"192.168.1.1"` are **valid** IP addresses, but `"0.011.255.245"`, `"192.168.1.312"` and `"192.168@1.1"` are **invalid** IP addresses.
+
+Given a string `s` containing only digits, return *all possible valid IP addresses that can be formed by inserting dots into* `s`. You are **not** allowed to reorder or remove any digits in `s`. You may return the valid IP addresses in **any** order.
+
+**Example 1:**
+
+```
+Input: s = "25525511135"
+Output: ["255.255.11.135","255.255.111.35"]
+```
+
+**Example 2:**
+
+```
+Input: s = "0000"
+Output: ["0.0.0.0"]
+```
+
+**Example 3:**
+
+```
+Input: s = "101023"
+Output: ["1.0.10.23","1.0.102.3","10.1.0.23","10.10.2.3","101.0.2.3"]
+```
+
+**Constraints:**
+
+-   `1 <= s.length <= 20`
+-   `s` consists of digits only.
+
+### Standard Solution
+
+#### Solution #1 Backtracking
+
+*   Since we need to insert dots, we can set them as an input to the backtracking method
+*   Time complexity is constant, no more than 27 combinations to check
+    *   If one already put a dot that leaves only `3` possibilities for the next dot to be placed: after one digit, after two digits, or after three digits. The first dot has only `3` available slots as well.
+*   Space complexity is also constant, no more than 19 valid IP addresses
+
+```java
+List<String> res;
+String s;
+public List<String> restoreIpAddresses(String s) {
+    res = new ArrayList<String>();
+    this.s = s;
+    // not valid address
+    if (s.length() < 4 || s.length() > 12) return res;
+    backtrack(0, new StringBuilder(), 4);
+    return res;
+}
+// use backtracking to traverse all possible ip address
+public void backtrack(int start, StringBuilder ip, int step){
+    // base case: reach the end of string
+    if (start == s.length() && step == 0){
+        // since we always add dot after num, need to remove the dot
+        res.add(ip.toString().substring(0, ip.length() - 1));
+        return;
+    }
+    for (int i = start; i <= start + 2 && i < s.length(); i++){
+        String num = s.substring(start, i + 1);
+        if (!isvalid(num)) continue;
+        // add a dot
+        ip.append(num);
+        ip.append(".");
+        // backtracking
+        backtrack(i + 1, ip, step - 1);
+        ip.setLength(ip.length() - (i + 1 - start + 1));
+    }
+}
+private boolean isvalid(String num){
+    if (num.length() > 1 && num.startsWith("0") || Integer.parseInt(num) > 255){
+        return false;
+    }
+    return true;
+}
+```
+
+## Path Sum II (Medium #113)
+
+**Question**: Given the `root` of a binary tree and an integer `targetSum`, return *all **root-to-leaf** paths where the sum of the node values in the path equals* `targetSum`*. Each path should be returned as a list of the node **values**, not node references*.
+
+A **root-to-leaf** path is a path starting from the root and ending at any leaf node. A **leaf** is a node with no children.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/01/18/pathsumii1.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: root = [5,4,8,11,null,13,4,7,2,null,null,5,1], targetSum = 22
+Output: [[5,4,11,2],[5,8,4,5]]
+Explanation: There are two paths whose sum equals targetSum:
+5 + 4 + 11 + 2 = 22
+5 + 8 + 4 + 5 = 22
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2021/01/18/pathsum2.jpg)
+
+```
+Input: root = [1,2,3], targetSum = 5
+Output: []
+```
+
+**Example 3:**
+
+```
+Input: root = [1,2], targetSum = 0
+Output: []
+```
+
+**Constraints:**
+
+-   The number of nodes in the tree is in the range `[0, 5000]`.
+-   `-1000 <= Node.val <= 1000`
+-   `-1000 <= targetSum <= 1000`
+
+### My Solution
+
+```java
+// incorrect solution but logistically correct, solution return twice: why?
+List<List<Integer>> res;      
+public List<List<Integer>> pathSum(TreeNode root, int targetSum) {
+
+    res = new ArrayList<>();
+    if (root == null){
+        return res;
+    }
+    if (root.val == targetSum && (root.left != null || root.right != null)){
+        return res;
+    }
+
+    backtracking(root, new ArrayList<>(), targetSum);
+    return res;
+}
+// backtracking to traverse the tree and find all solutions
+public void backtracking(TreeNode root, List<Integer> subset, int numLeft){
+    /**
+    * Because we end at null, it would return same solution twice
+    * that is because root.left is null && root.right is null
+    */
+    if (root == null && numLeft == 0){
+        res.add(new ArrayList(subset));
+        return;
+    }
+    if (root == null){
+        return;
+    }
+    // backtracking process
+    subset.add(root.val);
+    backtracking(root.left, subset, numLeft - root.val);
+    backtracking(root.right, subset, numLeft - root.val);
+    subset.remove(subset.size() - 1);
+    numLeft += root.val;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Backtracking
+
+*   Count how much target sum is left in the method
+
+```java
+List<List<Integer>> res;  
+public List<List<Integer>> pathSum(TreeNode root, int targetSum) {    
+    res = new ArrayList<>();
+    if (root == null){
+        return res;
+    }
+    backtracking(root, new ArrayList<>(), targetSum);
+    return res;
+}
+
+// backtracking to traverse the tree and find all solutions
+public void backtracking(TreeNode root, List<Integer> subset, int numLeft){
+    if (root == null){
+        return;
+    }
+    subset.add(root.val);
+
+    if (root.val == numLeft && root.left == null && root.right == null){
+        res.add(new ArrayList(subset));
+    }
+    else {
+        backtracking(root.left, subset, numLeft - root.val);
+        backtracking(root.right, subset, numLeft - root.val);
+    }
+    // backtracking process
+    subset.remove(subset.size() - 1);
+}
+```
+
+-   Time Complexity: $O(N^2)$ where N are the number of nodes in a tree. In the worst case, we could have a complete binary tree and if that is the case, then there would be $N/2$ leafs. For every leaf, we perform a potential $O(N)$ operation of copying over the `pathNodes` nodes to a new list to be added to the final `pathsList`. Hence, the complexity in the worst case could be $O(N^2)$.
+-   Space Complexity: $O(N)$. The space complexity, like many other problems is debatable here. I personally choose *not* to consider the space occupied by the `output` in the space complexity. So, all the `new` lists that we create for the paths are actually a part of the output and hence, don't count towards the final space complexity. The only *additional* space that we use is the `pathNodes` list to keep track of nodes along a branch.

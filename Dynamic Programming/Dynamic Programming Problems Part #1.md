@@ -267,7 +267,7 @@ public int maxSubarraySumCircular(int[] nums) {
 *   We can transfer this case to the first one. The maximum result equals the total sum minus the minimum subarray sum.
 
 *   Corner case: 
-*   If all numbers are negative, `maxSum = max(A)` and `minSum = sum(A)`. In this case, `max(maxSum, total - minSum) = 0`, which means the sum of an empty subarray. According to the description, We need to return the `max(A)`, instead of sum of am empty subarray. So we return the `maxSum` to handle this corner case.
+*   If all numbers are negative, `maxSum = max(A)` and `minSum = sum(A)`. In this case, `max(maxSum, total - minSum) = 0`, which means the sum of an empty subarray. According to the description, We need to return the `max(A)`, instead of the sum of an empty subarray. So we return the `maxSum` to handle this corner case.
 
 ```java
 public int maxSubarraySumCircular(int[] nums) {
@@ -2365,3 +2365,4 @@ public int numberOfArithmeticSlices(int[] A) {
 
 -   Time complexity: $O(n)$. We traverse over the given A array with n*n* elements once only.
 -   Space complexity: $O(n)$. 1-D dp of size n is used.
+

@@ -371,3 +371,10 @@ public int minCost(int[][] costs) {
 ```
 
 ## Backtracking
+
+*   通常提问方式:
+
+    *   **All** possible combinations/solutions/permutations
+
+    *   Return in list
+
