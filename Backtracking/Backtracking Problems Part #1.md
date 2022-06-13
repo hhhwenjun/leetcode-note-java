@@ -90,7 +90,7 @@ public void helper(int loc){
 }
 ```
 
-*   Store the number array to the array list, use the built-in method to swap the digits.
+*   Store the number array to the array list, and use the built-in method to swap the digits.
 *   When moving to the end digit, add the current array list to the results.
 *   Swap -> call next -> swap back
 
@@ -687,6 +687,30 @@ class Solution {
 }
 ```
 
+```java
+HashSet <List<Integer>> set = new HashSet<>();
+public List<List<Integer>> permuteUnique(int[] nums) {
+    boolean used[] = new boolean[nums.length];
+    permute(new ArrayList<Integer>(),nums, used);
+    return new ArrayList(set);
+}
+public void permute(List<Integer> permutation, int []nums,  boolean used[]){
+    if(permutation.size() == nums.length){
+        set.add(new ArrayList<Integer>(permutation));
+        return;
+    }
+    for(int i = 0; i < nums.length; i++){
+        if(!used[i]){
+            permutation.add(nums[i]);
+            used[i] = true;
+            permute(permutation, nums, used);
+            permutation.remove(permutation.size()-1);
+            used[i] =false;
+        }
+    }
+}
+```
+
 **Complexity Analysis**
 
 Let N be the length of the input array. Hence, the number of permutations would be at maximum $N!$, *i.e.* $N \cdot (N-1) \cdot (N-2) ... 1$, when each number in the array is unique.
@@ -897,3 +921,101 @@ public void backtracking(TreeNode root, List<Integer> subset, int numLeft){
 
 -   Time Complexity: $O(N^2)$ where N are the number of nodes in a tree. In the worst case, we could have a complete binary tree and if that is the case, then there would be $N/2$ leafs. For every leaf, we perform a potential $O(N)$ operation of copying over the `pathNodes` nodes to a new list to be added to the final `pathsList`. Hence, the complexity in the worst case could be $O(N^2)$.
 -   Space Complexity: $O(N)$. The space complexity, like many other problems is debatable here. I personally choose *not* to consider the space occupied by the `output` in the space complexity. So, all the `new` lists that we create for the paths are actually a part of the output and hence, don't count towards the final space complexity. The only *additional* space that we use is the `pathNodes` list to keep track of nodes along a branch.
+
+## Combination Sum III (Medium #216)
+
+**Question**: Find all valid combinations of `k` numbers that sum up to `n` such that the following conditions are true:
+
+-   Only numbers `1` through `9` are used.
+-   Each number is used **at most once**.
+
+Return *a list of all possible valid combinations*. The list must not contain the same combination twice, and the combinations may be returned in any order.
+
+**Example 1:**
+
+```
+Input: k = 3, n = 7
+Output: [[1,2,4]]
+Explanation:
+1 + 2 + 4 = 7
+There are no other valid combinations.
+```
+
+**Example 2:**
+
+```
+Input: k = 3, n = 9
+Output: [[1,2,6],[1,3,5],[2,3,4]]
+Explanation:
+1 + 2 + 6 = 9
+1 + 3 + 5 = 9
+2 + 3 + 4 = 9
+There are no other valid combinations.
+```
+
+**Example 3:**
+
+```
+Input: k = 4, n = 1
+Output: []
+Explanation: There are no valid combinations.
+Using 4 different numbers in the range [1,9], the smallest sum we can get is 1+2+3+4 = 10 and since 10 > 1, there are no valid combination.
+```
+
+**Constraints:**
+
+-   `2 <= k <= 9`
+-   `1 <= n <= 60`
+
+### My Solution
+
+```java
+/**
+* Abstract info: k number, sum to n, unique number, 1 - 9
+* Question: return all valid combinations, return as List<List<Integer>>
+* Possible method: Backtracking(recursion)
+*/
+
+// all the fields we need for backtracking
+int k;
+int n;
+List<List<Integer>> res;
+
+public List<List<Integer>> combinationSum3(int k, int n) {
+    this.k = k;
+    this.n = n;
+    res = new ArrayList<>();
+    backtracking(0, 0, new ArrayList<Integer>(), n);
+    return res;
+}
+
+// backtracking algorithm
+public void backtracking(int numberOfElem, int start, List<Integer> singleComb, int target){
+    // base case
+    if (numberOfElem == k && target == 0){
+        res.add(new ArrayList(singleComb));
+        return;
+    }
+    if (numberOfElem == k || target < 0){
+        return;
+    }
+    // element range from 1 - 9
+    for (int i = start + 1; i < 10; i++){
+        singleComb.add(i);
+        backtracking(numberOfElem + 1, i, singleComb, target - i);
+        singleComb.remove(singleComb.size() - 1);
+    }
+}
+```
+
+-   Time Complexity: $\mathcal{O}(\frac{9! \cdot K}{(9-K)!})$
+    -   In the worst scenario, we have to explore all potential combinations to the very end, *i.e.* the sum n is a large number ($n > 9 * 9$). At the first step, we have 9 choices, while at the second step, we have 8 choices, and so on and so forth.
+    -   The number of explorations we need to make in the worst case would be $P(9, K) = \frac{9!}{(9-K)!}$, assuming that $K <= 9$. By the way, K cannot be greater than 9, otherwise, we cannot have a combination whose digits are all unique.
+    -   Each exploration takes a constant time to process, except the last step where it takes $\mathcal{O}(K)$ time to make a copy of combination.
+    -   To sum up, the overall time complexity of the algorithm would be $\frac{9!}{(9-K)!} \cdot \mathcal{O}(K) = \mathcal{O}(\frac{9! \cdot K}{(9-K)!})$
+-   Space Complexity: $\mathcal{O}(K)$
+    -   During the backtracking, we used a list to keep the current combination, which holds up to K elements, *i.e.* $\mathcal{O}(K)$.
+    -   Since we employed recursion in the backtracking, we would need some additional space for the function call stack, which could pile up to K*K* consecutive invocations, *i.e.* $\mathcal{O}(K)$.
+    -   Hence, to sum up, the overall space complexity would be $\mathcal{O}(K)$.
+    -   **Note that**, we did not take into account the space for the final results in the space complexity.
+

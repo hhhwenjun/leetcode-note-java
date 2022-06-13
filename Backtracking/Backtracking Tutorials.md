@@ -836,3 +836,107 @@ public List<List<Integer>> subsetsWithDup(int[] nums) {
 }
 ```
 
+## Target Sum (Medium #494)
+
+**Question**: You are given an integer array `nums` and an integer `target`.
+
+You want to build an **expression** out of nums by adding one of the symbols `'+'` and `'-'` before each integer in nums and then concatenate all the integers.
+
+-   For example, if `nums = [2, 1]`, you can add a `'+'` before `2` and a `'-'` before `1` and concatenate them to build the expression `"+2-1"`.
+
+Return the number of different **expressions** that you can build, which evaluates to `target` 
+
+**Example 1:**
+
+```
+Input: nums = [1,1,1,1,1], target = 3
+Output: 5
+Explanation: There are 5 ways to assign symbols to make the sum of nums be target 3.
+-1 + 1 + 1 + 1 + 1 = 3
++1 - 1 + 1 + 1 + 1 = 3
++1 + 1 - 1 + 1 + 1 = 3
++1 + 1 + 1 - 1 + 1 = 3
++1 + 1 + 1 + 1 - 1 = 3
+```
+
+**Example 2:**
+
+```
+Input: nums = [1], target = 1
+Output: 1
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 20`
+-   `0 <= nums[i] <= 1000`
+-   `0 <= sum(nums[i]) <= 1000`
+-   `-1000 <= target <= 1000`
+
+### My Solution
+
+*   Every given number has to be used in the expression, and no order requirement(such as permutations), so no need to use for loop for the question.
+*   But since it is a recursion with two directions, speed would be super slow, estimated $O(2^n)$. The space complexity can be $O(n)$
+*   Basically, the backtracking method is the brute force method for this problem. 
+
+```java
+/*
+* abstract: build expression, return all number of expressions
+* Use all num in nums, reach the target sum
+* backtracking(recursion)
+*/
+int res;
+int[] nums;
+
+public int findTargetSumWays(int[] nums, int target) {
+    res = 0;
+    this.nums = nums;
+    backtracking(0, target);
+    return res;
+}
+
+// backtracking process
+public void backtracking(int index, int target){
+    // base case: reach the end of nums
+    if (index == nums.length && target == 0){
+        res++;
+        return;
+    }
+    if (index == nums.length){
+        return;
+    }
+    // expressions building, can be +/-
+    backtracking(index + 1, target + nums[index]);
+    backtracking(index + 1, target - nums[index]); 
+}
+```
+
+### Standard Solution
+
+#### Solution #1 2D DP
+
+*   Traverse all the possibilities
+
+<img src="/Users/wenjunhan/Library/Application Support/typora-user-images/image-20220613153621191.png" alt="image-20220613153621191" style="zoom:50%;" />
+
+```java
+public int findTargetSumWays(int[] nums, int S) {
+    int total = Arrays.stream(nums).sum();
+    int[][] dp = new int[nums.length][2 * total + 1];
+    dp[0][nums[0] + total] = 1;
+    dp[0][-nums[0] + total] += 1;
+
+    for (int i = 1; i < nums.length; i++) {
+        for (int sum = -total; sum <= total; sum++) {
+            if (dp[i - 1][sum + total] > 0) {
+                dp[i][sum + nums[i] + total] += dp[i - 1][sum + total];
+                dp[i][sum - nums[i] + total] += dp[i - 1][sum + total];
+            }
+        }
+    }
+    return Math.abs(S) > total ? 0 : dp[nums.length - 1][S + total];
+}
+```
+
+-   Time complexity: $O(t \cdot n)$ The `dp` array of size $O(t \cdot n)$ has been filled just once. Here, t refers to the sum of the $nums$ array and n refers to the length of the $nums$ array.
+-   Space complexity: $O(t \cdot n)$. `dp` array of size $t \cdot n$ is used.
