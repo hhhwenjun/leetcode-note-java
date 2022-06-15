@@ -1593,3 +1593,101 @@ public String largestWordCount(String[] messages, String[] senders) {
 ```
 
 *   Time and space complexity is the same as my solution
+
+## Merge Intervals (Medium #56)
+
+**Question**: Given an array of `intervals` where `intervals[i] = [starti, endi]`, merge all overlapping intervals, and return *an array of the non-overlapping intervals that cover all the intervals in the input*.
+
+**Example 1:**
+
+```
+Input: intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+Explanation: Since intervals [1,3] and [2,6] overlap, merge them into [1,6].
+```
+
+**Example 2:**
+
+```
+Input: intervals = [[1,4],[4,5]]
+Output: [[1,5]]
+Explanation: Intervals [1,4] and [4,5] are considered overlapping.
+```
+
+**Constraints:**
+
+-   `1 <= intervals.length <= 104`
+-   `intervals[i].length == 2`
+-   `0 <= starti <= endi <= 104`
+
+### My Solution
+
+```java
+/**
+* abstract: return non-overlapping intervals
+* 1. sort the intervals by the start
+* 2. merge the intervals by end-start
+*/
+public int[][] merge(int[][] intervals) {
+    // sort the intervals
+    Arrays.sort(intervals, (a, b) -> Integer.compare(a[0], b[0]));
+    List<int[]> intervalList = new LinkedList<>();
+
+    int min = intervals[0][0];
+    int max = intervals[0][1];
+    // merge the intervals by end-start
+    for (int i = 1; i < intervals.length; i++){
+        // current interval
+        int start = intervals[i][0];
+        int end = intervals[i][1];
+
+        // compare with previous start and end
+        if (max >= start){
+            max = Math.max(max, end);
+        }
+        else {
+            intervalList.add(new int[]{min, max});
+            min = start;
+            max = end;
+        }
+    }
+    intervalList.add(new int[]{min, max});
+    // create the final result int array
+    int[][] res = new int[intervalList.size()][2];
+    for (int i = 0; i < intervalList.size(); i++){
+        res[i] = intervalList.get(i);
+    }
+    return res;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Sorting
+
+*   Sort the 2D array with customized sorter
+
+```java
+public int[][] merge(int[][] intervals){
+    Arrays.sort(intervals, (a, b) -> Integer.compare(a[0], b[0]));
+    LinkedList<int[]> merged = new LinkedList<>();
+    for (int[] interval : intervals){
+        // if the list of merged intervals is empty of if the current
+        // interval does not overlap with the previous, simply append it
+        if (merged.isEmpty() || merged.getLast()[1] < interval[0]){
+            merged.add(interval);
+        }
+        // otherwise, there is overlap, so we merge the current and previous intervals
+        else {
+            merged.getLast()[1] = Math.max(merged.getLast()[1], interval[1]);
+        }
+    }
+    return merged.toArray(new int[merged.size()]);
+}
+```
+
+-   Time complexity: $O(n\log{}n)$. Other than the `sort` invocation, we do a simple linear scan of the list, so the runtime is dominated by the $O(n\log{}n)$ complexity of sorting.
+
+-   Space complexity: $O(\log N)$ (or $O(n)$)
+
+    If we can sort `intervals` in place, we do not need more than constant additional space, although the sorting itself takes $O(\log n)$ space. Otherwise, we must allocate linear space to store a copy of `intervals` and sort that.

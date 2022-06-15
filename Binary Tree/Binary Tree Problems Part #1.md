@@ -1297,3 +1297,196 @@ public class Codec {
 *   Same as my solution
 *   Time complexity : in both serialization and deserialization functions, we visit each node exactly once, thus the time complexity is $O(N)$, where N is the number of nodes, *i.e.* the size of tree.
 *   Space complexity : in both serialization and deserialization functions, we keep the entire tree, either at the beginning or at the end, therefore, the space complexity is $O(N)$.
+
+## Binary Tree Vertical Order Traversal (Medium #314)
+
+**Question**: Given the `root` of a binary tree, return ***the vertical order traversal** of its nodes' values*. (i.e., from top to bottom, column by column).
+
+If two nodes are in the same row and column, the order should be from **left to right**.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/01/28/vtree1.jpg" alt="img" style="zoom:67%;" />
+
+```
+Input: root = [3,9,20,null,null,15,7]
+Output: [[9],[3,15],[20],[7]]
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2021/01/28/vtree2-1.jpg" alt="img" style="zoom:67%;" />
+
+```
+Input: root = [3,9,8,4,0,1,7]
+Output: [[4],[9],[3,0,1],[8],[7]]
+```
+
+**Example 3:**
+
+<img src="https://assets.leetcode.com/uploads/2021/01/28/vtree2.jpg" alt="img" style="zoom:67%;" />
+
+```
+Input: root = [3,9,8,4,0,1,7,null,null,null,2,5]
+Output: [[4],[9,5],[3,0,1],[8,2],[7]]
+```
+
+**Constraints:**
+
+-   The number of nodes in the tree is in the range `[0, 100]`.
+-   `-100 <= Node.val <= 100`
+
+### My Solution
+
+*   Based on one of the solutions, basically correct but the order within ArrayList is not correct
+*   That is because we use stack here and it should be a queue, it influences the order
+
+```java
+ /**
+* abstract; traverse the tree return vertical order
+* in-order traversal? (similiar pattern)
+* leftchild - right = rightchild - left
+*/
+List<List<Integer>> res;
+
+public List<List<Integer>> verticalOrder(TreeNode root) {
+    res = new ArrayList<>();
+    if (root == null){
+        return res;
+    }
+    // vertical column map and array list
+    Map<Integer, ArrayList> columnTable = new HashMap<>();
+    // record the treenode and its column number
+    Stack<Pair<TreeNode, Integer>> stack = new Stack<>();
+    int column = 0;
+    stack.add(new Pair(root, column));
+    int minColumn = 0, maxColumn = 0;
+
+    // traverse all the nodes
+    while (!stack.isEmpty()){
+        Pair<TreeNode, Integer> pair = stack.pop();
+        root = pair.getKey();
+        column = pair.getValue();
+
+        if (root != null){
+            if (!columnTable.containsKey(column)){
+                columnTable.put(column, new ArrayList<Integer>());
+            }
+            columnTable.get(column).add(root.val);
+            minColumn = Math.min(minColumn, column);
+            maxColumn = Math.max(maxColumn, column);
+
+            stack.add(new Pair(root.left, column - 1));
+            stack.add(new Pair(root.right, column + 1));
+        }
+    }
+    for (int i = minColumn; i <= maxColumn; i++){
+        res.add(columnTable.get(i));
+    }
+    return res;
+}
+```
+
+### Standard Solution
+
+![tree in 2D coordinates](https://leetcode.com/problems/binary-tree-vertical-order-traversal/Figures/314/314_coordinates.png)
+
+#### Solution #1 BFS
+
+*   The idea is that we keep a hash table (let's denote it as `columnTable<key, value>`), where we keep the node values grouped by the `column` index.
+
+```java
+  public List<List<Integer>> verticalOrder(TreeNode root) {
+    List<List<Integer>> output = new ArrayList();
+    if (root == null) {
+      return output;
+    }
+
+    Map<Integer, ArrayList> columnTable = new HashMap();
+    Queue<Pair<TreeNode, Integer>> queue = new ArrayDeque();
+    int column = 0;
+    queue.offer(new Pair(root, column));
+
+    while (!queue.isEmpty()) {
+      Pair<TreeNode, Integer> p = queue.poll();
+      root = p.getKey();
+      column = p.getValue();
+
+      if (root != null) {
+        if (!columnTable.containsKey(column)) {
+          columnTable.put(column, new ArrayList<Integer>());
+        }
+        columnTable.get(column).add(root.val);
+
+        queue.offer(new Pair(root.left, column - 1));
+        queue.offer(new Pair(root.right, column + 1));
+      }
+    }
+
+    List<Integer> sortedKeys = new ArrayList<Integer>(columnTable.keySet());
+    Collections.sort(sortedKeys);
+    for(int k : sortedKeys) {
+      output.add(columnTable.get(k));
+    }
+
+    return output;
+  }
+```
+
+*   Time Complexity: $\mathcal{O}(N \log N)$ where N is the number of nodes in the tree.
+    *   In the first part of the algorithm, we do the BFS traversal, whose time complexity is $\mathcal{O}(N)$ since we traversed each node once and only once.
+    *   In the second part, in order to return the ordered results, we then sort the obtained hash table by its keys, which could result in the $\mathcal{O}(N \log N)$ time complexity in the worst-case scenario where the binary tree is extremely imbalanced (for instance, each node has only a left child node.)
+    *   As a result, the overall time complexity of the algorithm would be $\mathcal{O}(N \log N)$.
+
+*   Space Complexity: $\mathcal{O}(N)$ where N is the number of nodes in the tree.
+
+#### Solution #2 BFS without Sorting
+
+*   The key insight is that we only need to know the **range** of the column index (*i.e.* `[min_column, max_column]`). Then we can simply ***iterate*** through this range to generate the outputs without the need for sorting.
+
+```java
+class Solution {
+  public List<List<Integer>> verticalOrder(TreeNode root) {
+    List<List<Integer>> output = new ArrayList();
+    if (root == null) {
+      return output;
+    }
+
+    Map<Integer, ArrayList> columnTable = new HashMap();
+    // Pair of node and its column offset
+    Queue<Pair<TreeNode, Integer>> queue = new ArrayDeque();
+    int column = 0;
+    queue.offer(new Pair(root, column));
+
+    int minColumn = 0, maxColumn = 0;
+
+    while (!queue.isEmpty()) {
+      Pair<TreeNode, Integer> p = queue.poll();
+      root = p.getKey();
+      column = p.getValue();
+
+      if (root != null) {
+        if (!columnTable.containsKey(column)) {
+          columnTable.put(column, new ArrayList<Integer>());
+        }
+        columnTable.get(column).add(root.val);
+        minColumn = Math.min(minColumn, column);
+        maxColumn = Math.max(maxColumn, column);
+
+        queue.offer(new Pair(root.left, column - 1));
+        queue.offer(new Pair(root.right, column + 1));
+      }
+    }
+
+    for(int i = minColumn; i < maxColumn + 1; ++i) {
+      output.add(columnTable.get(i));
+    }
+
+    return output;
+  }
+}
+```
+
+*   Time Complexity: $\mathcal{O}(N)$ where N is the number of nodes in the tree.
+    Following the same analysis in the previous BFS approach, the only difference is that this time we don't need the costly sorting operation (*i.e.* $\mathcal{O}(N \log N)$).
+*   Space Complexity: $\mathcal{O}(N)$ where N is the number of nodes in the tree. The analysis follows the same logic as in the previous BFS approach.

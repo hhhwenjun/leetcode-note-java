@@ -378,3 +378,9 @@ public int minCost(int[][] costs) {
 
     *   Return in list
 
+## BFS
+
+*   Traverse a tree：通常要使用queue或者stack来进行
+    *   while循环，queue或者stack不为空
+    *   事先存储一个node（通常为root），然后在循环中pop（poll）
+    *   进行操作，接着把node的左子树和右子树存储在queue或者stack中，循环往复直到所有node都traverse完成
