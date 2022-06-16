@@ -186,3 +186,254 @@ class Solution {
 
 -   Time complexity: $O(M \times N)$ where M is the number of rows and N is the number of columns.
 -   Space complexity: worst-case $O(M \times N)$ in case that the grid map is filled with lands where DFS goes by $M \times N$ deep.
+
+## Robot Return to Origin (Easy #657)
+
+**Question**: There is a robot starting at the position `(0, 0)`, the origin, on a 2D plane. Given a sequence of its moves, judge if this robot **ends up at** `(0, 0)` after it completes its moves.
+
+You have given a string `moves` that represent the move sequence of the robot where `moves[i]` represent its `ith` move. Valid moves are `'R'` (right), `'L'` (left), `'U'` (up), and `'D'` (down).
+
+Return `true` *if the robot returns to the origin after it finishes all of its moves, or* `false` *otherwise*.
+
+**Note**: The way that the robot is "facing" is irrelevant. `'R'` will always make the robot move to the right once, `'L'` will always make it move left, etc. Also, assume that the magnitude of the robot's movement is the same for each move.
+
+**Example 1:**
+
+```
+Input: moves = "UD"
+Output: true
+Explanation: The robot moves up once, and then down once. All moves have the same magnitude, so it ended up at the origin where it started. Therefore, we return true.
+```
+
+**Example 2:**
+
+```
+Input: moves = "LL"
+Output: false
+Explanation: The robot moves left twice. It ends up two "moves" to the left of the origin. We return false because it is not at the origin at the end of its moves.
+```
+
+**Constraints:**
+
+-   `1 <= moves.length <= 2 * 104`
+-   `moves` only contains the characters `'U'`, `'D'`, `'L'` and `'R'`.
+
+### My Solution
+
+*   Use two stacks and calculate the sum to determine the origin
+*   Time and space complexity should be both $O(N)$, but since it involves multiple for loops, so the speed is slow
+
+```java
+/**
+* abstract: check the robot whether return to origin
+* 1. use two stacks represent horizontal/vertical directions
+* 2. when move, we add +1/-1 elements inside the stack
+* 3. determine all elements in the stack add up to 0
+*/
+public boolean judgeCircle(String moves) {
+    Stack<Integer> horizontal = new Stack<>();
+    Stack<Integer> vertical = new Stack<>();
+
+    for (char move : moves.toCharArray()){
+        if (move == 'U'){
+            vertical.add(1);
+        }
+        else if (move == 'D'){
+            vertical.add(-1);
+        }
+        else if (move == 'L'){
+            horizontal.add(1);
+        }
+        else if (move == 'R'){
+            horizontal.add(-1);
+        }
+    }
+
+    // count the sum of the two stacks, if 0 true, if != 0, false
+    int sum = 0;
+    for (Integer elem : horizontal){
+        sum += elem;
+    }
+    if (sum != 0){
+        return false;
+    }
+    for (Integer elem : vertical){
+        sum += elem;
+    }
+    return sum == 0;
+}
+```
+
+### Standard Solution 
+
+#### Solution #1 Simulation
+
+*   Similar to my idea, but actually we can only use two constants but not two stacks
+
+```java
+class Solution {
+    public boolean judgeCircle(String moves) {
+        int x = 0, y = 0;
+        for (char move: moves.toCharArray()) {
+            if (move == 'U') y--;
+            else if (move == 'D') y++;
+            else if (move == 'L') x--;
+            else if (move == 'R') x++;
+        }
+        return x == 0 && y == 0;
+    }
+}
+```
+
+-   Time Complexity: $O(N)$, where N is the length of `moves`. We iterate through the string.
+-   Space Complexity: $O(1)$. In Java, our character array is $O(N)$.
+
+## Number of Connected Components in an Undirected Graph (Medium #323)
+
+**Question**: You have a graph of `n` nodes. You are given an integer `n` and array `edges` where `edges[i] = [ai, bi]` indicates that there is an edge between `ai` and `bi` in the graph.
+
+Return *the number of connected components in the graph*.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/03/14/conn1-graph.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: n = 5, edges = [[0,1],[1,2],[3,4]]
+Output: 2
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2021/03/14/conn2-graph.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: n = 5, edges = [[0,1],[1,2],[2,3],[3,4]]
+Output: 1
+```
+
+**Constraints:**
+
+-   `1 <= n <= 2000`
+-   `1 <= edges.length <= 5000`
+-   `edges[i].length == 2`
+-   `0 <= ai <= bi < n`
+-   `ai != bi`
+-   There are no repeated edges.
+
+### Standard Solution
+
+#### Solution #1 DFS
+
+*   The problem has given the number of nodes, we can use it to create a 1D `visited` array.
+*   Create a list array, and use it to store neighbors by the edges
+*   Loop through the nodes and make all the neighbors as `visited`
+
+```java
+// dfs
+private void dfs(List<Integer>[] adjList, int[] visited, int startNode){
+    visited[startNode] = 1;
+    for (int i = 0; i < adjList[startNode].size(); i++){
+        if (visited[adjList[startNode].get(i)] == 0){
+            // find all neighbours' neighbours
+            dfs(adjList, visited, adjList[startNode].get(i));
+        }
+    }
+}
+
+public int countComponents(int n, int[][] edges) {
+    int components = 0;
+    int[] visited = new int[n];
+
+    List<Integer>[] adjList = new ArrayList[n];
+    for (int i = 0; i < n; i++){
+        adjList[i] = new ArrayList<>();
+    }
+    // record the edges in the adjacent list
+    for (int i = 0; i < edges.length; i++){
+        adjList[edges[i][0]].add(edges[i][1]);
+        adjList[edges[i][1]].add(edges[i][0]);
+    }
+    // loop through the nodes and adjacent nodes
+    for (int i = 0; i < n; i++){
+        if (visited[i] == 0){
+            components++;
+            dfs(adjList, visited, i);
+        }
+    }
+    return components;
+}
+```
+
+*   Here $E$ = Number of edges, $V$ = Number of vertices.
+
+*   Time complexity: ${O}(E + V)$
+
+    Building the adjacency list will take ${O}(E)$ operations, as we iterate over the list of edges once, and insert each edge into two lists.
+
+    During the DFS traversal, each vertex will only be visited once. This is because we mark each vertex as visited as soon as we see it, and then we only visit vertices that are not marked as visited. In addition, when we iterate over the edge list of each vertex, we look at each edge once. This has a total cost of ${O}(E + V).$
+
+*   Space complexity: ${O}(E + V)$
+
+    Building the adjacency list will take ${O}(E)$ space. To keep track of visited vertices, an array of size ${O}(V)$ is required. Also, the run-time stack for DFS will use ${O}(V)$ space.
+
+#### Solution #2 Union Find
+
+*   Initialize a variable `count` with the number of vertices in the input.
+*   Traverse all of the edges one by one, performing the union-find method `combine` on each edge. If the endpoints are already in the same set, then keep traversing. If they are not, then decrement `count` by 1.
+*   After traversing all of the `edges`, the variable `count` will contain the number of components in the graph.
+
+```java
+public class Solution {
+
+    private int find(int[] representative, int vertex) {
+        if (vertex == representative[vertex]) {
+            return vertex;
+        }
+        return representative[vertex] = find(representative, representative[vertex]);
+    }
+    
+    private int combine(int[] representative, int[] size, int vertex1, int vertex2) {
+        vertex1 = find(representative, vertex1);
+        vertex2 = find(representative, vertex2);
+        
+        if (vertex1 == vertex2) {
+            return 0;
+        } else {
+            if (size[vertex1] > size[vertex2]) {
+                size[vertex1] += size[vertex2];
+                representative[vertex2] = vertex1;
+            } else {
+                size[vertex2] += size[vertex1];
+                representative[vertex1] = vertex2;
+            }
+            return 1;
+        }
+    }
+
+    public int countComponents(int n, int[][] edges) {
+        int[] representative = new int[n];
+        int[] size = new int[n];
+        
+        for (int i = 0; i < n; i++) {
+            representative[i] = i;
+            size[i] = 1;
+        }
+        
+        int components = n;
+        for (int i = 0; i < edges.length; i++) { 
+            components -= combine(representative, size, edges[i][0], edges[i][1]);
+        }
+
+        return components;
+    }
+}
+```
+
+-   Time complexity: $O(E\cdotα(n))$.
+
+    Iterating over every edge requires $O(E)$ operations, and for every operation, we are performing the `combine` method which is $O(α(n))$, where $α(n)$ is the inverse Ackermann function.
+
+-   Space complexity: $O(V)$.
+
+    Storing the representative/immediate-parent of each vertex takes $O(V)$ space. Furthermore, storing the size of components also takes $O(V)$ space.

@@ -180,3 +180,245 @@ class UnionFind {
 }
 ```
 
+### Path Compression Optimization - Disjoint Sets
+
+*   Notice that to find the root node, we need to traverse the parent nodes sequentially until we reach the root node. If we search the root node of the same element again, we repeat the same operations. 
+*   When we search for the root node of the same element again, we only need to traverse two elements to find its root node, which is highly efficient. 
+*   Connect the nodes directly to their root node to optimize the path, not only their parent nodes
+*   Constructor $O(n)$, find $O(\log n)$, union $O(\log n)$, connected $O(\log n)$ in the average case, since the worst-case scenario is rare in practice.
+
+```java
+private int[] root;
+public UnionFind(int size) {
+    root = new int[size];
+    for (int i = 0; i < size; i++) {
+        root[i] = i;
+    }
+}
+public int find(int x) {
+    if (x == root[x]) {
+        return x;
+    }
+    return root[x] = find(root[x]);
+}
+public void union(int x, int y) {
+    int rootX = find(x);
+    int rootY = find(y);
+    if (rootX != rootY) {
+        root[rootY] = rootX;
+    }
+}
+public boolean connected(int x, int y) {
+    return find(x) == find(y);
+}
+```
+
+### Summary
+
+-   A basic implementation of the `find` function:
+
+```java
+public int find(int x) {
+    while (x != root[x]) {
+        x = root[x];
+    }
+    return x;
+}
+```
+
+*   The `find` function – optimized with path compression:
+
+```java
+public int find(int x) {
+    if (x == root[x]) {
+        return x;
+    }
+    return root[x] = find(root[x]);
+}
+```
+
+-   A basic implementation of the `union` function:
+
+```java
+public void union(int x, int y) {
+    int rootX = find(x);
+    int rootY = find(y);
+    if (rootX != rootY) {
+        root[rootY] = rootX;
+    }
+}
+```
+
+-   The `union` function – Optimized by union by rank:
+
+```java
+public void union(int x, int y) {
+    int rootX = find(x);
+    int rootY = find(y);
+    if (rootX != rootY) {
+        if (rank[rootX] > rank[rootY]) {
+            root[rootY] = rootX;
+        } else if (rank[rootX] < rank[rootY]) {
+            root[rootX] = rootY;
+        } else {
+            root[rootY] = rootX;
+            rank[rootX] += 1;
+        }
+    }
+}
+```
+
+## Number of Provinces (Medium 547)
+
+There are `n` cities. Some of them are connected, while some are not. If city `a` is connected directly with city `b`, and city `b` is connected directly with city `c`, then city `a` is connected indirectly with city `c`.
+
+A **province** is a group of directly or indirectly connected cities and no other cities outside of the group.
+
+You are given an `n x n` matrix `isConnected` where `isConnected[i][j] = 1` if the `ith` city and the `jth` city are directly connected, and `isConnected[i][j] = 0` otherwise.
+
+Return *the total number of **provinces***.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2020/12/24/graph1.jpg)
+
+```
+Input: isConnected = [[1,1,0],[1,1,0],[0,0,1]]
+Output: 2
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2020/12/24/graph2.jpg)
+
+```
+Input: isConnected = [[1,0,0],[0,1,0],[0,0,1]]
+Output: 3
+```
+
+**Constraints:**
+
+-   `1 <= n <= 200`
+-   `n == isConnected.length`
+-   `n == isConnected[i].length`
+-   `isConnected[i][j]` is `1` or `0`.
+-   `isConnected[i][i] == 1`
+-   `isConnected[i][j] == isConnected[j][i]`
+
+### Standard Solution
+
+#### Solution #1 DFS
+
+*   Similar to counting the number of island problems, using DFS, but be careful that row and column all mean the same nodes.
+*   When creating `visited` array to record the occurrence, we only need a 1D array. DFS also 1D are enough.
+*   Loop through all the nodes. At each node, we find all connected nodes and mark them as `visited`, next time just ignore all the visited nodes.
+*   In this way, we can find all the provinces. 
+
+```java
+public int findCircleNum(int[][] isConnected) {
+    int[] visited = new int[isConnected.length];
+    int count = 0;
+    // loop through the nodes and check if they are visited
+    for (int i = 0; i < isConnected.length; i++){
+        if (visited[i] == 0){
+            dfs(isConnected, visited, i);
+            count++;
+        }
+    }
+    return count;
+}
+
+public void dfs(int[][] M, int[] visited, int i){
+    // find all the connected node with i
+    for (int j = 0; j < M.length; j++){
+        if (M[i][j] == 1 && visited[j] == 0){
+            visited[j] = 1;
+            dfs(M, visited, j);
+        }
+    }
+}
+```
+
+-   Time complexity: $O(n^2)$. The complete matrix of size $n^2$ is traversed.
+-   Space complexity: $O(n)$. `visited` array of size n is used.
+
+#### Solution #2 BFS
+
+*   Using queue to store nodes and let it poll to find other connected components.
+*   Each time poll from the queue, we mark it as `visited`, and try to find all its neighbors.
+*   Put the neighbors in the queue, and repeat the process.
+*   Count it as a province when the queue is empty, and go to the next node.
+
+```java
+public int findCircleNum(int[][] M){
+    int[] visited = new int[M.length];
+    int count = 0;
+    Queue<Integer> queue = new LinkedList<>();
+    
+    for (int i = 0; i < M.length; i++){
+        if (visited[i] == 0){
+            queue.add(i);
+            while (!queue.isEmpty()){
+                int s = queue.remove();
+                visited[s] = 1;
+                for (int j = 0; j < M.length; j++){
+                    if (M[s][j] == 1 && visited[j] == 0){
+                        queue.add(j);
+                    }
+                }
+            }
+            count++;
+        }
+    }
+    return count;
+}
+```
+
+-   Time complexity: $O(n^2)$. The complete matrix of size $n^2$ is traversed.
+-   Space complexity: $O(n)$. A `queue` and `visited` array of size n is used.
+
+#### Solution #3 Using Union-Find Method
+
+*   Follow the template and realize the union method and find the method.
+*   Union find is commonly used to determine the number of connected components in a graph.
+
+```java
+public class Solution {
+    int find(int parent[], int i) {
+        if (parent[i] == -1)
+            return i;
+        // recursively find the root
+        return find(parent, parent[i]);
+    }
+
+    void union(int parent[], int x, int y) {
+        int xset = find(parent, x);
+        int yset = find(parent, y);
+        // connect
+        if (xset != yset)
+            parent[xset] = yset;
+    }
+    public int findCircleNum(int[][] M) {
+        int[] parent = new int[M.length];
+        Arrays.fill(parent, -1);
+        for (int i = 0; i < M.length; i++) {
+            for (int j = 0; j < M.length; j++) {
+                // union the nodes together, find parent and connect
+                if (M[i][j] == 1 && i != j) {
+                    union(parent, i, j);
+                }
+            }
+        }
+        int count = 0;
+        for (int i = 0; i < parent.length; i++) {
+            // find how many roots exist = how many provinces
+            if (parent[i] == -1)
+                count++;
+        }
+        return count;
+    }
+}
+```
+
+-   Time complexity: $O(n^3)$. We traverse over the complete matrix once. Union and find operations take $O(n)$ time in the worst case.
+-   Space complexity: $O(n)$. `parent` array of size n is used.

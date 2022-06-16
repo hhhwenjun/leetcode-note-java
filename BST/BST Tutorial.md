@@ -109,8 +109,6 @@ Notice that by initializing the pointer to a non-existent smallest number, the f
 
 You may assume that `next()` calls will always be valid. That is, there will be at least a next number in the in-order traversal when `next()` is called.
 
- 
-
 **Example 1:**
 
 ![img](https://assets.leetcode.com/uploads/2018/12/25/bst-tree.png)
