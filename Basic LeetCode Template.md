@@ -374,9 +374,154 @@ public int minCost(int[][] costs) {
 
 *   通常提问方式:
 
-    *   **All** possible combinations/solutions/permutations
+    *   **All** possible combinations/solutions/permutations，要详细的**所有**结果的情况
 
-    *   Return in list
+    *   Return in list，结果为一个list，list中每个结果都是一个list
+*   通常需要另一个backtracking的helper method， helper method需要使用recursion
+
+#### Template 1 - 通用模版
+
+*   把所有给的variables public 作全局，包括需要return的结果（很可能是list，先做好return的空list）
+*   在主方法中调用backtracking，并在其中创建一个空list作为单个的结果
+*   backtracking：
+    *   通常下是void method，调用参数index
+        *   index在此处用于追踪我们在given array中的位置，记录是否达到了given array 的末端
+        *   同时index也是下一个可能结果的先决条件
+    *   写好base case for recursion：
+        *   到达了target value
+        *   到达了given array的末端
+        *   注意需要重新建一个arraylist来结果当前结果list
+    *   for loop
+        *   从loop中进行操作链接到下一个可能的结果
+        *   把本次结果加入到结果集中
+        *   进入下一个可能的结果
+        *   把本次结果从结果集中**删除**：达到backtracking的目的
+
+```java
+// step 1: 把所有给的variables public 作全局，创建res的list（通常list中list嵌套）
+List<List<Integer>> res;
+int[] candidates;
+
+public List<List<Integer>> main(int[] candidates) {
+    res = new ArrayList<>();
+    this.candidates = candidates;
+    // step 2: 思考需要把什么带入backtracking的方法（target，index等），并套入一个空结果list
+    backtracking(0, new ArrayList<Integer>());
+    // 直接return已经做好的result list
+    return res;
+}
+
+// step 2: 思考需要把什么带入backtracking的方法（target，*index*等）
+//         并套入一个*空结果list（指代当前结果）*
+//		   通常是void method
+public void backtracking(int start, List<Integer> singleComb){
+// step 3: base case 刚好达成结果的条件，在此增加当前结果到结果集
+    if (start == candidates.length){
+        res.add(new ArrayList(singleComb));
+        return;
+    }
+// step 4: **最重要**，通常需要for-loop来进入下一个可能的结果 *****************
+//         从当前index出发，直到given array的末端，代表某个可能的路径
+    for (int i = start; i < candidates.length; i++){
+        // 加入到当前结果
+        singleComb.add(candidates[i]);
+        // 进入下一个可能的结果，注意此处 *********
+        // * 可重复的结果则i
+        // * 不可重复的记过则i + 1
+        backtracking(i + 1, singleComb);
+        // 移除出当前结果（实现backtracking）
+        singleComb.remove(singleComb.size() - 1);
+    }
+}
+```
+
+以combination sum为例
+
+```java
+// step 1: 把所有给的variables public 作全局，创建res的list（通常list中list嵌套）
+List<List<Integer>> res;
+int[] candidates;
+int target;
+
+public List<List<Integer>> combinationSum(int[] candidates, int target) {
+    res = new ArrayList<>();
+    this.candidates = candidates;
+    this.target = target;
+    // step 2: 思考需要把什么带入backtracking的方法（target，index等），并套入一个空结果list
+    backtracking(0, target, new ArrayList<Integer>());
+    // 直接return已经做好的result list
+    return res;
+}
+
+// step 2: 思考需要把什么带入backtracking的方法（target，*index*等）
+//         并套入一个*空结果list（指代当前结果）*
+//		   通常是void method
+public void backtracking(int start, int target, List<Integer> singleComb){
+// step 3: base case 刚好达成结果的条件，在此增加当前结果到结果集
+    if (target == 0){
+        res.add(new ArrayList(singleComb)); // *重要*：建一个new list来接结果
+        return;
+    }
+    // base case: not meet the requirement
+    if (target < 0 || start == candidates.length){
+        return;
+    }
+// step 4: **最重要**，通常需要for-loop来进入下一个可能的结果 *****************
+//         从当前index出发，直到given array的末端，代表某个可能的路径
+    for (int i = start; i < candidates.length; i++){
+        // 加入到当前结果
+        singleComb.add(candidates[i]);
+        // 进入下一个可能的结果
+        backtracking(i, target - candidates[i], singleComb);
+        // 移除出当前结果（实现backtracking）
+        singleComb.remove(singleComb.size() - 1);
+    }
+}
+```
+
+#### Template 2 - Permutation(通用模版变形)
+
+*   适用于可能的情况：
+    *   permutation
+    *   每个return的结果，并不按照原来given array中element的排序，需要乱序处理
+*   本质上讲通用模版中的可能结果的元素增减，改变为元素的swap来换位
+    *   需要将given array（如果有的话）转换成list，方便使用`Collections.swap()`，否则需要自己建立helper method来实现元素的交换
+
+以permutation为例
+
+```java
+// step 1: 把所有给的variables public 作全局，创建res的list（通常list中list嵌套）
+List<List<Integer>> res;
+List<Integer> nums;
+
+public List<List<Integer>> permute(int[] nums) {
+    res = new ArrayList<>();
+    this.nums = new ArrayList<>();
+// step 2: array 不方便进行swap且不是list，现转换成list就不需要create new list for single result
+    for (int num : nums){
+        this.nums.add(num);
+    }
+// step 3: 思考需要把什么带入backtracking的方法（target，index等）
+    backtracking(0);
+    return res;
+}
+public void backtracking(int index){
+// step 4: base case 刚好达成结果的条件，在此增加当前结果到结果集
+    if (index == nums.size()){
+        res.add(new ArrayList(nums));
+        return;
+    }
+// step 4: **最重要**，通常需要for-loop来进入下一个可能的结果 *****************
+//         从当前index出发，直到given array的末端，代表某个可能的路径，并进行swap
+    for (int i = index; i < nums.size(); i++){
+        Collections.swap(nums, i, index);
+        //*****注意****************
+        // 由于是swap并不按顺序排列结果，因此从index进行关联而不是i，保证swap到每个元素以及自己
+        backtracking(index + 1);
+        Collections.swap(nums, i, index);
+    }
+}
+```
 
 ## BFS
 

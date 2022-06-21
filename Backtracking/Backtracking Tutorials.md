@@ -940,3 +940,250 @@ public int findTargetSumWays(int[] nums, int S) {
 
 -   Time complexity: $O(t \cdot n)$ The `dp` array of size $O(t \cdot n)$ has been filled just once. Here, t refers to the sum of the $nums$ array and n refers to the length of the $nums$ array.
 -   Space complexity: $O(t \cdot n)$. `dp` array of size $t \cdot n$ is used.
+
+## Palindrome Permutation II (Medium #267)
+
+**Question**: Given a string s, return *all the palindromic permutations (without duplicates) of it*.
+
+You may return the answer in **any order**. If `s` has no palindromic permutation, return an empty list.
+
+**Example 1:**
+
+```
+Input: s = "aabb"
+Output: ["abba","baab"]
+```
+
+**Example 2:**
+
+```
+Input: s = "abc"
+Output: [] 
+```
+
+**Constraints:**
+
+-   `1 <= s.length <= 16`
+-   `s` consists of only lowercase English letters.
+
+### My Solution
+
+```java
+String s;
+Set<String> set;
+
+public List<String> generatePalindromes(String s) {
+    this.s = s;
+    set = new HashSet<>();
+
+    // backtracking process
+    backtracking(0);
+    return new ArrayList(set);
+}
+
+public void swap(int i, int j){
+    // swap char at index i and j
+    char[] strArray = s.toCharArray();
+    char temp = strArray[i];
+    strArray[i] = strArray[j];
+    strArray[j] = temp;
+    s = String.valueOf(strArray);
+    return;
+}
+
+public boolean isPalindrome(String str){
+    int high = str.length() - 1, low = 0;
+    while (low < high){
+        if (str.charAt(high) != str.charAt(low)){
+            return false;
+        }
+    }
+    return true;
+}
+
+public void backtracking(int index){
+    if (index == s.length() && isPalindrome(s)){
+        set.add(s);
+    }
+    for (int i = index; i < s.length(); i++){
+        swap(index, i);
+        backtracking(index + 1);
+        swap(index, i);
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Backtracking Brute Force (TLE)
+
+*   Same as my solution, but also exceed the time limit for this problem
+*   Time complexity: $O((n+1)!)$. A total of $n!$ permutations are possible. For every permutation generated, we need to check if it is a palindrome, each of which requires $O(n)$ time.
+*   Space complexity: $O(n)$. The depth of the recursion tree can go upto n.
+
+#### Solution #2 Backtracking and Split the String into Two
+
+*   Since palindrome would use most of the character twice, we can split the string and reverse later half the string to save complexity.
+*   Use a helper method to count the number of characters in the string, determine if it can be a palindrome, if not, just return null list
+*   Use an array to save half of the string characters, when using backtracking, each time we reverse the string and concat it with the first half of the string and make if palindrome
+
+```java
+public class Solution {
+    Set < String > set = new HashSet < > ();
+    public List < String > generatePalindromes(String s) {
+        int[] map = new int[128];
+        char[] st = new char[s.length() / 2];
+        if (!canPermutePalindrome(s, map))
+            return new ArrayList < > ();
+        char ch = 0;
+        int k = 0;
+        for (int i = 0; i < map.length; i++) {
+            if (map[i] % 2 == 1)
+                ch = (char) i;
+            for (int j = 0; j < map[i] / 2; j++) {
+                st[k++] = (char) i;
+            }
+        }
+        permute(st, 0, ch);
+        return new ArrayList < String > (set);
+    }
+    public boolean canPermutePalindrome(String s, int[] map) {
+        int count = 0;
+        for (int i = 0; i < s.length(); i++) {
+            map[s.charAt(i)]++;
+            if (map[s.charAt(i)] % 2 == 0)
+                count--;
+            else
+                count++;
+        }
+        return count <= 1;
+    }
+    public void swap(char[] s, int i, int j) {
+        char temp = s[i];
+        s[i] = s[j];
+        s[j] = temp;
+    }
+    void permute(char[] s, int l, char ch) {
+        if (l == s.length) {
+            set.add(new String(s) + (ch == 0 ? "" : ch) + new StringBuffer(new String(s)).reverse());
+        } else {
+            for (int i = l; i < s.length; i++) {
+                if (s[l] != s[i] || l == i) {
+                    swap(s, l, i);
+                    permute(s, l + 1, ch);
+                    swap(s, l, i);
+                }
+            }
+        }
+    }
+}
+```
+
+-   Time complexity: $O\big((\frac{n}{2}+1)!\big)$. At most $\frac{n}{2}!$ permutations need to be generated in the worst case. Further, for each permutation generated, `string.reverse()` function will take $n/4$ time.
+-   Space complexity: $O(n)$. The depth of recursion tree can go upto $n/2$ in the worst case.
+
+## Beautiful Arrangement (Medium #526)
+
+**Question**: Suppose you have `n` integers labeled `1` through `n`. A permutation of those `n` integers `perm` (**1-indexed**) is considered a **beautiful arrangement** if for every `i` (`1 <= i <= n`), **either** of the following is true:
+
+-   `perm[i]` is divisible by `i`.
+-   `i` is divisible by `perm[i]`.
+
+Given an integer `n`, return *the **number** of the **beautiful arrangements** that you can construct*.
+
+**Example 1:**
+
+```
+Input: n = 2
+Output: 2
+Explanation: 
+The first beautiful arrangement is [1,2]:
+    - perm[1] = 1 is divisible by i = 1
+    - perm[2] = 2 is divisible by i = 2
+The second beautiful arrangement is [2,1]:
+    - perm[1] = 2 is divisible by i = 1
+    - i = 2 is divisible by perm[2] = 1
+```
+
+**Example 2:**
+
+```
+Input: n = 1
+Output: 1
+```
+
+**Constraints:**
+
+-   `1 <= n <= 15`
+
+### My Solution
+
+```java
+// abstract: return number of arragements meet requirements
+// 1. Using backtracking, swap elements for permutations
+// 2. Determine if the permutation meets the requirements
+int count;
+List<Integer> nums;
+
+public int countArrangement(int n) {
+    nums = new ArrayList<>();
+    // put it inside an array
+    for (int i = 1; i <= n; i++){
+        nums.add(i);
+    }
+    count = 0;
+    backtracking(0);
+    return count;
+}
+
+private boolean isBeautiful(int i, int j){
+    return i % j == 0 || j % i == 0;
+}
+
+private void backtracking(int index){
+    if (index == nums.size()){
+        count++;
+        return;
+    }
+    for (int i = index; i < nums.size(); i++){
+        Collections.swap(nums, i, index);
+        if (isBeautiful(nums.get(index), index + 1)){
+            backtracking(index + 1);
+        }
+        Collections.swap(nums, i, index);
+    }
+}
+```
+
+*   Basically, it is a backtracking method with brute force, but slower since we use `Collections.swap()`, if we only use array swap could be faster.
+*   It is also a standard solution.
+*   Time complexity: $O(k)$. k refers to the number of valid permutations.
+*   Space complexity: $O(n)$. The depth of the recursion tree can go up to n. Further, $nums$ an array of size n is used, where, n is the given number.
+
+#### Solution #2 Better Backtracking
+
+*   Use a `visited` array to record if we have visited the digit, no need to swap and save more time
+
+```java
+int count = 0;
+public int countArrangement(int N){
+    boolean[] visited = new boolean[N + 1];
+    calculate(N, 1, visited);
+    return count;
+}
+public void calculate(int N, int pos, boolean[] visited){
+    if (pos > N){
+       count++;
+    }
+    for (int i = 1; i <= N; i++){
+        if (!visited[i] && (pos % i == 0 || i % pos == 0)){
+            visited[i] = true;
+            calculate(N, pos + 1, visited);
+            visited[i] = false;
+        }
+    }
+}
+```
+
+-   Time complexity: $O(k)$. k refers to the number of valid permutations.
+-   Space complexity: $O(n)$.` visited` array of size n is used. The depth of the recursion tree will also go up to n. Here, n refers to the given integer n.

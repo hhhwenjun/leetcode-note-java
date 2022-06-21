@@ -437,3 +437,191 @@ public class Solution {
 -   Space complexity: $O(V)$.
 
     Storing the representative/immediate-parent of each vertex takes $O(V)$ space. Furthermore, storing the size of components also takes $O(V)$ space.
+
+## Graph Valid Tree (Medium #261)
+
+**Question**: You have a graph of `n` nodes labeled from `0` to `n - 1`. You are given an integer n and a list of `edges` where `edges[i] = [ai, bi]` indicates that there is an undirected edge between nodes `ai` and `bi` in the graph.
+
+Return `true` *if the edges of the given graph make up a valid tree, and* `false` *otherwise*.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/03/12/tree1-graph.jpg" alt="img" style="zoom:67%;" />
+
+```
+Input: n = 5, edges = [[0,1],[0,2],[0,3],[1,4]]
+Output: true
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2021/03/12/tree2-graph.jpg" alt="img" style="zoom:67%;" />
+
+```
+Input: n = 5, edges = [[0,1],[1,2],[2,3],[1,3],[1,4]]
+Output: false
+```
+
+**Constraints:**
+
+-   `1 <= n <= 2000`
+-   `0 <= edges.length <= 5000`
+-   `edges[i].length == 2`
+-   `0 <= ai, bi < n`
+-   `ai != bi`
+-   There are no self-loops or repeated edges.
+
+### Standard Solution
+
+*   Use DFS
+    *   Create an adjacency list, to store the neighbors for the node
+    *   Use stack or queue to store the nodes, pop the node and traverse its' neighbors
+    *   Skip the nodes if it has been seen(due to previous nodes), return false if it has been marked as a parent(cycle in nodes)
+
+#### Solution #1 Iterative DFS
+
+*   For the graph to be a valid tree, it must have *exactly* `n - 1` edges. Any less, and it can't possibly be fully connected.
+*   Any more, and it *has* to contain cycles. 
+*   Check if it has `n - 1` edge, if yes, we do not need to consider cycle situations
+
+```java
+public boolean validTree(int n, int[][] edges) {
+   if (edges.length != n - 1) return false;
+
+   // make the adjacency list
+    List<List<Integer>> adjacencyList = new ArrayList<>();
+    for (int i = 0; i < n; i++){
+        adjacencyList.add(new ArrayList<>());
+    }
+    for (int[] edge : edges){
+        adjacencyList.get(edge[0]).add(edge[1]);
+        adjacencyList.get(edge[1]).add(edge[0]);
+    }
+
+    Stack<Integer> stack = new Stack<>();
+    Set<Integer> seen = new HashSet<>();
+    stack.push(0);
+    seen.add(0);
+
+    while(!stack.isEmpty()){
+        int node = stack.pop();
+        for (int neighbour : adjacencyList.get(node)){
+            if (seen.contains(neighbour)) continue;
+            seen.add(neighbour);
+            stack.push(neighbour);
+        }
+    }
+
+    return seen.size() == n;
+}
+```
+
+*   Time complexity and the space complexity are both $O(n)$
+
+*   If we do not check the edges, there is another solution
+
+```java
+List<List<Integer>> adjacencyList = new ArrayList<>();
+for (int i = 0; i < n; i++) {
+    adjacencyList.add(new ArrayList<>());
+}
+for (int[] edge : edges) {
+    adjacencyList.get(edge[0]).add(edge[1]);
+    adjacencyList.get(edge[1]).add(edge[0]);
+}
+
+Map<Integer, Integer> parent = new HashMap<>();
+parent.put(0, -1);
+Stack<Integer> stack = new Stack<>();
+stack.push(0);
+
+while (!stack.isEmpty()) {
+    int node = stack.pop();
+    // Check for unseen neighbours of this node:
+    for (int neighbour : adjacencyList.get(node)) {
+        // Don't look at the trivial cycle.
+        if (parent.get(node) == neighbour) {
+            continue;
+        }
+        // Check if we've already seen this node.
+        if (parent.containsKey(neighbour)) {
+            return false; // There must be a cycle.
+        }
+        // Otherwise, put this neighbour onto stack
+        // and record that it has been seen.
+        stack.push(neighbour);
+        parent.put(neighbour, node);
+    }
+}
+
+return parent.size() == n; 
+```
+
+#### Solution #2 Union Find
+
+*   Use `union-find` to merge the nodes together, if when merge, the nodes are already in the same set, meaning they construct a loop already.
+
+```java
+class UnionFind {
+    
+    private int[] parent;
+    
+    // For efficiency, we aren't using makeset, but instead initialising
+    // all the sets at the same time in the constructor.
+    public UnionFind(int n) {
+        parent = new int[n];
+        for (int node = 0; node < n; node++) {
+            parent[node] = node;
+        }
+    }
+    
+    // The find method, without any optimizations. It traces up the parent
+    // links until it finds the root node for A, and returns that root.
+    public int find(int A) {
+        while (parent[A] != A) {
+            A = parent[A];
+        }
+        return A;
+    }
+
+    // The union method, without any optimizations. It returns True if a
+    // merge happened, False if otherwise.
+    public boolean union(int A, int B) {
+        // Find the roots for A and B.
+        int rootA = find(A);
+        int rootB = find(B);
+        // Check if A and B are already in the same set.
+        if (rootA == rootB) {
+            return false;
+        }
+        // Merge the sets containing A and B.
+        parent[rootA] = rootB;
+        return true;
+    } 
+}
+class Solution {
+    
+    public boolean validTree(int n, int[][] edges) {     
+        // Condition 1: The graph must contain n - 1 edges.
+        if (edges.length != n - 1) return false;
+        
+        // Condition 2: The graph must contain a single connected component.
+        // Create a new UnionFind object with n nodes. 
+        UnionFind unionFind = new UnionFind(n);
+        // Add each edge. Check if a merge happened, because if it 
+        // didn't, there must be a cycle.
+        for (int[] edge : edges) {
+            int A = edge[0];
+            int B = edge[1];
+            if (!unionFind.union(A, B)) {
+                return false;
+            }
+        }
+        // If we got this far, there's no cycles!
+        return true;
+    }
+}
+```
+
+*   Time Complexity: $O(N \cdot α(N))$.
+*   Space Complexity: $O(N)$.
