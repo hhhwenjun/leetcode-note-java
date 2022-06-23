@@ -888,3 +888,317 @@ class UnionFind {
     *   The space complexity of our Union-Find data structure is $O(N)$.
     *   The space required by the list of edges is $O(N+M)$.
     *   To sum up, the overall space complexity of the algorithm is $O(N+M)$ which is dominated by the list of edges.
+
+## Longest Consecutive Sequence (Medium #128)
+
+**Question**: Given an unsorted array of integers `nums`, return *the length of the longest consecutive elements sequence.*
+
+You must write an algorithm that runs in `O(n)` time.
+
+**Example 1:**
+
+```
+Input: nums = [100,4,200,1,3,2]
+Output: 4
+Explanation: The longest consecutive elements sequence is [1, 2, 3, 4]. Therefore its length is 4.
+```
+
+**Example 2:**
+
+```
+Input: nums = [0,3,7,2,5,8,4,6,0,1]
+Output: 9
+```
+
+**Constraints:**
+
+-   `0 <= nums.length <= 105`
+-   `-109 <= nums[i] <= 109`
+
+### My Solution
+
+```java
+class Solution {
+    // abstract: return longest consecutive sequence in o(n)
+    // union-find to group the number that are consecutive |a - b| = 1
+    public int longestConsecutive(int[] nums) {
+        int length = nums.length;
+        UnionFind uf = new UnionFind(length);
+        // key: number in nums, value: index of number in nums
+        Map<Integer, Integer> map = new HashMap<>();
+        
+        for (int i = 0; i < length; i++){
+            if (map.containsKey(nums[i])){
+                continue;
+            }
+            if (map.containsKey(nums[i] - 1)){
+                uf.union(i, map.get(nums[i] - 1));
+            }
+            if (map.containsKey(nums[i] + 1)){
+                uf.union(i, map.get(nums[i] + 1));
+            }
+            map.put(nums[i], i);
+        }
+        return uf.getMaxSeqSize();
+    }
+}
+
+// create union-find class
+class UnionFind {
+    private int[] group;
+    private int[] rank;
+    
+    public UnionFind(int size){
+        group = new int[size];
+        rank = new int[size];
+        
+        for (int i = 0; i < size; i++){
+            group[i] = i;
+            rank[i] = 1;
+        }
+    }
+    
+    public int find(int index){
+        if (group[index] != index){
+            group[index] = find(group[index]);
+        }
+        return group[index];
+    }
+    
+    public void union(int index1, int index2){
+        int root1 = find(index1);
+        int root2 = find(index2);
+        
+        if (root1 != root2){
+            group[root1] = root2;
+            rank[root2] += rank[root1];
+        }
+    }
+    
+    public int getMaxSeqSize(){
+        int maxSize = 0;
+        for (int singleRank : rank){
+            maxSize = Math.max(maxSize, singleRank);
+        }
+        return maxSize;
+    }
+}
+```
+
+*   The complexity is $O(a(n))$ which is the inverse Ackerman function, but it is slow-growing that it's considered constant time as $O(n)$. It also can be $O(n \log n)$
+
+### Standard Solution
+
+#### Solution #1 HashSet and Intelligent Sequence Building
+
+*   Optimize the brute force method, user HashSet to store the values in case duplicate
+
+```java
+public int longestConsecutive(int[] nums) {
+    Set<Integer> num_set = new HashSet<Integer>();
+    for (int num : nums) {
+        num_set.add(num);
+    }
+
+    int longestStreak = 0;
+
+    for (int num : num_set) {
+        // in case already count it
+        if (!num_set.contains(num-1)) {
+            int currentNum = num;
+            int currentStreak = 1;
+
+            while (num_set.contains(currentNum+1)) {
+                currentNum += 1;
+                currentStreak += 1;
+            }
+
+            longestStreak = Math.max(longestStreak, currentStreak);
+        }
+    }
+
+    return longestStreak;
+}
+```
+
+*   Time complexity: $O(n)$.
+*   Space complexity: $O(n)$.
+
+#### Solution #2 Sorting
+
+```java
+public int longestConsecutive(int[] nums) {
+    if (nums.length == 0) {
+        return 0;
+    }
+
+    Arrays.sort(nums);
+
+    int longestStreak = 1;
+    int currentStreak = 1;
+
+    for (int i = 1; i < nums.length; i++) {
+        if (nums[i] != nums[i-1]) {
+            if (nums[i] == nums[i-1]+1) {
+                currentStreak += 1;
+            }
+            else {
+                longestStreak = Math.max(longestStreak, currentStreak);
+                currentStreak = 1;
+            }
+        }
+    }
+
+    return Math.max(longestStreak, currentStreak);
+}
+```
+
+*   Time complexity: $O(n \log n)$. The main `for` loop does constant work n*n* times, so the algorithm's time complexity is dominated by the invocation of `sort`, which will run in $O(n \log n)$ time for any sensible implementation.
+
+*   Space complexity: $O(1)$ (or $O(n)$). For the implementations provided here, the space complexity is constant because we sort the input array in place. If we are not allowed to modify the input array, we must spend linear space to store a sorted copy.
+
+## Accounts Merge (Medium #721)
+
+**Question**: Given a list of `accounts` where each element `accounts[i]` is a list of strings, where the first element `accounts[i][0]` is a name, and the rest of the elements are **emails** representing emails of the account.
+
+Now, we would like to merge these accounts. Two accounts definitely belong to the same person if there is some common email to both accounts. Note that even if two accounts have the same name, they may belong to different people as people could have the same name. A person can have any number of accounts initially, but all of their accounts definitely have the same name.
+
+After merging the accounts, return the accounts in the following format: the first element of each account is the name, and the rest of the elements are emails **in sorted order**. The accounts themselves can be returned in **any order**.
+
+**Example 1:**
+
+```
+Input: accounts = [["John","johnsmith@mail.com","john_newyork@mail.com"],["John","johnsmith@mail.com","john00@mail.com"],["Mary","mary@mail.com"],["John","johnnybravo@mail.com"]]
+Output: [["John","john00@mail.com","john_newyork@mail.com","johnsmith@mail.com"],["Mary","mary@mail.com"],["John","johnnybravo@mail.com"]]
+Explanation:
+The first and second John's are the same person as they have the common email "johnsmith@mail.com".
+The third John and Mary are different people as none of their email addresses are used by other accounts.
+We could return these lists in any order, for example the answer [['Mary', 'mary@mail.com'], ['John', 'johnnybravo@mail.com'], 
+['John', 'john00@mail.com', 'john_newyork@mail.com', 'johnsmith@mail.com']] would still be accepted.
+```
+
+**Example 2:**
+
+```
+Input: accounts = [["Gabe","Gabe0@m.co","Gabe3@m.co","Gabe1@m.co"],["Kevin","Kevin3@m.co","Kevin5@m.co","Kevin0@m.co"],["Ethan","Ethan5@m.co","Ethan4@m.co","Ethan0@m.co"],["Hanzo","Hanzo3@m.co","Hanzo1@m.co","Hanzo0@m.co"],["Fern","Fern5@m.co","Fern1@m.co","Fern0@m.co"]]
+Output: [["Ethan","Ethan0@m.co","Ethan4@m.co","Ethan5@m.co"],["Gabe","Gabe0@m.co","Gabe1@m.co","Gabe3@m.co"],["Hanzo","Hanzo0@m.co","Hanzo1@m.co","Hanzo3@m.co"],["Kevin","Kevin0@m.co","Kevin3@m.co","Kevin5@m.co"],["Fern","Fern0@m.co","Fern1@m.co","Fern5@m.co"]]
+```
+
+**Constraints:**
+
+-   `1 <= accounts.length <= 1000`
+-   `2 <= accounts[i].length <= 10`
+-   `1 <= accounts[i][j].length <= 30`
+-   `accounts[i][0]` consists of English letters.
+-   `accounts[i][j] (for j > 0)` is a valid email.
+
+### Standard Solution
+
+#### Solution #1 Union-Find
+
+*   Group email with its person's index as a hashmap
+*   If we have already seen this email(exists in the hashmap), it means there is a duplicate person, we can merge the person's index using the union-find method
+*   Then we create another hashmap, store the person's index and corresponding emails using find
+*   Finally sort the email list, use the index to find person's name
+
+```java
+class Solution {
+    // abstract: merge accounts, return emails in sorted order
+    // 1. create a union-find class to group the emails
+    // 2. sort the emails in a list
+    public List<List<String>> accountsMerge(List<List<String>> accounts) {
+        int accountNum = accounts.size();
+        UnionFind uf = new UnionFind(accountNum);
+        
+        // map email to the account index
+        Map<String, Integer> emails = new HashMap<>();
+        
+        for (int i = 0; i < accountNum; i++){
+            int accountLength = accounts.get(i).size();
+            
+            for (int j = 1; j < accountLength; j++){
+                // take the email from each account
+                String email = accounts.get(i).get(j);
+                String accountName = accounts.get(i).get(0);
+                
+                // assign the email to the account index
+                if (!emails.containsKey(email)){
+                    emails.put(email, i);
+                }
+                else {
+                    // we have already seen this email before, duplicate email means merge person
+                    uf.union(i, emails.get(email));
+                }
+            }
+        }
+        // store emails corresponding to persons' index
+        Map<Integer, List<String>> indexEmails = new HashMap<Integer, List<String>>();
+        for (String email : emails.keySet()){
+            // the given host id of the email before merge
+            int groupid = emails.get(email);
+            // check the true group is who (some groups are already merged in uf class)
+            int groupTrueid = uf.find(groupid);
+            
+            if (!indexEmails.containsKey(groupTrueid)){
+                indexEmails.put(groupTrueid, new ArrayList<String>());
+            }
+            indexEmails.get(groupTrueid).add(email);
+        }
+        // sort the emails and add the account name
+        List<List<String>> res = new ArrayList<>();
+        for (int group : indexEmails.keySet()){
+            List<String> indexEmail = indexEmails.get(group);
+            Collections.sort(indexEmail);
+            // put the name at the beginning of the list
+            indexEmail.add(0, accounts.get(group).get(0));
+            res.add(indexEmail);
+        }
+        return res;
+    }
+}
+
+class UnionFind {
+    int representative[];
+    int size[];
+    
+    public UnionFind(int size){
+        representative = new int[size];
+        this.size = new int[size];
+        
+        for (int i = 0; i < size; i++){
+            representative[i] = i;
+            this.size[i] = 1;
+        }
+    }
+    
+    public int find(int x){
+        if (x != representative[x]){
+            representative[x] = find(representative[x]);
+        }
+        return representative[x];
+    }
+    
+    public void union(int a, int b){
+        int root1 = find(a);
+        int root2 = find(b);
+        
+        if (root1 == root2) return;
+        if (size[root1] > size[root2]){
+            size[root1] += size[root2];
+            representative[root2] = representative[root1];
+        }
+        else {
+            size[root2] += size[root1];
+            representative[root1] = representative[root2];
+        }
+    }
+}
+```
+
+*   Here N is the number of accounts and K is the maximum length of an account.
+*   Time complexity: $O(NK \log {NK})$
+    *   We find the representative of all the emails, hence it will take $O(NK\alpha({N}))$ time. We are also sorting the components and the worst case will be when all emails end up belonging to the same component this will cost $O(NK(\log {NK}))$.
+    *   Hence the total time complexity is $O(NK \cdot \log {NK} + NK \cdot \alpha({N}))$.
+
+*   Space complexity: $O(NK)$
+    *   List `representative`, `size` store information corresponding to each group so will take $O(N)$ space. All emails get stored in `emailGroup` and `component` hence space used is $O(NK)$.
