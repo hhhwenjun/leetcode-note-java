@@ -822,7 +822,7 @@ public Node connect(Node root){
 *   Time Complexity: $O(N)$ since we process each node exactly once.
 *   Space Complexity: $O(1)$ since we don't make use of any additional data structure for traversing nodes on a particular level like the previous approach does.
 
-#### Solution #2 Level Order Traversal
+#### Solution #2 Level Order Traversal(BFS)
 
 *   A brute force method and easy to understand 
 *   Use a queue to store each level of the nodes, peek the top node to connect

@@ -189,6 +189,37 @@ public void backtracking(int current, List<Integer> path, int target){
     -   Since we have overlap between the paths, the actual time spent on the traversal will be lower to some extent.
 -   Space Complexity: $O(V)$ The recursion depth can be no more than V, and we need $O(V)$ space to store all the previously visited vertices while recursively traversing deeper with the current path. Please note that we don't count the space usage for the output, i.e., to store all the paths we obtained.
 
+*   Another solution using BFS
+    *   Time complexity is the same
+    *   Space complexity is $O(2^V * V)$
+
+```java
+public List<List<Integer>> allPathsSourceTarget(int[][] graph) {
+    List<List<Integer>> paths = new ArrayList<>();
+    if (graph == null || graph.length == 0) {
+        return paths;
+    }
+    Queue<List<Integer>> queue = new LinkedList<>();
+    List<Integer> path = new ArrayList<>();
+    path.add(0);
+    queue.add(path);
+    while (!queue.isEmpty()) {
+        List<Integer> currentPath = queue.poll();
+        int node = currentPath.get(currentPath.size() - 1);
+        for (int nextNode: graph[node]) {
+            List<Integer> tmpPath = new ArrayList<>(currentPath);
+            tmpPath.add(nextNode);
+            if (nextNode == graph.length - 1) {
+                paths.add(new ArrayList<>(tmpPath));
+            } else {
+                queue.add(new ArrayList<>(tmpPath));
+            } 
+        }
+    }
+    return paths;
+}
+```
+
 ## Surrounded Regions (Medium #130)
 
 **Question**: Given an `m x n` matrix `board` containing `'X'` and `'O'`, *capture all regions that are 4-directionally surrounded by* `'X'`.
@@ -306,3 +337,161 @@ class Pair<U, V> {
     -   We keep a list of border cells as starting points for our traversal. We could consider the number of border cells is proportional to the total number (N) of cells.
     -   During the recursive calls of `DFS()` function, we would consume some space in the function call stack, *i.e.* the call stack will pile up along with the depth of recursive calls. And the maximum depth of recursive calls would be N as in the worst scenario mentioned in the time complexity.
     -   As a result, the overall space complexity of the algorithm is $\mathcal{O}(N)$
+
+## Clone Graph (Medium #133)
+
+**Question**: Given a reference of a node in a **[connected](https://en.wikipedia.org/wiki/Connectivity_(graph_theory)#Connected_graph)** undirected graph.
+
+Return a [**deep copy**](https://en.wikipedia.org/wiki/Object_copying#Deep_copy) (clone) of the graph.
+
+Each node in the graph contains a value (`int`) and a list (`List[Node]`) of its neighbors.
+
+```
+class Node {
+    public int val;
+    public List<Node> neighbors;
+}
+```
+
+**Test case format:**
+
+For simplicity, each node's value is the same as the node's index (1-indexed). For example, the first node with `val == 1`, the second node with `val == 2`, and so on. The graph is represented in the test case using an adjacency list.
+
+**An adjacency list** is a collection of unordered **lists** used to represent a finite graph. Each list describes the set of neighbors of a node in the graph.
+
+The given node will always be the first node with `val = 1`. You must return the **copy of the given node** as a reference to the cloned graph.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2019/11/04/133_clone_graph_question.png" alt="img" style="zoom: 25%;" />
+
+```
+Input: adjList = [[2,4],[1,3],[2,4],[1,3]]
+Output: [[2,4],[1,3],[2,4],[1,3]]
+Explanation: There are 4 nodes in the graph.
+1st node (val = 1)'s neighbors are 2nd node (val = 2) and 4th node (val = 4).
+2nd node (val = 2)'s neighbors are 1st node (val = 1) and 3rd node (val = 3).
+3rd node (val = 3)'s neighbors are 2nd node (val = 2) and 4th node (val = 4).
+4th node (val = 4)'s neighbors are 1st node (val = 1) and 3rd node (val = 3).
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2020/01/07/graph.png)
+
+```
+Input: adjList = [[]]
+Output: [[]]
+Explanation: Note that the input contains one empty list. The graph consists of only one node with val = 1 and it does not have any neighbors.
+```
+
+**Example 3:**
+
+```
+Input: adjList = []
+Output: []
+Explanation: This an empty graph, it does not have any nodes. 
+```
+
+**Constraints:**
+
+-   The number of nodes in the graph is in the range `[0, 100]`.
+-   `1 <= Node.val <= 100`
+-   `Node.val` is unique for each node.
+-   There are no repeated edges and no self-loops in the graph.
+-   The Graph is connected and all nodes can be visited starting from the given node.
+
+### Standard Solution
+
+#### Solution #1 DFS
+
+*   To avoid getting stuck in a loop we would need some way to keep track of the nodes which have already been copied. By doing this we don't end up traversing them again.
+*   We would take a hash map to store the reference of the copy of all the nodes that have already been visited and cloned. If we don't use `visited` we will get stuck in a cycle.
+*   If we don't find the node in the `visited` hash map, we create a copy of it and put it in the hash map. 
+
+```java
+private HashMap<Node, Node> visited = new HashMap<>();
+public Node cloneGraph(Node node){
+    if (node == null){
+        return node;
+    }
+    
+    // if the node was already visited before.
+    // return the clone from the visited dictionary
+    if (visited.containsKey(node)){
+        return visited.get(node);
+    }
+    
+    // create a clone for the given node
+    // note that we don't have cloned neighbors as of now
+    Node cloneNode = new Node(node.val, new ArrayList());
+    // the key is original node and value being the clone node
+    visited.put(node, cloneNode);
+    
+    // iterate through the neighbors to generate the clones
+    for (Node neighbor : node.neighbors){
+        cloneNode.neighbors.add(cloneGraph(neighbor));
+    }
+    return cloneNode;
+}
+```
+
+-   Time Complexity: $O(N + M)$, where N is a number of nodes (vertices) and M is a number of edges.
+-   Space Complexity: $O(N)$. This space is occupied by the `visited` hash map and in addition to that, space would also be occupied by the recursion stack since we are adopting a recursive approach here. The space occupied by the recursion stack would be equal to $O(H)$ where H is the height of the graph. Overall, the space complexity would be $O(N)$.
+
+#### Solution #2 BFS
+
+*   Similar to DFS but using stack/queue to keep track of nodes
+
+```java
+// use hashmap to track visited
+private Map<Node, Node> visited = new HashMap<>();
+
+// use the dfs to traverse the node and neighbor lists + recursion
+public Node cloneGraph(Node node) {
+    // consider the null case
+    if (node == null){
+        return node;
+    }
+    Stack<Node> stack = new Stack<>();
+    stack.add(node);
+    visited.put(node, new Node(node.val, new ArrayList<Node>()));
+
+    while (!stack.isEmpty()){
+        Node current = stack.pop();
+
+        for (Node neighbor : current.neighbors){
+            if (!visited.containsKey(neighbor)){
+                visited.put(neighbor, new Node(neighbor.val, new ArrayList<Node>()));
+                stack.add(neighbor);
+            }
+            // add the clone of the neighbor clone node
+            visited.get(current).neighbors.add(visited.get(neighbor));
+        }
+    }
+    return visited.get(node);
+}
+```
+
+*   Time Complexity: $O(N + M)$, where N is a number of nodes (vertices) and M is a number of edges.
+*   Space Complexity: $O(N)$. This space is occupied by the `visited` dictionary and in addition to that, space would also be occupied by the queue since we are adopting the BFS approach here. The space occupied by the queue would be equal to $O(W)$ where W is the width of the graph. Overall, the space complexity would be $O(N)$.
+
+#### Solution #3 DFS with Array
+
+```java
+class Solution {
+    Node[] visited;
+    public Node cloneGraph(Node node) {
+        if(node == null) return null;
+        visited = new Node[101];
+        return DFS(node);
+    }
+    public Node DFS(Node node){
+        if(visited[node.val] != null) return visited[node.val];
+        visited[node.val] = new Node(node.val);
+        for(Node n: node.neighbors) visited[node.val].neighbors.add(DFS(n));
+        return visited[node.val];
+    }
+} 
+```
+

@@ -625,3 +625,193 @@ class Solution {
 
 *   Time Complexity: $O(N \cdot α(N))$.
 *   Space Complexity: $O(N)$.
+
+## All Paths from Source Lead to Destination (Medium #1059)
+
+**Question**: Given the `edges` of a directed graph where `edges[i] = [ai, bi]` indicates there is an edge between nodes `ai` and `bi`, and two nodes `source` and `destination` of this graph, determine whether or not all paths starting from `source` eventually, end at `destination`, that is:
+
+-   At least one path exists from the `source` node to the `destination` node
+-   If a path exists from the `source` node to a node with no outgoing edges, then that node is equal to `destination`.
+-   The number of possible paths from `source` to `destination` is a finite number.
+
+Return `true` if and only if all roads from `source` lead to `destination`.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2019/03/16/485_example_1.png" alt="img" style="zoom:50%;" />
+
+```
+Input: n = 3, edges = [[0,1],[0,2]], source = 0, destination = 2
+Output: false
+Explanation: It is possible to reach and get stuck on both node 1 and node 2.
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2019/03/16/485_example_2.png" alt="img" style="zoom:50%;" />
+
+```
+Input: n = 4, edges = [[0,1],[0,3],[1,2],[2,1]], source = 0, destination = 3
+Output: false
+Explanation: We have two possibilities: to end at node 3, or to loop over node 1 and node 2 indefinitely.
+```
+
+**Example 3:**
+
+<img src="https://assets.leetcode.com/uploads/2019/03/16/485_example_3.png" alt="img" style="zoom:50%;" />
+
+```
+Input: n = 4, edges = [[0,1],[0,2],[1,3],[2,3]], source = 0, destination = 3
+Output: true
+```
+
+**Constraints:**
+
+-   `1 <= n <= 104`
+-   `0 <= edges.length <= 104`
+-   `edges.length == 2`
+-   `0 <= ai, bi <= n - 1`
+-   `0 <= source <= n - 1`
+-   `0 <= destination <= n - 1`
+-   The given graph may have self-loops and parallel edges.
+
+### Standard Solution
+
+#### Solution #1 DFS + Backtracking
+
+*   Build up `adjList` as the neighbor node list, using hashmap structure
+*   We need to make sure that:
+    *   The destination node does not have outgoing edges, otherwise, it is not the destination
+    *   The non-destination node should have outgoing edges, otherwise, we stuck at the node
+    *   Cannot be stuck in a cycle (use `seen` array to make sure we are not in the cycle)
+*   Use the neighbor list to traverse the outgoing nodes, if seen, it is in the cycle, and track if the forwarding nodes return false(cannot go to the destination)
+*   Use backtracking to flip the status if finish traversing the current node's neighbors
+
+```java
+// dfs: find the neighbor nodes that the node point to
+public boolean leadsToDestination(int n, int[][] edges, int source, int destination) {
+    Map<Integer, List<Integer>> direct = new HashMap<>();
+    for (int i = 0; i < n; i++){
+        direct.put(i, new ArrayList<Integer>());
+    }
+    for (int[] edge : edges){
+        direct.get(edge[0]).add(edge[1]);
+    }
+    // destination does not have outgoing edge
+    if (direct.get(destination).size() != 0) return false;
+    return dfs(direct, source, destination, new boolean[n]);
+}
+
+public boolean dfs(Map<Integer, List<Integer>> direct, int source, int destination, boolean[] seen){
+    if (source == destination){
+        return true;
+    }
+    // now we have seen the node
+    seen[source] = true;
+    // non-destination should have outgoing edges otherwise we stuck at here
+    if (direct.get(source).size() == 0) return false;
+
+    // traverse the neighbor destination nodes
+    for (int neighbor : direct.get(source)){
+        if (seen[neighbor] || !dfs(direct, neighbor, destination, seen)){
+            return false;
+        }
+    }
+    // backtracking to the before status
+    seen[source] = false;
+    return true;
+}
+```
+
+*   Time complexity: Typically for an entire DFS over an input graph, it takes $\mathcal{O}(V + E)$ where V represents the number of vertices in the graph and likewise, E represents the number of edges in the graph. In the worst-case E can be $\mathcal{O}(V^2)$ in case each vertex is connected to every other vertex in the graph. However, even in the worst case, we will end up discovering a cycle very early on and prune the recursion tree. If we were to traverse the entire graph, then the complexity would be $\mathcal{O}(V^2)$ as the $\mathcal{O}(E)$ the part would dominate. However, due to pruning and backtracking in case of cycle detection, we end up with overall time complexity of $\mathcal{O}(V)$.
+*   Space Complexity: $\mathcal{O}(V + E)$ where $\mathcal{O}(E)$ is occupied by the adjacency list and $\mathcal{O}(V)$ is occupied by the recursion stack and the color states.
+
+## Reconstruct Itinerary (Hard #332)
+
+**Question**: You are given a list of airline `tickets` where `tickets[i] = [fromi, toi]` represent the departure and the arrival airports of one flight. Reconstruct the itinerary in order and return it.
+
+All of the tickets belong to a man who departs from `"JFK"`, thus, the itinerary must begin with `"JFK"`. If there are multiple valid itineraries, you should return the itinerary that has the smallest lexical order when read as a single string.
+
+-   For example, the itinerary `["JFK", "LGA"]` has a smaller lexical order than `["JFK", "LGB"]`.
+
+You may assume all tickets form at least one valid itinerary. You must use all the tickets once and only once.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2021/03/14/itinerary1-graph.jpg)
+
+```
+Input: tickets = [["MUC","LHR"],["JFK","MUC"],["SFO","SJC"],["LHR","SFO"]]
+Output: ["JFK","MUC","LHR","SFO","SJC"]
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2021/03/14/itinerary2-graph.jpg)
+
+```
+Input: tickets = [["JFK","SFO"],["JFK","ATL"],["SFO","ATL"],["ATL","JFK"],["ATL","SFO"]]
+Output: ["JFK","ATL","JFK","SFO","ATL","SFO"]
+Explanation: Another possible reconstruction is ["JFK","SFO","ATL","JFK","ATL","SFO"] but it is larger in lexical order.
+```
+
+**Constraints:**
+
+-   `1 <= tickets.length <= 300`
+-   `tickets[i].length == 2`
+-   `fromi.length == 3`
+-   `toi.length == 3`
+-   `fromi` and `toi` consist of uppercase English letters.
+-   `fromi != toi`
+
+### My Solution
+
+```java
+// use hashmap to store the adjacency list and remove node if traversed (dfs)
+// sort the adjacency list based on the spell
+private List<String> res = new ArrayList<String>();
+
+public List<String> findItinerary(List<List<String>> tickets) {
+    // use hashmap to store the adjacency list
+    Map<String, List<String>> flights = new HashMap<>();
+    for (List<String> ticket : tickets){
+        String key = ticket.get(0);
+        String dest = ticket.get(1);
+        if (!flights.containsKey(key)){
+            flights.put(key, new ArrayList<String>());
+        }
+        flights.get(key).add(dest);
+    }
+
+    // sort the adjacency list
+    for (List<String> flight : flights.values()){
+        Collections.sort(flight);
+    }
+    dfs(flights, "JFK");
+    return res;
+}
+
+public void dfs(Map<String, List<String>> flights, String start){
+    if (flights.containsKey(start)){
+        // take the adjacency list
+        List<String> adjList = flights.get(start);
+
+        while (!adjList.isEmpty()){
+            String dest = adjList.get(0);
+            adjList.remove(0);
+            dfs(flights, dest);
+        }
+    }
+    // have traverse this node, add to the front
+    res.add(0, start);
+}
+```
+
+*   It is also called the eulerian trail, it visits every edge exactly once.
+*   Find the adjacency list and sort the list, each time remove the first element in the list
+*   If the list is empty, it means we finish the traversal process. 
+*   Time Complexity: $\mathcal{O}(|E| \log{\frac{|E|}{|V|}})$ where $|E|$ is the number of edges (flights) in the input.
+*   Space Complexity: $\mathcal{O}(|V| + |E|)$ where $|V|$ is the number of airports and $|E|$ is the number of flights.
+
+
+

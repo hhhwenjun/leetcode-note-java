@@ -523,9 +523,22 @@ public void backtracking(int index){
 }
 ```
 
+## UNION FIND
+
+
+
+## DFS
+
+### DFS - Line Graph
+
 ## BFS
 
-*   Traverse a tree：通常要使用queue或者stack来进行
-    *   while循环，queue或者stack不为空
+*   Traverse a tree/graph：通常要使用queue来进行
+    *   Traverse by layer
+    *   while循环，queue不为空
     *   事先存储一个node（通常为root），然后在循环中pop（poll）
     *   进行操作，接着把node的左子树和右子树存储在queue或者stack中，循环往复直到所有node都traverse完成
+*   **DFS-stack, BFS-queue**
+
+*   Time Complexity: $O(V + E)$. Here, V represents the number of vertices, and E represents the number of edges. We need to check every vertex and traverse through every edge in the graph. The time complexity is the same as it was for the DFS approach.
+*   Space Complexity: $O(V)$. Generally, we will check if a vertex has been visited before adding it to the queue, so the queue will use at most $O(V)$ space. Keeping track of which vertices have been visited will also require $O(V)$ space.

@@ -1202,3 +1202,220 @@ class UnionFind {
 
 *   Space complexity: $O(NK)$
     *   List `representative`, `size` store information corresponding to each group so will take $O(N)$ space. All emails get stored in `emailGroup` and `component` hence space used is $O(NK)$.
+
+## Count Unreachable Pairs of Nodes in an Undirected Graph (Medium #2316)
+
+**Question**: You are given an integer `n`. There is an **undirected** graph with `n` nodes, numbered from `0` to `n - 1`. You are given a 2D integer array `edges` where `edges[i] = [ai, bi]` denotes that there exists an **undirected** edge connecting nodes `ai` and `bi`.
+
+Return *the **number of pairs** of different nodes that are **unreachable** from each other*.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2022/05/05/tc-3.png" alt="img" style="zoom:50%;" />
+
+```
+Input: n = 3, edges = [[0,1],[0,2],[1,2]]
+Output: 0
+Explanation: There are no pairs of nodes that are unreachable from each other. Therefore, we return 0.
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2022/05/05/tc-2.png" alt="img" style="zoom:50%;" />
+
+```
+Input: n = 7, edges = [[0,2],[0,5],[2,4],[1,6],[5,4]]
+Output: 14
+Explanation: There are 14 pairs of nodes that are unreachable from each other:
+[[0,1],[0,3],[0,6],[1,2],[1,3],[1,4],[1,5],[2,3],[2,6],[3,4],[3,5],[3,6],[4,6],[5,6]].
+Therefore, we return 14.
+```
+
+ 
+
+**Constraints:**
+
+-   `1 <= n <= 105`
+-   `0 <= edges.length <= 2 * 105`
+-   `edges[i].length == 2`
+-   `0 <= ai, bi < n`
+-   `ai != bi`
+-   There are no repeated edges.
+
+### My Solution
+
+*   It is a correct solution but exceeds time limit
+*   It is a question in the contest
+
+```java
+class Solution {
+    // method: 1. union-find to group all the nodes as groups
+    // 2. find the group size of each group
+    // 3. res = sum (group size * group size)
+    public long countPairs(int n, int[][] edges) {
+        // group the node which have edges to connect them
+        UnionFind uf = new UnionFind(n);
+        
+        for (int[] edge : edges){
+            int node1 = edge[0];
+            int node2 = edge[1];
+            uf.union(node1, node2);
+        }
+        int sum = uf.sum();
+        return sum;
+    }
+}
+
+class UnionFind {
+    private int[] group;
+    private int[] size;
+    
+    public UnionFind(int n){
+        group = new int[n];
+        size = new int[n];
+        for (int i = 0; i < n; i++){
+            group[i] = i;
+            size[i] = 1;
+        }
+    }
+    
+    public int find(int i){
+        if (i != group[i]){
+            group[i] = find(group[i]);
+        }
+        return group[i];
+    }
+    
+    public boolean union(int node1, int node2){
+        int root1 = find(node1);
+        int root2 = find(node2);
+        
+        if (root1 == root2){
+            // already in the same group
+            return false;
+        }
+        
+        // not in the same group, we merge them together
+        if (size[root1] > size[root2]){
+            group[root2] = group[root1];
+            size[root1] += size[root2];
+        }
+        else {
+            group[root1] = group[root2];
+            size[root2] += size[root1];
+        }
+        return true;
+    }
+    
+    public int groupSize(int node1){
+        int root = find(node1);
+        return size[root];
+    }
+    
+    public List<Integer> groupRoot(){
+        List<Integer> root = new ArrayList<>();
+        for (int i : group){
+            int rooti = find(i);
+            if (!root.contains(rooti)){
+                root.add(rooti);
+            }
+        }
+        return root;
+    }
+    
+    public int sum(){
+        List<Integer> rootList = groupRoot();
+        int size = rootList.size();
+        int sum = 0;
+        for (int i = 0; i < size; i++){
+            for (int j = i + 1; j < size; j++){
+                sum += groupSize(rootList.get(i)) * groupSize(rootList.get(j));
+            }
+        }
+        return sum;
+    }
+}
+```
+
+### Standard Solution
+
+*   Almost same as my solution, but need a trick to calculate the sum
+*   No need to use nested for loop to calculate the sum by multiplications
+
+```java
+class Solution {
+    // method: 1. union-find to group all the nodes as groups
+    // 2. find the group size of each group
+    // 3. res = sum (group size * group size)
+    public long countPairs(int n, int[][] edges) {
+        // group the node which have edges to connect them
+        UnionFind uf = new UnionFind(n);
+
+        for (int[] edge: edges) {
+            uf.union(edge[0], edge[1]);
+        }
+        
+        long pairs = 0;
+        long remaining = n;
+        
+        int[] size = new int[n];
+        for (int i = 0; i < n; i++) {
+            size[uf.find(i)] ++;
+        }
+        for (int s: size) {
+            if (s == 0) {
+                continue;
+            }
+            remaining -= s;
+            pairs += s * remaining;
+        }
+        
+        return pairs;
+    }
+}
+
+class UnionFind {
+    private int[] group;
+    private int[] rank;
+    
+    public UnionFind(int n){
+        group = new int[n];
+        rank = new int[n];
+        for (int i = 0; i < n; i++){
+            group[i] = i;
+            rank[i] = 1;
+        }
+    }
+    
+    public int find(int i){
+        if (i == group[i]){
+            return i;
+        }
+        return group[i] = find(group[i]);
+    }
+    
+    public boolean union(int node1, int node2){
+        int root1 = find(node1);
+        int root2 = find(node2);
+        
+        if (root1 == root2){
+            // already in the same group
+            return false;
+        }
+        // not in the same group, we merge them together
+        if (rank[root1] > rank[root2]){
+            group[root2] = group[root1];
+
+        }
+        else if (rank[root1] < rank[root2]) {
+            group[root1] = group[root2];
+        }
+        else {
+            group[root1] = group[root2];
+            rank[root2]++;
+        }
+        return true;
+    }
+}
+```
+
