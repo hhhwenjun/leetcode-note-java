@@ -813,5 +813,232 @@ public void dfs(Map<String, List<String>> flights, String start){
 *   Time Complexity: $\mathcal{O}(|E| \log{\frac{|E|}{|V|}})$ where $|E|$ is the number of edges (flights) in the input.
 *   Space Complexity: $\mathcal{O}(|V| + |E|)$ where $|V|$ is the number of airports and $|E|$ is the number of flights.
 
+## Number of Distinct Islands (Medium #694)
 
+**Question**: You are given an `m x n` binary matrix `grid`. An island is a group of `1`'s (representing land) connected **4-directionally** (horizontal or vertical.) You may assume all four edges of the grid are surrounded by water.
 
+An island is considered to be the same as another if and only if one island can be translated (and not rotated or reflected) to equal the other.
+
+Return *the number of **distinct** islands*. 
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/05/01/distinctisland1-1-grid.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: grid = [[1,1,0,0,0],[1,1,0,0,0],[0,0,0,1,1],[0,0,0,1,1]]
+Output: 1
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2021/05/01/distinctisland1-2-grid.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: grid = [[1,1,0,1,1],[1,0,0,0,0],[0,0,0,0,1],[1,1,0,1,1]]
+Output: 3
+```
+
+**Constraints:**
+
+-   `m == grid.length`
+-   `n == grid[i].length`
+-   `1 <= m, n <= 50`
+-   `grid[i][j]` is either `0` or `1`.
+
+### My Solution
+
+*   Find islands and check if they are distinct by subtracting the difference. Since we use a certain direction for traversal, the order of traversal is the same.
+
+```java
+private int[][] grid;
+private boolean[][] seen;
+private List<List<int[]>> islandInfo;
+private int[][] directions = new int[][]{{-1, 0}, {0, -1}, {0, 1}, {1, 0}};
+
+public int numDistinctIslands(int[][] grid) {
+    this.grid = grid;
+    seen = new boolean[grid.length][grid[0].length];
+    islandInfo = new ArrayList<>();
+    int count = 0;
+    // dfs: find the islands, store islands in lists
+    for (int i = 0; i < grid.length; i++){
+        for (int j = 0; j < grid[0].length; j++){
+            if (seen[i][j]){
+                continue;
+            }
+            if (grid[i][j] == 1){
+                // find a new island
+                List<int[]> island = new ArrayList<>();
+                dfs(i, j, island);
+                if (checkDistinct(island)){
+                    count++;
+                    islandInfo.add(island);
+                }
+            }
+        }
+    }
+    return count;
+}
+
+public void dfs(int i, int j, List<int[]> island){
+    if (i < 0 || i >= grid.length || j < 0 || j >= grid[0].length || grid[i][j] == 0 || seen[i][j]){
+        return;
+    }
+    seen[i][j] = true;
+    island.add(new int[]{i, j});
+    for (int[] direction : directions){
+        dfs(i + direction[0], j + direction[1], island);
+    }
+}
+
+// check islands if they are distinct
+public boolean checkDistinct(List<int[]> island){
+    if (islandInfo.size() == 0) return true;
+
+    for (int i = 0; i < islandInfo.size(); i++){
+        List<int[]> islandCompare = islandInfo.get(i);
+        if (islandCompare.size() != island.size()){
+            continue;
+        }
+        else {
+            boolean same = true;
+            int diffX = islandCompare.get(0)[0] - island.get(0)[0];
+            int diffY = islandCompare.get(0)[1] - island.get(0)[1];
+            for (int j = 0; j < island.size(); j++){
+                int currdiffX = islandCompare.get(j)[0] - island.get(j)[0];
+                int currdiffY = islandCompare.get(j)[1] - island.get(j)[1];
+                if (diffX != currdiffX || diffY != currdiffY){
+                    same = false;
+                }
+            }
+            if (same == true){
+                return false;
+            }
+        }
+    }
+    return true;
+}
+```
+
+```java
+// a standard method similar to my method
+class Solution {
+
+    private List<List<int[]>> uniqueIslands = new ArrayList<>(); // All known unique islands.
+    private List<int[]> currentIsland = new ArrayList<>(); // Current Island
+    private int[][] grid; // Input grid
+    private boolean[][] seen; // Cells that have been explored. 
+     
+    public int numDistinctIslands(int[][] grid) {   
+        this.grid = grid;
+        this.seen = new boolean[grid.length][grid[0].length];   
+        for (int row = 0; row < grid.length; row++) {
+            for (int col = 0; col < grid[0].length; col++) {
+                dfs(row, col);
+                if (currentIsland.isEmpty()) {
+                    continue;
+                }
+                // Translate the island we just found to the top left.
+                int minCol = grid[0].length - 1;
+                for (int i = 0; i < currentIsland.size(); i++) {
+                    minCol = Math.min(minCol, currentIsland.get(i)[1]);
+                }
+                for (int[] cell : currentIsland) {
+                    cell[0] -= row;
+                    cell[1] -= minCol;
+                }
+                // If this island is unique, add it to the list.
+                if (currentIslandUnique()) {
+                    uniqueIslands.add(currentIsland);
+                }
+                currentIsland = new ArrayList<>();
+            }
+        }
+        return uniqueIslands.size();
+    }
+    
+    private void dfs(int row, int col) {
+        if (row < 0 || col < 0 || row >= grid.length || col >= grid[0].length) return;
+        if (seen[row][col] || grid[row][col] == 0) return;
+        seen[row][col] = true;
+        currentIsland.add(new int[]{row, col});
+        dfs(row + 1, col);
+        dfs(row - 1, col);
+        dfs(row, col + 1);
+        dfs(row, col - 1);
+    }
+    
+    private boolean currentIslandUnique() {
+        for (List<int[]> otherIsland : uniqueIslands) {
+            if (currentIsland.size() != otherIsland.size()) continue;
+            if (equalIslands(currentIsland, otherIsland)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    private boolean equalIslands(List<int[]> island1, List<int[]> island2) {
+        for (int i = 0; i < island1.size(); i++) {
+            if (island1.get(i)[0] != island2.get(i)[0] || island1.get(i)[1] != island2.get(i)[1]) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+```
+
+*   Basically, my method is brute force with dfs. Time Complexity: $O(M^2 \cdot N^2)$. In the worst case, we would have a large grid, with many unique islands all of the same size, and the islands packed as closely together as possible. This would mean that for each island we discover, we'd be looping over the cells of all the other islands we've discovered so far. For example, here's a grid with M = 10, N = 10, and islands all of size 5.
+
+*   Space complexity: $O(N \cdot M)$
+
+    The `seen` set requires $O(N \cdot M)$ memory. Additionally, each cell with land requires $O(1)$ space in the `islands` array.
+
+### Standard Solution
+
+#### Solution #1 HashSet + DFS
+
+*   Match the top left cell to the top left corner and store in set
+
+```java
+class Solution {
+    
+    private int[][] grid;
+    private boolean[][] seen;
+    private Set<Pair<Integer, Integer>> currentIsland;
+    private int currRowOrigin;
+    private int currColOrigin;
+    
+    private void dfs(int row, int col) {
+        if (row < 0 || row >= grid.length || col < 0 || col >= grid[0].length) return;
+        if (grid[row][col] == 0 || seen[row][col]) return;
+        seen[row][col] = true;
+        currentIsland.add(new Pair<>(row - currRowOrigin, col - currColOrigin));
+        dfs(row + 1, col);
+        dfs(row - 1, col);
+        dfs(row, col + 1);
+        dfs(row, col - 1);    
+    }
+    
+    public int numDistinctIslands(int[][] grid) {
+        this.grid = grid;
+        this.seen = new boolean[grid.length][grid[0].length];   
+        Set<Set<Pair<Integer, Integer>>> islands = new HashSet<>();
+        for (int row = 0; row < grid.length; row++) {
+            for (int col = 0; col < grid[0].length; col++) {
+                this.currentIsland = new HashSet<>();
+                this.currRowOrigin = row;
+                this.currColOrigin = col;
+                dfs(row, col);
+                if (!currentIsland.isEmpty()) islands.add(currentIsland);
+            }
+        }         
+        return islands.size();
+    }
+}
+```
+
+*   Time Complexity: $O(M \cdot N)$.
+*   Space complexity: $O(M \cdot N)$. The `seen` set is the biggest use of additional memory.
