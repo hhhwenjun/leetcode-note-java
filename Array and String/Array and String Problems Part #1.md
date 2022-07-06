@@ -1589,4 +1589,256 @@ public void swap(int[] nums, int left, int right){
 ```
 
 *   Time complexity: $O(N)$
-*   Space complexity: $O(1)$
+*   Space complexity: $O(1)$                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+
+## Valid Anagram (Easy #242)
+
+**Question**: Given two strings `s` and `t`, return `true` *if* `t` *is an anagram of* `s`*, and* `false` *otherwise*.
+
+An **Anagram** is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.
+
+**Example 1:**
+
+```
+Input: s = "anagram", t = "nagaram"
+Output: true
+```
+
+**Example 2:**
+
+```
+Input: s = "rat", t = "car"
+Output: false
+```
+
+**Constraints:**
+
+-   `1 <= s.length, t.length <= 5 * 104`
+-   `s` and `t` consist of lowercase English letters.
+
+**Follow up:** What if the inputs contain Unicode characters? How would you adapt your solution to such a case?
+
+### My Solution
+
+```java
+// sum: return if is anagram
+public boolean isAnagram(String s, String t) {
+    // 1. compare length of the string, if not same length, false
+    if (s.length() != t.length()) return false;
+
+    // 2. use an array to store the occurence of letter in 1 string
+    int[] occurence = new int[26]; // lower cases
+    char[] sArray = s.toCharArray();
+    char[] tArray = t.toCharArray();
+
+    for (char ch : sArray){
+        int loc = ch - 'a';
+        occurence[loc]++;
+    }
+
+    // 3. subtract the occrence in the array base on 2 string, if every letter go back to 0, true
+    for (char ch : tArray){
+        int loc = ch - 'a';
+        occurence[loc]--;
+    }
+    for (int count : occurence){
+        if (count != 0){
+            return false;
+        }
+    }
+    return true;
+}
+```
+
+*   The result is pretty good with time complexity since it should be $O(n)$, but the space complexity is $O(1)$ in a larger case since it can be further simplified.
+
+### Standard Solution
+
+#### Solution #1 Sorting
+
+```java
+public boolean isAnagram(String s, String t) {
+    if (s.length() != t.length()) {
+        return false;
+    }
+    char[] str1 = s.toCharArray();
+    char[] str2 = t.toCharArray();
+    Arrays.sort(str1);
+    Arrays.sort(str2);
+    return Arrays.equals(str1, str2);
+}
+```
+
+-   Time complexity: $O(n \log n)$. Assume that n is the length of s, sorting costs $O(n \log n)$ and comparing two strings costs $O(n)$. Sorting time dominates, and the overall time complexity is $O(n \log n)$.
+-   Space complexity: $O(1)$. Space depends on the sorting implementation which, usually, costs $O(1)$ auxiliary space if `heapsort` is used. Note that in Java, `toCharArray()` makes a copy of the string so it costs $O(n)$ extra space, but we ignore this for complexity analysis because:
+    -   It is a language-dependent detail.
+    -   It depends on how the function is designed. For example, the function parameter types can be changed to `char[]`.
+
+#### Solution #2 Frequency Counter
+
+*   Same as my solution but simplifier
+
+```java
+public boolean isAnagram(String s, String t){
+    if (s.length() != t.length()){
+        return false;
+    }
+    int[] counter = new int[26];
+    for (int i = 0; i < s.length(); i++){
+        counter[s.charAt(i) - 'a']++;
+        counter[t.charAt(i) - 'a']--;
+    }
+    for (int count : counter){
+        if (count != 0){
+            return false;
+        }
+    }
+    return true;
+}
+```
+
+-   Time complexity: $O(n)$. Time complexity is $O(n)$ because accessing the counter table is a constant time operation.
+-   Space complexity: $O(1)$. Although we do use extra space, the space complexity is $O(1)$ because the table's size stays constant no matter how large n is.
+
+#### Solution #3 Hashmap (Follow-up)
+
+```java
+public boolean isAnagram(String s, String t) {
+    HashMap<Character,Integer> smap=new HashMap<>();
+    int sl=s.length();
+    int tl=t.length();
+    if(sl!=tl){return false;}
+    for(int i=0;i<sl;i++){
+        smap.put(s.charAt(i),smap.getOrDefault(s.charAt(i),0)+1);
+        smap.put(t.charAt(i),smap.getOrDefault(t.charAt(i),0)-1);
+    }
+    for(char c:smap.keySet()){
+        if(smap.get(c)!=0){return false;}
+    }
+    return true;
+}
+```
+
+*   The hashtable should handle all Unicode characters. The time complexity is still $O(n)$ while the space complexity becomes $O(n)$ because of the hashtable.
+
+## Group Anagrams (Medium #49)
+
+**Question**: Given an array of strings `strs`, group **the anagrams** together. You can return the answer in **any order**.
+
+An **Anagram** is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.
+
+**Example 1:**
+
+```
+Input: strs = ["eat","tea","tan","ate","nat","bat"]
+Output: [["bat"],["nat","tan"],["ate","eat","tea"]]
+```
+
+**Example 2:**
+
+```
+Input: strs = [""]
+Output: [[""]]
+```
+
+**Example 3:**
+
+```
+Input: strs = ["a"]
+Output: [["a"]]
+```
+
+**Constraints:**
+
+-   `1 <= strs.length <= 104`
+-   `0 <= strs[i].length <= 100`
+-   `strs[i]` consists of lowercase English letters.
+
+### My Solution
+
+*   Tricks in the problem
+    *   Cannot use `int[]` as key of the hashmap, it seems like it only compare with the address of array
+    *   Cannot use `int[]` converted string as the key of the hashmap. It may confuse some of the cases. To distinguish the keys, add `#` between each number of the key
+
+```java
+public List<List<String>> groupAnagrams(String[] strs) {
+    List<List<String>> res = new ArrayList<>();
+    // pattern (int[26]), list of strings, to count the occurence of letters
+
+    Map<String, List<String>> pattern = new HashMap<>();
+    for (String str : strs){
+        int[] countMap = new int[26];
+        for (char ch : str.toCharArray()){
+            countMap[ch - 'a']++;
+        }
+        StringBuilder key = new StringBuilder();
+        for (int i = 0; i < 26; i++){
+            key.append("#");
+            key.append(countMap[i]);
+        }
+        String keyString = key.toString();
+        if (!pattern.containsKey(keyString)){
+            pattern.put(keyString, new ArrayList<>());
+        }
+        // meet the pattern, they should be grouped and put in result list
+        pattern.get(keyString).add(str);
+    }
+
+    // loop the map and store the string list to result list
+    for (Map.Entry<String, List<String>> entry : pattern.entrySet()){
+        res.add(entry.getValue());
+    }
+    return res;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Categorize by Count
+
+*   Idea is similar to my method but simpler
+
+```java
+public List<List<String>> groupAnagrams(String[] strs) {
+    if (strs.length == 0) return new ArrayList();
+    Map<String, List> ans = new HashMap<String, List>();
+    int[] count = new int[26];
+    for (String s : strs) {
+        Arrays.fill(count, 0);
+        for (char c : s.toCharArray()) count[c - 'a']++;
+
+        StringBuilder sb = new StringBuilder("");
+        for (int i = 0; i < 26; i++) {
+            sb.append('#');
+            sb.append(count[i]);
+        }
+        String key = sb.toString();
+        if (!ans.containsKey(key)) ans.put(key, new ArrayList());
+        ans.get(key).add(s);
+    }
+    return new ArrayList(ans.values());
+}
+```
+
+-   Time Complexity: $O(NK)$, where N is the length of `strs`, and K is the maximum length of a string in `strs`. Counting each string is linear in the size of the string, and we count every string.
+-   Space Complexity: $O(NK)$, the total information content stored in `ans`.
+
+#### Solution #2 Sort the List
+
+```java
+public List<List<String>> groupAnagrams(String[] strs) {
+    if (strs.length == 0) return new ArrayList();
+    Map<String, List> ans = new HashMap<String, List>();
+    for (String s : strs) {
+        char[] ca = s.toCharArray();
+        Arrays.sort(ca);
+        String key = String.valueOf(ca);
+        if (!ans.containsKey(key)) ans.put(key, new ArrayList());
+        ans.get(key).add(s);
+    }
+    return new ArrayList(ans.values());
+}
+```
+
+-   Time Complexity: $O(NK \log K)$, where N is the length of `strs`, and K is the maximum length of a string in `strs`. The outer loop has complexity $O(N)$ as we iterate through each string. Then, we sort each string in $O(K \log K)$ time.
+-   Space Complexity: $O(NK)$, the total information content stored in `ans`.
