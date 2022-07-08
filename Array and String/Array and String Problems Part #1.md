@@ -1842,3 +1842,173 @@ public List<List<String>> groupAnagrams(String[] strs) {
 
 -   Time Complexity: $O(NK \log K)$, where N is the length of `strs`, and K is the maximum length of a string in `strs`. The outer loop has complexity $O(N)$ as we iterate through each string. Then, we sort each string in $O(K \log K)$ time.
 -   Space Complexity: $O(NK)$, the total information content stored in `ans`.
+
+## Contains Duplicate (Easy #217)
+
+**Question**: Given an integer array `nums`, return `true` if any value appears **at least twice** in the array, and return `false` if every element is distinct.
+
+**Example 1:**
+
+```
+Input: nums = [1,2,3,1]
+Output: true
+```
+
+**Example 2:**
+
+```
+Input: nums = [1,2,3,4]
+Output: false
+```
+
+**Example 3:**
+
+```
+Input: nums = [1,1,1,3,3,4,3,2,4,2]
+Output: true
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 105`
+-   `-109 <= nums[i] <= 109`
+
+### My Solution
+
+```java
+public boolean containsDuplicate(int[] nums) {
+    // set: cannot duplicate
+    Set<Integer> numSet = new HashSet<Integer>();
+    for (int num : nums){
+        if (numSet.contains(num)){
+            return true;
+        }
+        numSet.add(num);
+    }
+    return false;
+}
+```
+
+*   Time and space complexity should be both $O(n)$
+
+### Standard Solution
+
+#### Solution #1 Sorting
+
+```java
+public boolean containsDuplicate(int[] nums) {
+    Arrays.sort(nums);
+    for (int i = 0; i < nums.length - 1; ++i) {
+        if (nums[i] == nums[i + 1]) return true;
+    }
+    return false;
+}
+```
+
+-   Time complexity: $O(n \log n)$. Sorting is $O(n \log n)$ and the sweeping is $O(n)$. The entire algorithm is dominated by the sorting step, which is $O(n \log n)$.
+-   Space complexity: $O(1)$. Space depends on the sorting implementation which, usually, costs $O(1)$ auxiliary space if `heapsort` is used.
+
+#### Solution #2 HashSet
+
+*   Same as my solution.
+
+## Two Sum (Easy # 1)
+
+**Question**: Given an array of integers `nums` and an integer `target`, return *indices of the two numbers such that they add up to `target`*.
+
+You may assume that each input would have ***exactly\* one solution**, and you may not use the *same* element twice.
+
+You can return the answer in any order.
+
+**Example 1:**
+
+```
+Input: nums = [2,7,11,15], target = 9
+Output: [0,1]
+Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
+```
+
+**Example 2:**
+
+```
+Input: nums = [3,2,4], target = 6
+Output: [1,2]
+```
+
+**Example 3:**
+
+```
+Input: nums = [3,3], target = 6
+Output: [0,1]
+```
+
+**Constraints:**
+
+-   `2 <= nums.length <= 104`
+-   `-109 <= nums[i] <= 109`
+-   `-109 <= target <= 109`
+-   **Only one valid answer exists.**
+
+### My Solution
+
+```java
+public int[] twoSum(int[] nums, int target) {
+    // hashmap to store the value + index
+    Map<Integer, Integer> numMap = new HashMap<>();
+    for (int i = 0; i < nums.length; i++){
+        if (numMap.containsKey(target - nums[i])){
+            return new int[]{i, numMap.get(target - nums[i])};
+        }
+        if (!numMap.containsKey(nums[i])){
+            numMap.put(nums[i], i);
+        }
+    }
+    return new int[]{0, 0};
+}
+```
+
+*   Time and space complexity should be both $O(n)$
+
+### Standard Solution
+
+#### Solution #1 Two-passes HashMap
+
+```java
+public int[] twoSum(int[] nums, int target) {
+    Map<Integer, Integer> map = new HashMap<>();
+    for (int i = 0; i < nums.length; i++) {
+        map.put(nums[i], i);
+    }
+    for (int i = 0; i < nums.length; i++) {
+        int complement = target - nums[i];
+        if (map.containsKey(complement) && map.get(complement) != i) {
+            return new int[] { i, map.get(complement) };
+        }
+    }
+    // In case there is no solution, we'll just return null
+    return null;
+}
+```
+
+-   Time complexity: $O(n)$. We traverse the list containing n elements exactly twice. Since the hash table reduces the lookup time to $O(1)$, the overall time complexity is $O(n)$.
+-   Space complexity: $O(n)$. The extra space required depends on the number of items stored in the hash table, which stores exactly n elements
+
+#### Solution #2 One-pass Hash Table
+
+```java
+public int[] twoSum(int[] nums, int target) {
+    Map<Integer, Integer> map = new HashMap<>();
+    for (int i = 0; i < nums.length; i++) {
+        int complement = target - nums[i];
+        if (map.containsKey(complement)) {
+            return new int[] { map.get(complement), i };
+        }
+        map.put(nums[i], i);
+    }
+    // In case there is no solution, we'll just return null
+    return null;
+}
+```
+
+-   Time complexity: $O(n)$ We traverse the list containing n elements only once. Each lookup in the table costs only $O(1)$ time.
+-   Space complexity: $O(n)$. The extra space required depends on the number of items stored in the hash table, which stores at most n elements.

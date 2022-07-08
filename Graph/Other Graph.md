@@ -233,7 +233,7 @@ public int minCostConnectPoints(int[][] points){
 
 ### Dijkstra's Algorithm
 
-*   “Dijkstra’s algorithm” solves the “single-source shortest path” problem in a weighted directed graph with non-negative weights.
+*   “Dijkstra’s algorithm” solves the “single-source shortest path” problem in a weighted directed graph with **non-negative** weights.
 *   Record the shortest distance from the source vertex and the previous vertex
 
 ![image-20220705105812724](/Users/wenjunhan/Library/Application Support/typora-user-images/image-20220705105812724.png)
@@ -243,6 +243,13 @@ public int minCostConnectPoints(int[][] points){
         -   If you use a [Fibonacci heap](https://en.wikipedia.org/wiki/Fibonacci_heap) to implement the “min-heap”, extracting the minimum element will take $O(\log V)$ time while the key decreasing operation will take amortized $O(1)$ time, therefore, the total time complexity would be $O(E + V \log V)$.
         -   If you use a [Binary heap](https://en.wikipedia.org/wiki/Binary_heap), then the time complexity would be $O(V + E \log V)$.
     *   Space Complexity: $O(V)$. We need to store V vertices in our data structure.
+
+### Bellman-Ford Algorithm
+
+*   In a “graph with no negative-weight cycles” with N vertices, the shortest path between any two vertices has at most N-1 edges.
+*   No solution can be found when we have a “graph with negative weight cycles”.
+*   Time Complexity: $O(V \cdot E)$. In the worst-case scenario, when all the vertices are connected with each other, we need to check every path from every vertex; this results in $O(V \cdot E)$ time complexity.
+*   Space Complexity: $O(V)$. We use two arrays of length V. One to store the shortest distance from the source vertex using at most `k-1` edges. The other is to store the shortest distance from the source vertex using at most `k` edges.
 
 ## Network Delay Time (Medium #743)
 
@@ -499,3 +506,635 @@ class Solution {
     -   Hence, the time complexity is equal to $O(N + E \log N)$.
 -   Space complexity: $O(N + E)$
     -   Building the adjacency list will take $O(E)$ space. Dijkstra's algorithm takes $O(E)$ space for priority queue because each vertex could be added to the priority queue $N - 1$ time which makes it $N * (N - 1)$ and $O(N^2)$ is equivalent to $O(E)$. `signalReceivedAt` takes $O(N)$ space.
+
+## Cheapest Flights Within K Stops (Medium #787)
+
+**Question**: There are `n` cities connected by some number of flights. You are given an array `flights` where `flights[i] = [fromi, toi, pricei]` indicates that there is a flight from city `fromi` to city `toi` with cost `pricei`.
+
+You are also given three integers `src`, `dst`, and `k`, return ***the cheapest price** from* `src` *to* `dst` *with at most* `k` *stops.* If there is no such route, return `-1`. 
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2022/03/18/cheapest-flights-within-k-stops-3drawio.png)
+
+```
+Input: n = 4, flights = [[0,1,100],[1,2,100],[2,0,100],[1,3,600],[2,3,200]], src = 0, dst = 3, k = 1
+Output: 700
+Explanation:
+The graph is shown above.
+The optimal path with at most 1 stop from city 0 to 3 is marked in red and has cost 100 + 600 = 700.
+Note that the path through cities [0,1,2,3] is cheaper but is invalid because it uses 2 stops.
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2022/03/18/cheapest-flights-within-k-stops-1drawio.png)
+
+```
+Input: n = 3, flights = [[0,1,100],[1,2,100],[0,2,500]], src = 0, dst = 2, k = 1
+Output: 200
+Explanation:
+The graph is shown above.
+The optimal path with at most 1 stop from city 0 to 2 is marked in red and has cost 100 + 100 = 200.
+```
+
+**Example 3:**
+
+![img](https://assets.leetcode.com/uploads/2022/03/18/cheapest-flights-within-k-stops-2drawio.png)
+
+```
+Input: n = 3, flights = [[0,1,100],[1,2,100],[0,2,500]], src = 0, dst = 2, k = 0
+Output: 500
+Explanation:
+The graph is shown above.
+The optimal path with no stops from city 0 to 2 is marked in red and has cost 500.
+```
+
+**Constraints:**
+
+-   `1 <= n <= 100`
+-   `0 <= flights.length <= (n * (n - 1) / 2)`
+-   `flights[i].length == 3`
+-   `0 <= fromi, toi < n`
+-   `fromi != toi`
+-   `1 <= pricei <= 104`
+-   There will not be any multiple flights between two cities.
+-   `0 <= src, dst, k < n`
+-   `src != dst`
+
+### My Solution
+
+*   It does not work out and don't know why, should be almost same as the first solution
+
+```java
+// dijkstra's algorithm with priorityqueue(minheap)
+// make adjacency list for cities
+Map<Integer, List<Pair<Integer, Integer>>> adj = new HashMap<>();
+
+public int findCheapestPrice(int n, int[][] flights, int src, int dst, int k) {
+    for (int[] flight : flights){
+        int source = flight[0];
+        int dest = flight[1];
+        int price = flight[2];
+
+        adj.putIfAbsent(source, new ArrayList<>());
+        adj.get(source).add(new Pair(price, dest));
+    }
+    // create array for flight prices to the location
+    int[] cheapPrice = new int[n];
+    int[] currentStops = new int[n];
+    Arrays.fill(cheapPrice, Integer.MAX_VALUE);
+    Arrays.fill(currentStops, Integer.MAX_VALUE);
+
+    dijkstra(cheapPrice, src, dst, k, currentStops);
+    return cheapPrice[dst] == Integer.MAX_VALUE ? -1 : cheapPrice[dst];
+
+}
+
+public void dijkstra(int[] cheapPrice, int src, int dst, int k, int[] currentStops){
+    // poll from heap and calculate cheapest price from heap
+    PriorityQueue<Pair<Integer, int[]>> heap = new PriorityQueue<Pair<Integer, int[]>>(
+        Comparator.comparing(Pair::getKey)
+    );
+    heap.add(new Pair(0, new int[]{src, k}));
+    while(!heap.isEmpty()){
+        Pair<Integer, int[]> topElem = heap.poll();
+        int currLoc = topElem.getValue()[0];
+        int currStopNum = topElem.getValue()[1];
+        int currPrice = topElem.getKey();
+
+        if (!adj.containsKey(currLoc)){
+            continue;
+        }
+        if (currStopNum < 0){
+            continue;
+        }
+
+        // traverse the adjlist
+        for (Pair<Integer, Integer> edge : adj.get(currLoc)){
+            int nextPrice = edge.getKey();
+            int nextLoc = edge.getValue();
+            if (cheapPrice[nextLoc] > currPrice + nextPrice){
+                cheapPrice[nextLoc] = currPrice + nextPrice;
+                currentStops[nextLoc] = currStopNum;
+                heap.add(new Pair(cheapPrice[nextLoc], new int[]{nextLoc, currStopNum - 1}));
+            }
+            else if (currStopNum < currentStops[nextLoc]){
+                heap.add(new Pair(cheapPrice[nextLoc], new int[]{nextLoc, currStopNum - 1}));
+            }
+        }
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Dijkstra's Algorithm
+
+*   Use a min-heap to store the price and other information
+*   Create arrays to record the best stop number and the cheapest price
+*   If the price is lower, record it to array; If the stop number is lower, record it to array
+
+```java
+class Solution {
+    
+    public int findCheapestPrice(int n, int[][] flights, int src, int dst, int K) {
+     
+        // Build the adjacency matrix
+        int adjMatrix[][] = new int[n][n];
+        for (int[] flight: flights) {
+            adjMatrix[flight[0]][flight[1]] = flight[2];
+        }
+        
+        // Shortest distances array
+        int[] distances = new int[n];
+        
+        // Shortest steps array
+        int[] currentStops = new int[n];
+        Arrays.fill(distances, Integer.MAX_VALUE);
+        Arrays.fill(currentStops, Integer.MAX_VALUE);
+        distances[src] = 0;
+        currentStops[src] = 0;
+        
+        // The priority queue would contain (node, cost, stops)
+        PriorityQueue<int[]> minHeap = new PriorityQueue<int[]>((a, b) -> a[1] - b[1]);
+        minHeap.offer(new int[]{src, 0, 0});
+        
+         while (!minHeap.isEmpty()) {
+             
+            int[] info = minHeap.poll();
+            int node = info[0], stops = info[2], cost = info[1];
+             
+             // If destination is reached, return the cost to get here
+            if (node == dst) {
+                return cost;
+            }
+             
+            // If there are no more steps left, continue 
+            if (stops == K + 1) {
+                continue;
+            }
+             
+            // Examine and relax all neighboring edges if possible 
+            for (int nei = 0; nei < n; nei++) {
+                if (adjMatrix[node][nei] > 0) {
+                    int dU = cost, dV = distances[nei], wUV = adjMatrix[node][nei];
+                    
+                    // Better cost?
+                    if (dU + wUV < dV) {
+                        minHeap.offer(new int[]{nei, dU + wUV, stops + 1});
+                        distances[nei] = dU + wUV;
+                        currentStops[nei] = stops;
+                    }
+                    else if (stops < currentStops[nei]) {
+                        // Better steps?
+                        minHeap.offer(new int[]{nei, dU + wUV, stops + 1});
+                    }
+                }
+            }
+         }
+        
+        return distances[dst] == Integer.MAX_VALUE? -1 : distances[dst];
+    }
+}
+```
+
+*   Time Complexity: Let E represent the number of flights and V represent the number of cities. The time complexity is mainly governed by the number of times we pop and push into the heap. We will process each node (city) at least once, and for each city popped from the queue, we iterate over its adjacency matrix and can potentially add all its neighbors to the heap. Thus, the time is taken for extract min, and then addition to the heap (or simply, heap replace) would be $\text{O}(\text{V}^2 \cdot \text{log V})$
+*   Space Complexity: $\text{O}(\text{V}^2)$ is the overall space complexity. $\text{O}(\text{V})$ is occupied by the two dictionaries and also by the heap and $\text{V}^2$ by the adjacency matrix structure. As mentioned above, there might be duplicate cities in the heap with different distances and number of stops due to our implementation. But we are not taking that into consideration here. This is the space complexity of the traditional Dijkstra's, and it doesn't change with the algorithm modifications (not the implementation modifications) we've done here.
+
+#### Solution #2 Bellman-Ford Algorithm
+
+*   Create a previous and a current array to store the cost, and keep swapping them so that each time we calculate the current price based on the previous prices. 
+
+```java
+// Bellman Ford Algorithm
+public int findCheapestPrice(int n, int[][] flights, int src, int dst, int k) {
+    if (src == dst) {
+        return 0;
+    }
+
+    int[] previous = new int[n];
+    int[] current = new int[n];
+    for (int i = 0; i < n; i++) {
+        previous[i] = Integer.MAX_VALUE;
+        current[i] = Integer.MAX_VALUE;
+    }
+    previous[src] = 0;
+    for (int i = 1; i < k + 2; i++) {
+        current[src] = 0;
+        for (int[] flight : flights) {
+            int previous_flight = flight[0];
+            int current_flight = flight[1];
+            int cost = flight[2];
+
+            if (previous[previous_flight] < Integer.MAX_VALUE) {
+                current[current_flight] = Math.min(current[current_flight],
+                                                   previous[previous_flight] + cost);
+            }
+        }
+        previous = current.clone();
+    }
+    return current[dst] == Integer.MAX_VALUE ? -1 : current[dst];
+}
+```
+
+## Path With Minimum Effort (Medium #1631)
+
+**Question**: You are a hiker preparing for an upcoming hike. You are given `heights`, a 2D array of size `rows x columns`, where `heights[row][col]` represents the height of cell `(row, col)`. You are situated in the top-left cell, `(0, 0)`, and you hope to travel to the bottom-right cell, `(rows-1, columns-1)` (i.e., **0-indexed**). You can move **up**, **down**, **left**, or **right**, and you wish to find a route that requires the minimum **effort**.
+
+A route's **effort** is the **maximum absolute difference** in heights between two consecutive cells of the route.
+
+Return *the minimum **effort** required to travel from the top-left cell to the bottom-right cell.*
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2020/10/04/ex1.png" alt="img" style="zoom:50%;" />
+
+```
+Input: heights = [[1,2,2],[3,8,2],[5,3,5]]
+Output: 2
+Explanation: The route of [1,3,5,3,5] has a maximum absolute difference of 2 in consecutive cells.
+This is better than the route of [1,2,2,2,5], where the maximum absolute difference is 3.
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2020/10/04/ex2.png" alt="img" style="zoom:50%;" />
+
+```
+Input: heights = [[1,2,3],[3,8,4],[5,3,5]]
+Output: 1
+Explanation: The route of [1,2,3,4,5] has a maximum absolute difference of 1 in consecutive cells, which is better than route [1,3,5,3,5].
+```
+
+**Example 3:**
+
+<img src="https://assets.leetcode.com/uploads/2020/10/04/ex3.png" alt="img" style="zoom:50%;" />
+
+```
+Input: heights = [[1,2,1,1,1],[1,2,1,2,1],[1,2,1,2,1],[1,2,1,2,1],[1,1,1,2,1]]
+Output: 0
+Explanation: This route does not require any effort.
+```
+
+**Constraints:**
+
+-   `rows == heights.length`
+-   `columns == heights[i].length`
+-   `1 <= rows, columns <= 100`
+-   `1 <= heights[i][j] <= 106`
+
+### Standard Solution
+
+#### Solution #1 Binary Search
+
+```java
+class Solution {
+    int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    public int minimumEffortPath(int[][] heights) {
+        // binary search
+        int left = 0;
+        int right = 1000000;
+        int result = right;
+        while (left <= right){
+            int mid = (left + right) / 2;
+            // mid is the highest affordable difference
+            if (canReachDestination(heights, mid)){
+                result = Math.min(result, mid);
+                right = mid - 1;
+            }
+            else {
+                left = mid + 1;
+            }
+        }
+        return result;
+    }
+    
+    // use bfs to check if we can reach destination with max absolute difference k
+    boolean canReachDestination(int[][] heights, int k){
+        int row = heights.length;
+        int col = heights[0].length;
+        Deque<Cell> queue = new ArrayDeque<>();
+        boolean[][] visited = new boolean[heights.length][heights[0].length];
+        queue.addLast(new Cell(0, 0));
+        visited[0][0] = true;
+        while (!queue.isEmpty()){
+            Cell curr = queue.removeFirst();
+            // if reach the destination
+            if (curr.x == row - 1 && curr.y == col - 1){
+                return true;
+            }
+            for (int[] direction : directions){
+                int adjacentX = curr.x + direction[0];
+                int adjacentY = curr.y + direction[1];
+                if (isValidCell(adjacentX, adjacentY, row, col) &&
+                   !visited[adjacentX][adjacentY]){
+                    int currentDifference = Math.abs(heights[adjacentX][adjacentY] - heights[curr.x][curr.y]);
+                    if (currentDifference <= k){
+                        visited[adjacentX][adjacentY] = true;
+                        queue.addLast(new Cell(adjacentX, adjacentY));
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    boolean isValidCell(int x, int y, int row, int col){
+        return x >= 0 && x <= row - 1 && y >= 0 && y <= col - 1; 
+    }
+}
+
+class Cell {
+    int x;
+    int y;
+    
+    Cell(int x, int y){
+        this.x = x;
+        this.y = y;
+    }
+}
+```
+
+*   Let m be the number of rows and n be the number of columns for the matrix $\text{height}$.
+
+*   Time Complexity: $\mathcal{O}(m \cdot n)$. We do a binary search to calculate the `mid` values and then do Breadth First Search on the matrix for each of those values.
+
+*   Space Complexity: $\mathcal{O}(m \cdot n)$ as we use a queue and visited array of size m \cdot n*m*⋅*n*
+
+## Kahn's Algorithm for Topological Sorting
+
+*   Topological sorting provides a linear sorting based on the required ordering between vertices in directed acyclic graphs.
+    *   In what order to finish the tasks
+    *   If directed graph forms a cycle, the algorithm cannot work
+    *   There must be at least one vertex in the “graph” with an “in-degree” of 0.
+*   **Concepts**
+    *   In-degree: number of arrows point to the node
+    *   Out-degree: number of arrows point from the node out to somewhere
+*   **Steps**
+    *   Transfer the orders to a directed graph
+    *   Calculate the in-degrees and out-degrees of the node, and put the node with no in-degree to a queue as the order.
+    *   Each time pull out the node, we delete 1 in-degree to other related nodes. 
+*   **Complexity Analysis**
+    *   Time Complexity: $O(V + E)$
+        *   First, we will build an adjacency list. This allows us to efficiently check which courses depend on each prerequisite course. Building the adjacency list will take $O(E)$ time, as we must iterate over all edges.
+        *   Next, we will repeatedly visit each course (vertex) with an in-degree of zero and decrement the in-degree of all courses that have this course as a prerequisite (outgoing edges). In the worst-case scenario, we will visit every vertex and decrement every outgoing edge once. Thus, this part will take $O(V + E)$ time.
+        *   Therefore, the total time complexity is $O(E) + O(V + E) = O(V + E)$
+    *   Space Complexity: $O(V+E)$
+        *   The adjacency list uses $O(E)$ space.
+        *   Storing the in-degree for each vertex requires $O(V)$ space.
+        *   The queue can contain at most V nodes, so the queue also requires $O(V)$ space.
+
+## Course Schedule II (Medium #210)
+
+**Question**: There are a total of `numCourses` courses you have to take, labeled from `0` to `numCourses - 1`. You are given an array `prerequisites` where `prerequisites[i] = [ai, bi]` indicates that you **must** take course `bi` first if you want to take course `ai`.
+
+-   For example, the pair `[0, 1]`, indicates that to take course `0` you have to first take course `1`.
+
+Return *the ordering of courses you should take to finish all courses*. If there are many valid answers, return **any** of them. If it is impossible to finish all courses, return **an empty array**.
+
+**Example 1:**
+
+```
+Input: numCourses = 2, prerequisites = [[1,0]]
+Output: [0,1]
+Explanation: There are a total of 2 courses to take. To take course 1 you should have finished course 0. So the correct course order is [0,1].
+```
+
+**Example 2:**
+
+```
+Input: numCourses = 4, prerequisites = [[1,0],[2,0],[3,1],[3,2]]
+Output: [0,2,1,3]
+Explanation: There are a total of 4 courses to take. To take course 3 you should have finished both courses 1 and 2. Both courses 1 and 2 should be taken after you finished course 0.
+So one correct course order is [0,1,2,3]. Another correct ordering is [0,2,1,3].
+```
+
+**Example 3:**
+
+```
+Input: numCourses = 1, prerequisites = []
+Output: [0]
+```
+
+**Constraints:**
+
+-   `1 <= numCourses <= 2000`
+-   `0 <= prerequisites.length <= numCourses * (numCourses - 1)`
+-   `prerequisites[i].length == 2`
+-   `0 <= ai, bi < numCourses`
+-   `ai != bi`
+-   All the pairs `[ai, bi]` are **distinct**.
+
+### My Solution
+
+```java
+// topological sorting: kahn's algorithm
+// 1. adjacency list, find out the neighbors(dfs)
+// 2. count the in-degree of each node, put node into a queue
+// 3. if the in-degree is reduced to 0, put it into the result
+int numCourses;
+List<List<Integer>> adjList;
+
+public int[] findOrder(int numCourses, int[][] prerequisites) {
+    // initialization
+    this.numCourses = numCourses;
+    int[] indegree = new int[numCourses];
+    adjList = new ArrayList<>();
+    for (int i = 0; i < numCourses; i++){
+        adjList.add(new ArrayList());
+    }
+
+    // build adjacency list and count the in-degree of node
+    for (int[] pre : prerequisites){
+        indegree[pre[0]]++;
+        // directed graph
+        adjList.get(pre[1]).add(pre[0]);
+    }
+    // kahn's algorithm to reduce the in-degree to 0 for finding order
+    boolean[] seen = new boolean[numCourses]; // incase we are in a cycle
+    List<Integer> res = new ArrayList<>();
+    kahnAlgorithm(res, seen, indegree);
+    if (res.size() != numCourses) return new int[0];
+    int[] resArray = new int[numCourses];
+    for (int i = 0; i < numCourses; i++){
+        resArray[i] = res.get(i);
+    }
+    return resArray;
+}
+
+public void kahnAlgorithm(List<Integer> res, boolean[] seen, int[] indegree){
+    for (int i = 0; i < numCourses; i++){
+        if (seen[i]){
+            continue;
+        }
+        // the course we can learn right now
+        if (indegree[i] == 0){
+            res.add(i);
+            seen[i] = true;
+            List<Integer> neighbors = adjList.get(i);
+            for (int neighbor : neighbors){
+                indegree[neighbor]--;
+                kahnAlgorithm(res, seen, indegree);
+            }
+        }
+    }
+}
+```
+
+*   Use topological sorting concept, but very slow in time complexity probably because of recursion. 
+
+### Standard Solution
+
+#### Solution #1 DFS
+
+*   Use integer to mark the status of the course
+*   Just simply use dfs to traverse all the nodes by neighbor nodes, assume 0 is the start point
+
+```java
+class Solution {
+  static int WHITE = 1;
+  static int GRAY = 2;
+  static int BLACK = 3;
+
+  boolean isPossible;
+  Map<Integer, Integer> color;
+  Map<Integer, List<Integer>> adjList;
+  List<Integer> topologicalOrder;
+
+  private void init(int numCourses) {
+    this.isPossible = true;
+    this.color = new HashMap<Integer, Integer>();
+    this.adjList = new HashMap<Integer, List<Integer>>();
+    this.topologicalOrder = new ArrayList<Integer>();
+
+    // By default all vertces are WHITE
+    for (int i = 0; i < numCourses; i++) {
+      this.color.put(i, WHITE);
+    }
+  }
+
+  private void dfs(int node) {
+
+    // Don't recurse further if we found a cycle already
+    if (!this.isPossible) {
+      return;
+    }
+
+    // Start the recursion
+    this.color.put(node, GRAY);
+
+    // Traverse on neighboring vertices
+    for (Integer neighbor : this.adjList.getOrDefault(node, new ArrayList<Integer>())) {
+      if (this.color.get(neighbor) == WHITE) {
+        this.dfs(neighbor);
+      } else if (this.color.get(neighbor) == GRAY) {
+        // An edge to a GRAY vertex represents a cycle
+        this.isPossible = false;
+      }
+    }
+
+    // Recursion ends. We mark it as black
+    this.color.put(node, BLACK);
+    this.topologicalOrder.add(node);
+  }
+
+  public int[] findOrder(int numCourses, int[][] prerequisites) {
+
+    this.init(numCourses);
+
+    // Create the adjacency list representation of the graph
+    for (int i = 0; i < prerequisites.length; i++) {
+      int dest = prerequisites[i][0];
+      int src = prerequisites[i][1];
+      List<Integer> lst = adjList.getOrDefault(src, new ArrayList<Integer>());
+      lst.add(dest);
+      adjList.put(src, lst);
+    }
+
+    // If the node is unprocessed, then call dfs on it.
+    for (int i = 0; i < numCourses; i++) {
+      if (this.color.get(i) == WHITE) {
+        this.dfs(i);
+      }
+    }
+
+    int[] order;
+    if (this.isPossible) {
+      order = new int[numCourses];
+      for (int i = 0; i < numCourses; i++) {
+        order[i] = this.topologicalOrder.get(numCourses - i - 1);
+      }
+    } else {
+      order = new int[0];
+    }
+
+    return order;
+  }
+}
+```
+
+-   Time Complexity: $O(V + E)$ where V represents the number of vertices and E represents the number of edges. Essentially we iterate through each node and each vertex in the graph once and only once.
+-   Space Complexity: $O(V + E)$.
+    -   We use the adjacency list to represent our graph initially. The space occupied is defined by the number of edges because for each node as the key, we have all its adjacent nodes in the form of a list as the value. Hence, $O(E)$
+    -   Additionally, we apply recursion in our algorithm, which in worst case will incur $O(E)$ extra space in the function call stack.
+    -   To sum up, the overall space complexity is $O(V + E)$.
+
+#### Solution #2 Topological Sorting (In-degree)
+
+*   Same algorithm as my solution, keep track of all nodes in the graph with 0 in-degree.
+*   Iterate over all the edges in the input and create an adjacency list and also a map of node v/s in-degree.
+
+```java
+public int[] findOrder(int numCourses, int[][] prerequisites){
+    int[] result = new int[numCourses];
+    // edge cases
+    if (numCourses == 0){
+        return result;
+    }
+    if (prerequisites == null || prerequisites.length == 0){
+        for (int i = 0; i < numCourses; i++){
+            result[i] = i;
+        }
+        return result;
+    }
+    int[] indegree = new int[numCourses];
+    Queue<Integer> zeroDegree = new LinkedList<>();
+    for (int[] pre : prerequisites){
+        indegree[pre[0]]++;
+    }
+    // check if anynode has no prerequisite
+    for (int i = 0; i < indegree.length; i++){
+        if (indegree[i] == 0){
+            zeroDegree.add(i);
+        }
+    }
+    // no course has no prerequisite, has to be a cycle
+    if (zeroDegree.isEmpty()){
+        return new int[0];
+    }
+    int index = 0; 
+    while (!zeroDegree.isEmpty()){
+        int course = zeroDegree.poll();
+        result[index] = course;
+        index++;
+        for (int[] pre : prerequisites){
+            if (pre[1] == course){
+                indegree[pre[0]]--;
+                if (indegree[pre[0]] == 0){
+                    zeroDegree.add(pre[0]);
+                }
+            }
+        }
+    }
+    for (int in : indegree){
+        if (in != 0){
+            return new int[0];
+        }
+    }
+    return result;
+}
+```
+
+*   Time Complexity: $O(V + E)$ where V represents the number of vertices and E represents the number of edges. We pop each node exactly once from the zero in-degree queues, and that gives us V. Also, for each vertex, we iterate over its adjacency list, and in totality, we iterate over all the edges in the graph, which gives us E. Hence, $O(V + E)$
+*   Space Complexity: $O(V + E)$. We use an intermediate queue data structure to keep all the nodes with 0 in-degree. In the worst case, there won't be any prerequisite relationship, and the queue will contain all the vertices initially since all of them will have 0 in-degree. That gives us $O(V)$. Additionally, we also used the adjacency list to represent our graph initially. The space occupied is defined by the number of edges because for each node as the key, we have all its adjacent nodes in the form of a list as the value. Hence, $O(E)$. So, the overall space complexity is $O(V + E)$

@@ -153,9 +153,67 @@ class Solution {
 
 *   The heap method is more time and space costly, but easier to implement and read.
 
+```java
+// third attempt
+public int[] topKFrequent(int[] nums, int k) {
+    // create hashmap to count the frequency and then use max-heap to return the entryset
+    Map<Integer, Integer> map = new HashMap<>();
+    int[] res = new int[k];
+    for (int num : nums){
+        map.put(num, map.getOrDefault(num, 0) + 1);
+    }
+    PriorityQueue<Map.Entry<Integer, Integer>> maxheap = 
+        new PriorityQueue<>((a, b) -> b.getValue() - a.getValue());
+    for (Map.Entry<Integer, Integer> countSet : map.entrySet()){
+        maxheap.add(countSet);
+    }
+    for (int i = 0; i < k; i++){
+        res[i] = maxheap.poll().getKey();
+    }
+    return res;
+}
+```
+
 ### Standard Solution
 
 #### Solution #1 Heap
+
+```java
+class Solution {
+    public int[] topKFrequent(int[] nums, int k) {
+        // O(1) time
+        if (k == nums.length) {
+            return nums;
+        }
+        
+        // 1. build hash map : character and how often it appears
+        // O(N) time
+        Map<Integer, Integer> count = new HashMap();
+        for (int n: nums) {
+          count.put(n, count.getOrDefault(n, 0) + 1);
+        }
+
+        // init heap 'the less frequent element first'
+        Queue<Integer> heap = new PriorityQueue<>(
+            (n1, n2) -> count.get(n1) - count.get(n2));
+
+        // 2. keep k top frequent elements in the heap
+        // O(N log k) < O(N log N) time
+        for (int n: count.keySet()) {
+          heap.add(n);
+          if (heap.size() > k) heap.poll();    
+        }
+
+        // 3. build an output array
+        // O(k log k) time
+        int[] top = new int[k];
+        for(int i = k - 1; i >= 0; --i) {
+            top[i] = heap.poll();
+        }
+        return top;
+    }
+}
+```
 
 *   Similar idea to my solution
 *   Time complexity: $\mathcal{O}(N \log k)$ if k < N and $\mathcal{O}(N)$ in the particular case of N = k. That ensures time complexity is better than $\mathcal{O}(N \log N)$.
