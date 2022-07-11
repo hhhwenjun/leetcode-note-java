@@ -2012,3 +2012,170 @@ public int[] twoSum(int[] nums, int target) {
 
 -   Time complexity: $O(n)$ We traverse the list containing n elements only once. Each lookup in the table costs only $O(1)$ time.
 -   Space complexity: $O(n)$. The extra space required depends on the number of items stored in the hash table, which stores at most n elements.
+
+## Minimum Sum of Squared Difference(Medium #2333)
+
+**Question**: You are given two positive **0-indexed** integer arrays `nums1` and `nums2`, both of length `n`.
+
+The **sum of squared difference** of arrays `nums1` and `nums2` is defined as the **sum** of `(nums1[i] - nums2[i])2` for each `0 <= i < n`.
+
+You are also given two positive integers `k1` and `k2`. You can modify any of the elements of `nums1` by `+1` or `-1` at most `k1` times. Similarly, you can modify any of the elements of `nums2` by `+1` or `-1` at most `k2` times.
+
+Return *the minimum **sum of squared difference** after modifying array* `nums1` *at most* `k1` *times and modifying array* `nums2` *at most* `k2` *times*.
+
+**Note**: You are allowed to modify the array elements to become **negative** integers.
+
+**Example 1:**
+
+```
+Input: nums1 = [1,2,3,4], nums2 = [2,10,20,19], k1 = 0, k2 = 0
+Output: 579
+Explanation: The elements in nums1 and nums2 cannot be modified because k1 = 0 and k2 = 0. 
+The sum of square difference will be: (1 - 2)2 + (2 - 10)2 + (3 - 20)2 + (4 - 19)2 = 579.
+```
+
+**Example 2:**
+
+```
+Input: nums1 = [1,4,10,12], nums2 = [5,8,6,9], k1 = 1, k2 = 1
+Output: 43
+Explanation: One way to obtain the minimum sum of square difference is: 
+- Increase nums1[0] once.
+- Increase nums2[2] once.
+The minimum of the sum of square difference will be: 
+(2 - 5)2 + (4 - 8)2 + (10 - 7)2 + (12 - 9)2 = 43.
+Note that, there are other ways to obtain the minimum of the sum of square difference, but there is no way to obtain a sum smaller than 43.
+```
+
+**Constraints:**
+
+-   `n == nums1.length == nums2.length`
+-   `1 <= n <= 105`
+-   `0 <= nums1[i], nums2[i] <= 105`
+-   `0 <= k1, k2 <= 109`
+
+### My Solution
+
+*   It is time limit exceeded, but the process is correct, need to make it more time-efficient
+
+```java
+class Solution {
+    public long minSumSquareDiff(int[] nums1, int[] nums2, int k1, int k2) {
+        int n = nums1.length;
+        PriorityQueue<Integer> diffQueue = new PriorityQueue<>((a, b) -> b - a);
+        int[] diff = new int[n];
+        for (int i = 0; i < n; i++){
+            diff[i] = Math.abs(nums1[i] - nums2[i]);
+            diffQueue.add(diff[i]);
+        }
+        
+        int times = k1 + k2;
+        while (times > 0){
+            int currentDiff = diffQueue.poll();
+            if (currentDiff == 0){
+                break;
+            }
+            currentDiff--;
+            diffQueue.add(currentDiff);
+            times--;
+        }
+        Long minSum = 0L;
+        while(!diffQueue.isEmpty()){
+            int elem = diffQueue.poll();
+            minSum += elem * elem;
+        }
+        return minSum;
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Priority Queue
+
+*   The `k1` and `k2` has a very large number, if just `k1--` it would spend a lot of time and exceed time limit
+*   Need to use a hashmap to count the `diff` and each time deduct the counted number of times
+
+```java
+class Solution {
+    class PQcomparator implements Comparator<int[]> {
+        @Override
+        public int compare(int[] a, int[] b) {
+            return Integer.compare(b[0], a[0]);
+        }
+    }
+
+    public long minSumSquareDiff(int[] nums1, int[] nums2, int k1, int k2) {
+        int n = nums1.length;
+        int[] diffs = new int[n];
+        for(int i = 0; i < n; i++) {
+            diffs[i] = Math.abs(nums1[i] - nums2[i]);
+        }
+        
+        int op = k1 + k2;
+
+        Map<Integer, Integer> freqs = new HashMap<>();
+        for(int num : diffs) {
+            freqs.put(num, freqs.getOrDefault(num, 0) + 1);
+        }
+        
+        PriorityQueue<int[]> pq = new PriorityQueue<>(new PQcomparator());
+        for(int key : freqs.keySet()) {
+            pq.offer(new int[]{key, freqs.get(key)});
+        }
+        
+        while(!pq.isEmpty()) {
+            if (op == 0) {
+                break;
+            }
+            
+            int[] top = pq.poll();
+            
+            int key = top[0];
+            int count = top[1];
+            
+            if (key == 0) {
+                break;
+            }
+
+            int nextkey = 0;
+            if (!pq.isEmpty()) {
+                nextkey = pq.peek()[0];
+            } else {
+                pq.offer(new int[]{0, 0});
+                nextkey = 0;
+            }
+            
+            int diff = key - nextkey;
+            if (count * diff <= op) {
+                pq.peek()[1] += count;
+                op -= count * diff;
+            } else {
+                int equalDistribute = op / count;
+                int remaining = op - equalDistribute * count;
+                
+                int lowerKey = key - equalDistribute;
+                if (lowerKey == 0) {
+                    break;
+                }
+                
+                pq.offer(new int[]{lowerKey, count - remaining});
+                pq.offer(new int[]{lowerKey - 1, remaining});
+                
+                op = 0;
+            }
+        }
+        
+        long ans = 0;
+        while(!pq.isEmpty()) {
+            int[] top = pq.poll();
+            int key = top[0];
+            int count = top[1];
+            ans += 1l * key * key * count;
+        }
+        
+        return ans;
+    }
+}
+```
+

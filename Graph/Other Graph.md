@@ -1138,3 +1138,567 @@ public int[] findOrder(int numCourses, int[][] prerequisites){
 
 *   Time Complexity: $O(V + E)$ where V represents the number of vertices and E represents the number of edges. We pop each node exactly once from the zero in-degree queues, and that gives us V. Also, for each vertex, we iterate over its adjacency list, and in totality, we iterate over all the edges in the graph, which gives us E. Hence, $O(V + E)$
 *   Space Complexity: $O(V + E)$. We use an intermediate queue data structure to keep all the nodes with 0 in-degree. In the worst case, there won't be any prerequisite relationship, and the queue will contain all the vertices initially since all of them will have 0 in-degree. That gives us $O(V)$. Additionally, we also used the adjacency list to represent our graph initially. The space occupied is defined by the number of edges because for each node as the key, we have all its adjacent nodes in the form of a list as the value. Hence, $O(E)$. So, the overall space complexity is $O(V + E)$
+
+## Alien Dictionary (Hard #269)
+
+**Question**: There is a new alien language that uses the English alphabet. However, the order among the letters is unknown to you.
+
+You are given a list of strings `words` from the alien language's dictionary, where the strings in `words` are **sorted lexicographically** by the rules of this new language.
+
+Return *a string of the unique letters in the new alien language sorted in **lexicographically increasing order** by the new language's rules. If there is no solution, return* `""`*. If there are multiple solutions, return **any of them***.
+
+A string `s` is **lexicographically smaller** than a string `t` if at the first letter where they differ, the letter in `s` comes before the letter in `t` in the alien language. If the first `min(s.length, t.length)` letters are the same, then `s` is smaller if and only if `s.length < t.length`.
+
+**Example 1:**
+
+```
+Input: words = ["wrt","wrf","er","ett","rftt"]
+Output: "wertf"
+```
+
+**Example 2:**
+
+```
+Input: words = ["z","x"]
+Output: "zx"
+```
+
+**Example 3:**
+
+```
+Input: words = ["z","x","z"]
+Output: ""
+Explanation: The order is invalid, so return "".
+```
+
+**Constraints:**
+
+-   `1 <= words.length <= 100`
+-   `1 <= words[i].length <= 100`
+-   `words[i]` consists of only lowercase English letters.
+
+### Standard Solution
+
+*   Topological sorting
+
+*   There are three parts to this problem.
+    1.  Getting as much information about the alphabet order as we can out of the input word list.
+    2.  Representing that information in a meaningful way.
+    3.  Assembling a valid alphabet ordering.
+*   Where two words are adjacent, we need to look for the *first difference* between them. That difference tells us the relative order between two letters.
+
+#### Solution #1 BFS
+
+```java
+public String alienOrder(String[] words){
+    
+	// step 0: create data structures and find all unique letters
+    Map<Character, List<Character>> adjList = new HashMap<>();
+    // count indegree of char
+    Map<Character, Integer> counts = new HashMap<>();
+    // initialize the map and list
+    for (String word : words){
+        for (char c : word.toCharArray()){
+            counts.put(c, 0);
+            adjList.put(c, new ArrayList<>());
+        }
+    }
+    
+    // step 1: find all edges in graph
+    for (int i = 0; i < words.length - 1; i++){
+        // compare the adjacent words
+        String word1 = words[i];
+        String word2 = words[i + 1];
+        // check that word 2 is not a prefix of word1
+        if (word1.length() > word2.length() && word1.startsWith(word2)){
+            return "";
+        }
+        // find the first non match and insert the corresponding relation
+        for (int j = 0; j < Math.min(word1.length(), word2.length()); j++){
+            if (word1.charAt(j) != word2.charAt(j)){
+                // directed graph, prerequisite char -> next char, add to indegree
+                adjList.get(word1.charAt(j)).add(word2.charAt(j));
+                counts.put(word2.charAt(j), counts.get(word2.charAt(j)) + 1);
+                break;
+            }
+        }
+    }
+    
+    // step 2: bfs
+    StringBuilder sb = new StringBuilder();
+    Queue<Character> queue = new LinkedList<>();
+    for (Character c : counts.keySet()){
+        // first reachable char
+        if (counts.get(c).equals(0)){
+            queue.add(c);
+        }
+    }
+    while(!queue.isEmpty()){
+        Character c = queue.remove();
+        sb.append(c);
+        // find adjacent list
+        for (Character next : adjList.get(c)){
+            counts.put(next, counts.get(next) - 1); // minus indegree
+            if (counts.get(next).equals(0)){
+                queue.add(next);
+            }
+        }
+    }
+    if (sb.length() < counts.size()){
+        return ""; // some cannot be determined
+    }
+    return sb.toString();
+}
+```
+
+*   Let N be the total number of strings in the input list. Let C be the total length of all the words in the input list, added together. Let U be the total number of unique letters in the alien alphabet. While this is limited to 26 in the question description, we'll still look at how it would impact the complexity if it were not limited (as this could potentially be a follow-up question).
+
+*   Time complexity: $O(C)$.
+    *   There were three parts to the algorithm; identifying all the relations, putting them into an adjacency list, and then converting it into a valid alphabet ordering.
+    *   In the worst case, the first and second parts require checking every letter of every word (if the difference between two words was always in the last letter). This is $O(C)$.
+    *   For the third part, recall that a breadth-first search costs $O(V + E)$Where V is the number of vertices and E is the number of edges. Our algorithm has the same cost as BFS, as it too is visiting each edge and node once.
+
+*   Space complexity: $O(1)$ or $O(U + \min(U^2, N))$
+    *   The adjacency list uses the most auxiliary memory. This list uses $O(V + E)$ memory, where V is the number of unique letters, and E is the number of relations.
+    *   So for the question we're given, where U is a constant fixed at a maximum of 26, the space complexity is simply $O(1)$. This is because U is fixed at 26, and the number of relations is fixed at $26^2$, so $O(\min(26^2, N)) = O(26^2) = O(1)$.
+    *   But when we consider an arbitrarily large number of possible letters, we use the size of the adjacency list; $O(U + \min(U^2, N))$.
+
+#### Solution #2 DFS
+
+*   Similar to last method
+
+```java
+private Map<Character, List<Character>> reverseAdjList = new HashMap<>();
+private Map<Character, Boolean> seen = new HashMap<>();
+private StringBuilder output = new StringBuilder();
+
+public String alienOrder(String[] words) {
+
+    // Step 0: Put all unique letters into reverseAdjList as keys.
+    for (String word : words) {
+        for (char c : word.toCharArray()) {
+            reverseAdjList.putIfAbsent(c, new ArrayList<>());
+        }
+    }
+
+    // Step 1: Find all edges and add reverse edges to reverseAdjList.
+    for (int i = 0; i < words.length - 1; i++) {
+        String word1 = words[i];
+        String word2 = words[i + 1];
+        // Check that word2 is not a prefix of word1.
+        if (word1.length() > word2.length() && word1.startsWith(word2)) {
+            return "";
+        }
+        // Find the first non match and insert the corresponding relation.
+        for (int j = 0; j < Math.min(word1.length(), word2.length()); j++) {
+            if (word1.charAt(j) != word2.charAt(j)) {
+                reverseAdjList.get(word2.charAt(j)).add(word1.charAt(j));
+                break;
+            }
+        }
+    }
+
+    // Step 2: DFS to build up the output list.
+    for (Character c : reverseAdjList.keySet()) {
+        boolean result = dfs(c);
+        if (!result) return "";
+    }
+
+    return output.toString();
+}
+
+// Return true iff no cycles detected.
+private boolean dfs(Character c) {
+    if (seen.containsKey(c)) {
+        return seen.get(c); // If this node was grey (false), a cycle was detected.
+    }
+    seen.put(c, false);
+    for (Character next : reverseAdjList.get(c)) {
+        boolean result = dfs(next);
+        if (!result) return false;
+    }
+    seen.put(c, true);
+    output.append(c);
+    return true;
+}    
+```
+
+*   Complexity is the same
+
+## Minimum Height Trees (Medium #310)
+
+A tree is an undirected graph in which any two vertices are connected by *exactly* one path. In other words, any connected graph without simple cycles is a tree.
+
+Given a tree of `n` nodes labelled from `0` to `n - 1`, and an array of `n - 1` `edges` where `edges[i] = [ai, bi]` indicates that there is an undirected edge between the two nodes `ai` and `bi` in the tree, you can choose any node of the tree as the root. When you select a node `x` as the root, the result tree has height `h`. Among all possible rooted trees, those with minimum height (i.e. `min(h)`) are called **minimum height trees** (MHTs).
+
+Return *a list of all **MHTs'** root labels*. You can return the answer in **any order**.
+
+The **height** of a rooted tree is the number of edges on the longest downward path between the root and a leaf.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2020/09/01/e1.jpg)
+
+```
+Input: n = 4, edges = [[1,0],[1,2],[1,3]]
+Output: [1]
+Explanation: As shown, the height of the tree is 1 when the root is the node with label 1 which is the only MHT.
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2020/09/01/e2.jpg)
+
+```
+Input: n = 6, edges = [[3,0],[3,1],[3,2],[3,4],[5,4]]
+Output: [3,4]
+```
+
+**Constraints:**
+
+-   `1 <= n <= 2 * 104`
+-   `edges.length == n - 1`
+-   `0 <= ai, bi < n`
+-   `ai != bi`
+-   All the pairs `(ai, bi)` are distinct.
+-   The given input is **guaranteed** to be a tree and there will be **no repeated** edges.
+
+### My Solution
+
+*   DFS, it works but exceed time limit
+
+```java
+// dfs + count height for each node
+private Map<Integer, List<Integer>> adjList;
+
+public List<Integer> findMinHeightTrees(int n, int[][] edges) {
+    // create adjacent list
+    adjList = new HashMap<>();
+    for (int i = 0; i < n; i++){
+        adjList.put(i, new ArrayList<Integer>());
+    }
+    for (int[] edge : edges){
+        adjList.get(edge[0]).add(edge[1]);
+        adjList.get(edge[1]).add(edge[0]);
+    }
+
+    int minheight = Integer.MAX_VALUE;
+
+    // check if other nodes can reach the same height, create res list
+    List<Integer> res = new ArrayList<>();
+    for (int i = 0; i < n; i++){
+        int currheight = dfs(i, new boolean[n]);
+        minheight = Math.min(minheight, currheight);
+    }
+    for (int i = 0; i < n; i++){
+        if (minheight == dfs(i, new boolean[n])){
+            res.add(i);
+        }
+    }
+    return res;
+}
+
+public int dfs(int root, boolean[] seen){
+    if (seen[root]){
+        return 0;
+    }
+    seen[root] = true;
+    List<Integer> neighbors = adjList.get(root);
+    if (neighbors.size() == 0) return 0;
+    int res = 0;
+    for (int neighbor : neighbors){
+        res = Math.max(res, dfs(neighbor, seen) + 1);
+    }
+    return res;
+}
+```
+
+*   Time complexity would be $\mathcal{O}(N^2)$ where N is the number of nodes in the tree.
+
+### Standard Solution
+
+#### Solution #1 Topological Sorting
+
+*   The idea is that we *trim* out the leaf nodes layer by layer, until we reach the *core* of the graph, which are the centroids nodes.
+
+*   Once we trim out the first layer of the leaf nodes (nodes that have only one connection), some of the non-leaf nodes would become leaf nodes.
+*   The trimming process continues until there are only two nodes left in the graph, which are the *centroids* that we are looking for
+
+```java
+public List<Integer> findMinHeightTrees(int n, int[][] edges){
+    // edge cases
+    if (n < 2){
+        ArrayList<Integer> centroids = new ArrayList<>();
+        for (int i = 0; i < n; i++){
+            centroids.add(i);
+        }
+        return centroids;
+    }
+    
+    // build the graph with the adjacency list
+    ArrayList<Set<Integer>> neighbors = new ArrayList<>();
+    for (int i = 0; i < n; i++){
+        neighbors.add(new HashSet<Integer>());
+    }
+    for (int[] edge : edges) {
+        Integer start = edge[0], end = edge[1];
+        neighbors.get(start).add(end);
+        neighbors.get(end).add(start);
+    }
+    
+    // initialize the first layer of leaves (indegree)
+    ArrayList<Integer> leaves = new ArrayList<>();
+    for (int i = 0; i < n; i++){
+        if (neighbors.get(i).size() == 1){
+            leaves.add(i);
+        }
+    }
+    
+    // trim the leaves until reaching the centroids
+    int remainingNodes = n;
+    while (remainingNodes > 2){
+        remainingNodes -= leaves.size();
+        ArrayList<Integer> newLeaves = new ArrayList<>();
+        
+        // remove the current leaves along with the edges
+        for (Integer leaf : leaves){
+            // the only neighbor left for the leaf node
+            Integer neighbor = neighbors.get(leaf).iterator().next();
+            // remove the edge along with the leaf node
+            neightbors.get(neighbor).remove(leaf);
+            if (neighbors.get(neighbor).size() == 1){
+                newLeaves.add(neighbor); // add new leaf
+            }
+        }
+        // prepare for the next round
+        leaves = newLeaves;
+    }
+    
+    // the remaining nodes are the centroids of the graph
+    return leaves;
+}
+```
+
+*   Let $|V|$ be the number of nodes in the graph, then the number of edges would be $|V| - 1$ as specified in the problem.
+
+*   Time Complexity: $\mathcal{O}(|V|)$
+    *   First, it takes $|V|-1$ iterations for us to construct a graph, given the edges.
+    *   With the constructed graph, we retrieve the initial leaf nodes, which takes $|V|$ steps.
+    *   During the BFS trimming process, we will trim out *almost* all the nodes $(|V|)$ and edges$ (|V|-1)$ from the edges. Therefore, it would take us around $|V| + |V| - 1$ operations to reach the centroids.
+    *   To sum up, the overall time complexity of the algorithm is $\mathcal{O}(|V|)$.
+
+*   Space Complexity: $\mathcal{O}(|V|)$
+
+## Parallel Courses (Medium #1136)
+
+**Question**: You are given an integer `n`, which indicates that there are `n` courses labeled from `1` to `n`. You are also given an array `relations` where `relations[i] = [prevCoursei, nextCoursei]`, representing a prerequisite relationship between course `prevCoursei` and course `nextCoursei`: course `prevCoursei` has to be taken before course `nextCoursei`.
+
+In one semester, you can take **any number** of courses as long as you have taken all the prerequisites in the **previous** semester for the courses you are taking.
+
+Return *the **minimum** number of semesters needed to take all courses*. If there is no way to take all the courses, return `-1`.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2021/02/24/course1graph.jpg)
+
+```
+Input: n = 3, relations = [[1,3],[2,3]]
+Output: 2
+Explanation: The figure above represents the given graph.
+In the first semester, you can take courses 1 and 2.
+In the second semester, you can take course 3.
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2021/02/24/course2graph.jpg)
+
+```
+Input: n = 3, relations = [[1,2],[2,3],[3,1]]
+Output: -1
+Explanation: No course can be studied because they are prerequisites of each other.
+```
+
+**Constraints:**
+
+-   `1 <= n <= 5000`
+-   `1 <= relations.length <= 5000`
+-   `relations[i].length == 2`
+-   `1 <= prevCoursei, nextCoursei <= n`
+-   `prevCoursei != nextCoursei`
+-   All the pairs `[prevCoursei, nextCoursei]` are **unique**.
+
+### My Solution
+
+```java
+// topological sorting + bfs
+Map<Integer, List<Integer>> adjList;
+
+public int minimumSemesters(int n, int[][] relations) {
+    // build the adjacency list
+    adjList = new HashMap<>();
+    int[] indegree = new int[n + 1];
+    for (int i = 1; i <= n; i++){
+        adjList.put(i, new ArrayList<Integer>());
+    }
+    for (int[] relation : relations){
+        adjList.get(relation[0]).add(relation[1]);
+        indegree[relation[1]]++;
+    }
+    // each time we find the indegree == 0 and put it to a queue
+    Queue<Integer> order = new ArrayDeque<>();
+    int terms = 0;
+    for (int i = 1; i <= n; i++){
+        if (indegree[i] == 0) order.add(i);
+    }
+    order.add(0); // add a fake node for terms calculation
+    while(!order.isEmpty()){
+        int curr = order.poll();
+        if (curr == 0){
+            terms++;
+            if (!order.isEmpty()){
+                order.add(0);
+            }
+            continue;
+        }
+        // otherwise it is a tree node
+        for (Integer neighbor : adjList.get(curr)){
+            indegree[neighbor]--;
+            if (indegree[neighbor] == 0){
+                order.add(neighbor);
+            }
+        }
+    }
+    int sum = 0;
+    // if sum of indegree is not 0, there must be a cycle 
+    for (int num : indegree){
+        sum += num;
+    }
+    return sum == 0 ? terms : -1;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 BFS + Kahn's Algorithm
+
+*   The same idea as my solution, it is almost the same problem as the course schedule
+*   Each time change the queue to a new queue
+
+```java
+public int minimumSemesters(int N, int[][] relations) {
+    int[] inCount = new int[N + 1]; // or indegree
+    List<List<Integer>> graph = new ArrayList<>(N + 1);
+    for (int i = 0; i < N + 1; ++i) {
+        graph.add(new ArrayList<Integer>());
+    }
+    for (int[] relation : relations) {
+        graph.get(relation[0]).add(relation[1]);
+        inCount[relation[1]]++;
+    }
+    int step = 0;
+    int studiedCount = 0;
+    List<Integer> bfsQueue = new ArrayList<>();
+    for (int node = 1; node < N + 1; node++) {
+        if (inCount[node] == 0) {
+            bfsQueue.add(node);
+        }
+    }
+    // start learning with BFS
+    while (!bfsQueue.isEmpty()) {
+        // start new semester
+        step++;
+        List<Integer> nextQueue = new ArrayList<>();
+        for (int node : bfsQueue) {
+            studiedCount++;
+            for (int endNode : graph.get(node)) {
+                inCount[endNode]--;
+                // if all prerequisite courses learned
+                if (inCount[endNode] == 0) {
+                    nextQueue.add(endNode);
+                }
+            }
+        }
+        bfsQueue = nextQueue;
+    }
+
+    // check if learn all courses
+    return studiedCount == N ? step : -1;
+}
+```
+
+-   Time Complexity: $\mathcal{O}(N+E)$ For building the graph, we spend $\mathcal{O}(N)$ to initialize the graph, and spend $\mathcal{O}(E)$ to add egdes since we iterate `relations` once. For BFS, we spend $\mathcal{O}(N+E)$ since we need to visit every node and edge once in BFS in the worst case.
+-   Space Complexity: $\mathcal{O}(N+E)$. For the graph, we spend $\mathcal{O}(N+E)$ since we have $\mathcal{O}(N)$ keys and $\mathcal{O}(E)$ values. For BFS, we spend $\mathcal{O}(N)$ since in the worst case, we need to add all nodes to the queue in the same time.
+
+#### Solution #2 DFS + Check for Cycle
+
+*   Use `visited` array to check if there is a cycle
+
+```java
+class Solution {
+    public int minimumSemesters(int N, int[][] relations) {
+        List<List<Integer>> graph = new ArrayList<>(N + 1);
+        for (int i = 0; i < N + 1; ++i) {
+            graph.add(new ArrayList<Integer>());
+        }
+        for (int[] relation : relations) {
+            graph.get(relation[0]).add(relation[1]);
+        }
+        // check if the graph contains a cycle
+        int[] visited = new int[N + 1];
+        for (int node = 1; node < N + 1; node++) {
+            // if has cycle, return -1
+            if (dfsCheckCycle(node, graph, visited) == -1) {
+                return -1;
+            }
+        }
+
+        // if no cycle, return the longest path
+        int[] visitedLength = new int[N + 1];
+        int maxLength = 1;
+        for (int node = 1; node < N + 1; node++) {
+            int length = dfsMaxPath(node, graph, visitedLength);
+            maxLength = Math.max(length, maxLength);
+        }
+        return maxLength;
+    }
+
+    private int dfsCheckCycle(int node, List<List<Integer>> graph, int[] visited) {
+        // return -1 if has a cycle
+        // return 1 if does not have any cycle
+        if (visited[node] != 0) {
+            return visited[node];
+        } else {
+            // mark as visiting
+            visited[node] = -1;
+        }
+        for (int endNode : graph.get(node)) {
+            if (dfsCheckCycle(endNode, graph, visited) == -1) {
+                // we meet a cycle!
+                return -1;
+            }
+        }
+        // mark as visited
+        visited[node] = 1;
+        return 1;
+    }
+
+    private int dfsMaxPath(int node, List<List<Integer>> graph, int[] visitedLength) {
+        // return the longest path (inclusive)
+        if (visitedLength[node] != 0) {
+            return visitedLength[node];
+        }
+        int maxLength = 1;
+        for (int endNode : graph.get(node)) {
+            int length = dfsMaxPath(endNode, graph, visitedLength);
+            maxLength = Math.max(length + 1, maxLength);
+        }
+        // store it
+        visitedLength[node] = maxLength;
+        return maxLength;
+    }
+}
+```
+
+-   Time Complexity: $\mathcal{O}(N+E)$. For building the graph, we spend $\mathcal{O}(N)$ to initialize the graph and spend $\mathcal{O}(E)$ to add edges since we iterate `relations` once. For DFS, we spend $\mathcal{O}(N+E)$ since we need to visit every node and edge once in DFS in the worst case.
+-   Space Complexity: $\mathcal{O}(N+E)$. For the graph, we spend $\mathcal{O}(N+E)$ since we have $\mathcal{O}(N)$ keys and $\mathcal{O}(E)$values. For DFS, we spend $\mathcal{O}(N)$ since in the worst case, we need to add all nodes to the stack to recursively call DFS. Also, we run DFS twice.
