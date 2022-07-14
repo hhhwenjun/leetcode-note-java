@@ -378,3 +378,127 @@ public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
 *   Space complexity: $O(1)$
 
 *   Another way is to connect the last node to head of one list (such as A). Then make it a problem of Linked List Cycle II(then start from B for hare and tortoise problem).
+
+## Remove Nth Node From End of List (Medium #19)
+
+**Question**: Given the `head` of a linked list, remove the `nth` node from the end of the list and return its head.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2020/10/03/remove_ex1.jpg)
+
+```
+Input: head = [1,2,3,4,5], n = 2
+Output: [1,2,3,5]
+```
+
+**Example 2:**
+
+```
+Input: head = [1], n = 1
+Output: []
+```
+
+**Example 3:**
+
+```
+Input: head = [1,2], n = 1
+Output: [1] 
+```
+
+**Constraints:**
+
+-   The number of nodes in the list is `sz`.
+-   `1 <= sz <= 30`
+-   `0 <= Node.val <= 100`
+-   `1 <= n <= sz`
+
+**Follow up:** Could you do this in one pass?
+
+### My Solution
+
+*   It is a one-pass solution with $O(n)$ time compelxity and $O(1)$ space complexity
+
+```java
+public ListNode removeNthFromEnd(ListNode head, int n) {
+    // two pointers: fast pointer, slow pointer
+    ListNode dummyHead = new ListNode();
+    int distance = n;
+    dummyHead.next = head;
+
+    ListNode fast = dummyHead;
+    for (int i = 0; i < distance; i++){
+        fast = fast.next;
+    }
+    ListNode slow = dummyHead;
+
+    // when fast pointer go to the end of linkedlist, 
+    // slow pointer in the node before target
+    while(fast.next != null){
+        fast = fast.next;
+        slow = slow.next;
+    }
+    // remove the nth node from the end
+    slow.next = slow.next.next;
+    return dummyHead.next;
+}
+```
+
+### Standard Solution
+
+*   Use a dummy head since the index does not start from 0(**important**). It would greatly help reduce the chaos in solving the problem.
+*   Need to locate the node **before the target** for remove, not only find the target
+
+#### Solution #1 Two-pass Algorithm
+
+*   Loop through the list to count the length and locate the node, then pass it again for removal
+
+```java
+public ListNode removeNthFromEnd(ListNode head, int n) {
+    ListNode dummy = new ListNode(0);
+    dummy.next = head;
+    int length  = 0;
+    ListNode first = head;
+    while (first != null) {
+        length++;
+        first = first.next;
+    }
+    length -= n;
+    first = dummy;
+    while (length > 0) {
+        length--;
+        first = first.next;
+    }
+    first.next = first.next.next;
+    return dummy.next;
+}
+```
+
+-   Time complexity: $O(L)$. The algorithm makes two traversal of the list, first to calculate list length L and second to find the $(L - n)$ th node. There are $2L-n$ operations and time complexity is $O(L)$.
+-   Space complexity: $O(1)$. We only used constant extra space.
+
+#### Solution #2 One-pass Algorithm
+
+*   Two pointer, one fast one slow. One pointer is n ahead of the slow pointer.
+
+```java
+public ListNode removeNthFromEnd(ListNode head, int n) {
+    ListNode dummy = new ListNode(0);
+    dummy.next = head;
+    ListNode first = dummy;
+    ListNode second = dummy;
+    // Advances first pointer so that the gap between first and second is n nodes apart
+    for (int i = 1; i <= n + 1; i++) {
+        first = first.next;
+    }
+    // Move first to the end, maintaining the gap
+    while (first != null) {
+        first = first.next;
+        second = second.next;
+    }
+    second.next = second.next.next;
+    return dummy.next;
+}
+```
+
+*   Time and space complexity is same as the last problem, but better

@@ -525,11 +525,140 @@ public void backtracking(int index){
 
 ## UNION FIND
 
+*   Union-Find is all about remembering the patterns.
+*   每次使用这个class来进行cluster，对于每个cluster只需要找ancestor的数据（e.g rank，find）
+*   Create a class called `UnionFind`
+    *   Initialize a `group` array and a `rank` array. Sometimes you may also need to create a `size` array
+    *   Create `find,` and `union` method
+        *   `find`: Find the ancestor(centroid) of the cluster, 用以进行union时确定存在于某个cluster
+        *   `union`: Union two groups. If true, we union them; if false, they are already in the same cluster
+    *   `rank`: Speeding up the `union` process, basically, calculates the path number of the cluster tree.
+        *   Always attach the cluster with a shorter path to the cluster with a longer path.
+        *   使用方法为path compression
+*   Time complexity: time complexity for find/union operation is $\alpha({N})$ (Here, $\alpha({N})$ is the inverse Ackermann function that grows so slowly. Suppose we have $N$ elements to go through, then the time compleXIty would be $O(N \alpha({N}))$
+*   Space complexity: just using array so it would be $O(N)$
 
+### Template 1 - 通用模版
+
+```java
+class UnionFind {
+    private int[] group;
+    private int[] rank;
+    
+    public UnionFind(int n){
+        group = new int[n];
+        rank = new int[n];
+        for (int i = 0; i < n; i++){
+            group[i] = i; // initialization: each node is its own group
+            rank[i] = 1; // each node has rank 1(path length: 1)
+        }
+    }
+    
+    public int find(int node){
+        if (node != group[node]){
+            group[node] = find(group[node]); // recursion find the ancestor
+        }
+        return group[node];
+    }
+
+    public boolean union(int i, int j){
+        // find the ancestor
+        int root1 = find(i);
+        int root2 = find(j);
+        
+        if (root1 == root2){
+            // already in same group
+            return false;
+        }
+        // if they are not in the same group
+        if (rank[root1] > rank[root2]){
+            group[root2] = group[root1]; // attach shorter path cluster to the longer one
+        }
+        else if (rank[root2] > rank[root1]){
+            group[root1] = group[root2];
+        }
+        else {
+            group[root1] = group[root2];
+            rank[root2]++; // same length, one of the cluster have to be ancestor, rank + 1
+        }
+        return true;
+    }
+}
+```
+
+*   **模版的使用**
+    *   通常在主method中进行class的实例化与使用，例子如下
+
+```java
+// map to store the number and index, union-find to group the numbers
+Map<Integer, Integer> numMap = new HashMap<>();
+UnionFind uf = new UnionFind(nums.length);
+for (int i = 0; i < nums.length; i++){
+    int curr = nums[i];
+    // in case duplicate
+    if (numMap.containsKey(curr)) continue;
+    // if map has consecutive elements for curr element
+    if (numMap.containsKey(curr - 1)){
+        uf.union(i, numMap.get(curr - 1));
+    }
+    if (numMap.containsKey(curr + 1)){
+        uf.union(i, numMap.get(curr + 1));
+    }
+    numMap.put(curr, i);
+}
+```
+
+*   `rank`不是必须的，可以分情况使用，如果不需要优化time complexity也可以不用(最好用上)
+*   如果需要知道每个cluster的size，也可以使用size来替代rank(同样也是path compression)
+
+### Template 2 - With Size
+
+*   Path compression with size
+
+```java
+class UnionFind {
+    int representative[];
+    int size[];
+    
+    public UnionFind(int size){
+        representative = new int[size];
+        this.size = new int[size];
+        
+        for (int i = 0; i < size; i++){
+            representative[i] = i;
+            this.size[i] = 1;
+        }
+    }
+    
+    public int find(int x){
+        if (x != representative[x]){
+            representative[x] = find(representative[x]);
+        }
+        return representative[x];
+    }
+    
+    public void union(int a, int b){
+        int root1 = find(a);
+        int root2 = find(b);
+        
+        if (root1 == root2) return;
+        if (size[root1] > size[root2]){
+            size[root1] += size[root2];
+            representative[root2] = representative[root1];
+        }
+        else {
+            size[root2] += size[root1];
+            representative[root1] = representative[root2];
+        }
+    }
+}
+```
 
 ## DFS
 
 ### DFS - Line Graph
+
+*   需要创建`adjList`，可以是list或者map，用以存储相关联的nodes的信息（**important**）
 
 ## BFS
 
@@ -541,4 +670,41 @@ public void backtracking(int index){
 *   **DFS-stack, BFS-queue**
 
 *   Time Complexity: $O(V + E)$. Here, V represents the number of vertices, and E represents the number of edges. We need to check every vertex and traverse through every edge in the graph. The time complexity is the same as it was for the DFS approach.
-*   Space Complexity: $O(V)$. Generally, we will check if a vertex has been visited before adding it to the queue, so the queue will use at most $O(V)$ space. Keeping track of which vertices have been visited will also require $O(V)$ space.
+*   Space Complexity: $O(V)$. Generally, we will check if a vertex has been visited before adding it to the queue, so the queue will use most $O(V)$ space. Keeping track of which vertices have been visited will also require $O(V)$ space.
+
+## Two Pointer
+
+### Linked List
+
+*   Usually **1 fast pointer, 1 slow pointer**, and different speeds of progress(hare and tortoise)
+    *   A fast pointer can move two steps each time, and a slow pointer move 1 step each time
+    *   **Always examine if the node is null before you call the next field.**
+        *   Getting the next node of a null node will cause the null-pointer error. For example, before we run `fast = fast.next.next`, we need to examine both `fast` and `fast.next` is not null.
+    *   **Carefully define the end conditions of your loop.**
+
+```java
+// Initialize slow & fast pointers
+ListNode slow = head;
+ListNode fast = head;
+/**
+ * Change this condition to fit the specific problem.
+ * Attention: remember to avoid null-pointer error
+ **/
+while (slow != null && fast != null && fast.next != null) {
+    slow = slow.next;           // move slow pointer one step each time
+    fast = fast.next.next;      // move fast pointer two steps each time
+    if (slow == fast) {         // change this condition to fit specific problem
+        return true;
+    }
+}
+return false;   // change return value to fit specific problem
+```
+
+*   Or two pointers have the same speed but start from a different node (remove the nth node from the end)
+*   **Complexity Analysis**
+    *   If you only use pointers without any other extra space, the space complexity will be `O(1)`.
+    *   However, it is more difficult to analyze the time complexity. In order to get the answer, we need to analyze `how many times we will run our loop` . In our previous finding cycle example, let's assume that we move the faster pointer 2 steps each time and move the slower pointer 1 step each time.
+        *   If there is no cycle, the fast pointer takes `N/2 times` to reach the end of the linked list, where N is the length of the linked list.
+        *   If there is a cycle, the fast pointer needs `M times` to catch up the slower pointer, where M is the length of the cycle in the list.
+        *   Obviously, M <= N. So we will run the loop `up to N times`. And for each loop, we only need constant time. So, the time complexity of this algorithm is `O(N)` in total.
+
