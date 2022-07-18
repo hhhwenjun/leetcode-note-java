@@ -708,3 +708,13 @@ return false;   // change return value to fit specific problem
         *   If there is a cycle, the fast pointer needs `M times` to catch up the slower pointer, where M is the length of the cycle in the list.
         *   Obviously, M <= N. So we will run the loop `up to N times`. And for each loop, we only need constant time. So, the time complexity of this algorithm is `O(N)` in total.
 
+## LinkedList一些技巧
+
+### DummyHead/Sentinel Node的使用
+
+*   dummy head/sentinel node/pseudo-head 即为在目前的head之前再加一个node，是一个fake node，数值没有意义
+*   **作用**：
+    *   在需要移除某个node，比如说head的时候，会非常方便移除（否则很麻烦）
+    *   需要对list长度进行计数，但计数从1不从0开始时，计数容易错位，此时dummy head可以补足空位
+    *   在某些题目中需要记录prev node的指针，此时dummy head可以帮助记录head的prev node
+    *   一般在使用while loop的时候使用dummy head，recursion的情况下很少使用

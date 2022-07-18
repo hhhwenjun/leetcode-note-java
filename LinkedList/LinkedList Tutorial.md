@@ -502,3 +502,642 @@ public ListNode removeNthFromEnd(ListNode head, int n) {
 ```
 
 *   Time and space complexity is same as the last problem, but better
+
+## Remove Linked List Elements (Easy #203)
+
+**Question**: Given the `head` of a linked list and an integer `val`, remove all the nodes of the linked list that has `Node.val == val`, and return *the new head*.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2021/03/06/removelinked-list.jpg)
+
+```
+Input: head = [1,2,6,3,4,5,6], val = 6
+Output: [1,2,3,4,5]
+```
+
+**Example 2:**
+
+```
+Input: head = [], val = 1
+Output: []
+```
+
+**Example 3:**
+
+```
+Input: head = [7,7,7,7], val = 7
+Output: []
+```
+
+**Constraints:**
+
+-   The number of nodes in the list is in the range `[0, 104]`.
+-   `1 <= Node.val <= 50`
+-   `0 <= val <= 50`
+
+### My Solution
+
+```java
+public ListNode removeElements(ListNode head, int val) {
+    if (head == null || (head.next == null && head.val == val)){
+        return null;
+    }
+    ListNode dummyHead = new ListNode();
+    dummyHead.next = head;
+    ListNode prev = dummyHead;
+    ListNode curr = dummyHead.next;
+
+    while(curr != null){
+        if (curr.val == val){
+            prev.next = curr.next;
+            curr = curr.next;
+            continue;
+        }
+        curr = curr.next;
+        prev = prev.next;
+    }
+    return dummyHead.next;
+}
+```
+
+### Standard Solution
+
+*   The problem seems to be very easy if one has to delete a node in the middle:
+    -   Pick the node-predecessor `prev` of the node to delete.
+    -   Set its next pointer to point to the node next to the one to delete.
+*   Things are more complicated when the node or nodes to delete are in the head of the linked list.
+
+### Standard Solution 
+
+#### Solution #1 Sentinel Node
+
+*   Similar to my solution but simplified
+
+```java
+public ListNode removeElements(ListNode head, int val){
+	ListNode sentinel = new ListNode(0);
+    sentinel.next = head;
+    
+    ListNode prev = sentinel, curr = head;
+    while(curr != null){
+        if (curr.val == val){
+            prev.next = curr.next;
+        }
+        else {
+            prev = curr;
+        }
+        curr = curr.next;
+    }
+    return sentinel.next;
+}
+```
+
+-   Time complexity: $\mathcal{O}(N)$, it's one pass solution.
+-   Space complexity: $\mathcal{O}(1)$, it's a constant space solution.
+
+## Odd Even Linked List (Medium #328)
+
+**Question**: Given the `head` of a singly linked list, group all the nodes with odd indices together followed by the nodes with even indices, and return *the reordered list*.
+
+The **first** node is considered **odd**, and the **second** node is **even**, and so on.
+
+Note that the relative order inside both the even and odd groups should remain as it was in the input.
+
+You must solve the problem in `O(1)` extra space complexity and `O(n)` time complexity.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/03/10/oddeven-linked-list.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: head = [1,2,3,4,5]
+Output: [1,3,5,2,4]
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2021/03/10/oddeven2-linked-list.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: head = [2,1,3,5,6,4,7]
+Output: [2,3,6,7,1,5,4]
+```
+
+**Constraints:**
+
+-   The number of nodes in the linked list is in the range `[0, 104]`.
+-   `-106 <= Node.val <= 106`
+
+### My Solution
+
+*   It looks hard if you only consider modifying the list within the list itself(like using swap). But much easier if you consider constructing two linked lists, one is for even index, and one is for odd index. Then contact the two linked lists. 
+
+```java
+class Solution {
+    public ListNode oddEvenList(ListNode head) {
+        ListNode curr = head;
+        
+        // initialize two new linked list
+        ListNode dummyOdd = new ListNode();
+        ListNode dummyEven = new ListNode();
+        ListNode currOdd = dummyOdd;
+        ListNode currEven = dummyEven;
+        
+        // categorize the nodes to each linked list
+        int i = 1;
+        while(curr != null){
+            if (i % 2 == 0){
+                currEven.next = curr;
+                currEven = currEven.next;
+            }
+            else {
+                currOdd.next = curr;
+                currOdd = currOdd.next;
+            }
+            curr = curr.next;
+            i++;
+        }
+        
+        // linked two lists
+        currOdd.next = dummyEven.next;
+        currEven.next = null; // cut the excessive node (may contain more odd node)
+        return dummyOdd.next;
+    }
+}
+```
+
+*   It is not fast enough but more readable
+*   Time complexity is $O(n)$ and the space complexity is also $O(n)$
+
+### Standard Solution
+
+#### Solution #1 Modify in-place
+
+```JAVA
+public ListNode oddEvenList(ListNode head) {
+    if (head == null) return null;
+    ListNode odd = head, even = head.next, evenHead = even;
+    while (even != null && even.next != null) {
+        odd.next = even.next;
+        odd = odd.next;
+        even.next = odd.next;
+        even = even.next;
+    }
+    odd.next = evenHead;
+    return head;
+}
+```
+
+-   Time complexity: $O(n)$. There is total of n nodes, and we visit each node once.
+-   Space complexity: $O(1)$. All we need is the four-pointers.
+
+## Palindrome Linked List (Easy #234)
+
+**Question**: Given the `head` of a singly linked list, return `true` if it is a palindrome.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2021/03/03/pal1linked-list.jpg)
+
+```
+Input: head = [1,2,2,1]
+Output: true
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2021/03/03/pal2linked-list.jpg)
+
+```
+Input: head = [1,2]
+Output: false
+```
+
+**Constraints:**
+
+-   The number of nodes in the list is in the range `[1, 105]`.
+-   `0 <= Node.val <= 9`
+
+**Follow up:** Could you do it in `O(n)` time and `O(1)` space?
+
+### My Solution
+
+```java
+public boolean isPalindrome(ListNode head) {
+    if (head == null){
+        return true;
+    }
+    // reverse the second half of the list
+    ListNode firstHalfEnd = findSecondHalf(head);
+    ListNode secondHalfStart = reverseList(firstHalfEnd.next);
+
+    // check if palindrome
+    ListNode currFirst = head;
+    ListNode currSecond = secondHalfStart;
+    boolean isPalindrome = true;
+
+    while(currSecond != null && isPalindrome){
+        if (currFirst.val != currSecond.val){
+            isPalindrome = false;
+            break;
+        }
+        currFirst = currFirst.next;
+        currSecond = currSecond.next;
+    }
+    return isPalindrome;
+}
+
+// reverse the linked list
+public ListNode reverseList(ListNode head){
+    ListNode prev = null;
+    ListNode curr = head;
+    while(curr != null){
+        ListNode tempNode = curr.next;
+        curr.next = prev;
+        prev = curr;
+        curr = tempNode;
+    }
+    return prev;
+}
+
+public ListNode findSecondHalf(ListNode head){
+    ListNode fast = head;
+    ListNode slow = head;
+    while(fast.next != null && fast.next.next != null){
+        fast = fast.next.next;
+        slow = slow.next;
+    }
+    return slow;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Copy to List
+
+```java
+public boolean isPalindrome(ListNode head) {
+    List<Integer> vals = new ArrayList<>();
+
+    // Convert LinkedList into ArrayList.
+    ListNode currentNode = head;
+    while (currentNode != null) {
+        vals.add(currentNode.val);
+        currentNode = currentNode.next;
+    }
+
+    // Use two-pointer technique to check for palindrome.
+    int front = 0;
+    int back = vals.size() - 1;
+    while (front < back) {
+        // Note that we must use ! .equals instead of !=
+        // because we are comparing Integer, not int.
+        if (!vals.get(front).equals(vals.get(back))) {
+            return false;
+        }
+        front++;
+        back--;
+    }
+    return true;
+}
+```
+
+*   Time and space complexity is both $O(n)$
+
+#### Solution #2 Recursion
+
+```java
+private ListNode frontPointer;
+
+private boolean recursivelyCheck(ListNode currentNode) {
+    if (currentNode != null) {
+        if (!recursivelyCheck(currentNode.next)) return false;
+        if (currentNode.val != frontPointer.val) return false;
+        frontPointer = frontPointer.next;
+    }
+    return true;
+}
+
+public boolean isPalindrome(ListNode head) {
+    frontPointer = head;
+    return recursivelyCheck(head);
+}
+```
+
+*   Time and space complexity is both $O(n)$
+
+#### Solution #3 Reverse second half in-place
+
+*   Same as my solution
+
+```java
+public boolean isPalindrome(ListNode head) {
+
+    if (head == null) return true;
+
+    // Find the end of first half and reverse second half.
+    ListNode firstHalfEnd = endOfFirstHalf(head);
+    ListNode secondHalfStart = reverseList(firstHalfEnd.next);
+
+    // Check whether or not there is a palindrome.
+    ListNode p1 = head;
+    ListNode p2 = secondHalfStart;
+    boolean result = true;
+    while (result && p2 != null) {
+        if (p1.val != p2.val) result = false;
+        p1 = p1.next;
+        p2 = p2.next;
+    }        
+
+    // Restore the list and return the result.
+    firstHalfEnd.next = reverseList(secondHalfStart);
+    return result;
+}
+
+// Taken from https://leetcode.com/problems/reverse-linked-list/solution/
+private ListNode reverseList(ListNode head) {
+    ListNode prev = null;
+    ListNode curr = head;
+    while (curr != null) {
+        ListNode nextTemp = curr.next;
+        curr.next = prev;
+        prev = curr;
+        curr = nextTemp;
+    }
+    return prev;
+}
+
+private ListNode endOfFirstHalf(ListNode head) {
+    ListNode fast = head;
+    ListNode slow = head;
+    while (fast.next != null && fast.next.next != null) {
+        fast = fast.next.next;
+        slow = slow.next;
+    }
+    return slow;
+}
+```
+
+*   Time complexity: $O(n)$, where n is the number of nodes in the Linked List.
+*   Space complexity: $O(1)$. We are changing the next pointers for half of the nodes. This was all memory that had already been allocated, so we are not using any extra memory, and therefore it is $O(1)$.
+
+## Flatten a Multilevel Doubly Linked List (Medium #430)
+
+**Question**: You are given a doubly linked list, which contains nodes that have a next pointer, a previous pointer, and an additional **child pointer**. This child pointer may or may not point to a separate doubly linked list, also containing these special nodes. These child lists may have one or more children of their own, and so on, to produce a **multilevel data structure** as shown in the example below.
+
+Given the `head` of the first level of the list, **flatten** the list so that all the nodes appear in a single-level, doubly linked list. Let `curr` be a node with a child list. The nodes in the child list should appear **after** `curr` and **before** `curr.next` in the flattened list.
+
+Return *the* `head` *of the flattened list. The nodes in the list must have **all** of their child pointers set to* `null`.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/11/09/flatten11.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: head = [1,2,3,4,5,6,null,null,null,7,8,9,10,null,null,11,12]
+Output: [1,2,3,7,8,11,12,9,10,4,5,6]
+Explanation: The multilevel linked list in the input is shown.
+After flattening the multilevel linked list it becomes:
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2021/11/09/flatten2.1jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: head = [1,2,null,3]
+Output: [1,3,2]
+Explanation: The multilevel linked list in the input is shown.
+After flattening the multilevel linked list it becomes:
+```
+
+**Example 3:**
+
+```
+Input: head = []
+Output: []
+Explanation: There could be empty list in the input.
+```
+
+**Constraints:**
+
+-   The number of Nodes will not exceed `1000`.
+-   `1 <= Node.val <= 105`
+
+### Standard Solution
+
+#### Solution #1 DFS + Recursion
+
+*   Use a helper method to flatten the list
+*   Consider we transfer the child node to the next node; in the helper method, we would need two inputs(curr and prev)
+    *   Prev is the prev node, and curr node is the prev node's child node (or normal next node, but in that case would not make much difference)
+*   The helper method uses recursion
+*   Use a dummy head
+
+```java
+public Node flatten(Node head) {
+    if(head == null) return head;
+
+    Node dummyHead = new Node(0, null, head, null);
+    flatten(dummyHead, head);
+    dummyHead.next.prev = null;
+    return dummyHead.next;
+}
+
+// recursion method
+public Node flatten(Node prev, Node curr){
+    // actually prev is prev, curr is prev's child
+    // connect child and prev as prev's next, prev's true next is way behind
+    if (curr == null) return prev;
+    
+    // for prev and its child, or child list to normal next node
+    // if both are normal nodes, nothing is changed
+    prev.next = curr;
+    curr.prev = prev;
+
+    // check if it has child, if so, continue to connect child as next
+    Node tempNext = curr.next;
+    Node temp = flatten(curr, curr.child);
+    curr.child = null;
+
+    return flatten(temp, tempNext);
+}
+```
+
+#### Solution #2 DFS by Iteration
+
+*   It is easier to understand normal dfs method
+*   Deque's push is added to the front
+
+```java
+public Node flatten(Node head){
+    if (head == null) return head;
+    
+    Node pseudoHead = new Node(0, null, head, null);
+    Node curr, prev = pseudoHead;
+    
+    Deque<Node> stack = new ArrayQeque<>();
+    stack.push(head);
+    
+    while(!stack.isEmpty()){
+        curr = stack.pop();
+        prev.next = curr;
+        curr.prev = prev;
+        
+        if (curr.next != null) stack.push(curr.next);
+        if (curr.child != null){
+            stack.push(curr.child);
+            // remove all child pointers
+            curr.child = null;
+        }
+        prev = curr;
+    }
+    // detach the pseudo node from result
+    pseudoHead.next.prev = null;
+    return pseudoHead.next;
+}
+```
+
+-   Time Complexity: $\mathcal{O}(N)$. The iterative solution has the same time complexity as the recursive.
+-   Space Complexity: $\mathcal{O}(N)$. Again, the iterative solution has the same space complexity as the recursive one.
+
+## Reorder List(Medium #143)
+
+**Question**: You are given the head of a singly linked-list. The list can be represented as:
+
+```
+L0 → L1 → … → Ln - 1 → Ln
+```
+
+*Reorder the list to be on the following form:*
+
+```
+L0 → Ln → L1 → Ln - 1 → L2 → Ln - 2 → …
+```
+
+You may not modify the values in the list's nodes. Only nodes themselves may be changed.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/03/04/reorder1linked-list.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: head = [1,2,3,4]
+Output: [1,4,2,3]
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2021/03/09/reorder2-linked-list.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: head = [1,2,3,4,5]
+Output: [1,5,2,4,3]
+```
+
+**Constraints:**
+
+-   The number of nodes in the list is in the range `[1, 5 * 104]`.
+-   `1 <= Node.val <= 1000`
+
+### My Solution
+
+```java
+public void reorderList(ListNode head) {
+    ListNode secondStart = findSecondHalf(head);
+    ListNode firstStart = head;
+
+    // reverse the second half
+    secondStart = reverseList(secondStart);
+
+    // each time take one node from 1st half list, and 2nd half list
+    ListNode temp;
+    while(secondStart.next != null){
+        temp = firstStart.next;
+        firstStart.next = secondStart;
+        firstStart = temp;
+
+        temp = secondStart.next;
+        secondStart.next = firstStart;
+        secondStart = temp;
+    }
+}
+
+public ListNode findSecondHalf(ListNode head){
+    ListNode fast = head;
+    ListNode slow = head;
+    while(fast != null && fast.next != null){
+        fast = fast.next.next;
+        slow = slow.next;
+    }
+    // slow in the middle, fast in the end
+    return slow;
+}
+
+public ListNode reverseList(ListNode head){
+    ListNode prev = null;
+    ListNode curr = head;
+    while(curr != null){
+        ListNode tempNode = curr.next;
+        curr.next = prev;
+        prev = curr;
+        curr = tempNode;
+    }
+    return prev;
+}
+```
+
+### Standard Solution
+
+*   This problem is a combination of these three easy problems:
+    -   [Middle of the Linked List](https://leetcode.com/problems/middle-of-the-linked-list).
+    -   [Reverse Linked List](https://leetcode.com/problems/reverse-linked-list).
+    -   [Merge Two Sorted Lists](https://leetcode.com/problems/merge-two-sorted-lists).
+
+*   Almost same as my solution
+*   Draw a graph if feeling confused
+
+```java
+class Solution {
+  public void reorderList(ListNode head) {
+    if (head == null) return;
+
+    // find the middle of linked list [Problem 876]
+    // in 1->2->3->4->5->6 find 4 
+    ListNode slow = head, fast = head;
+    while (fast != null && fast.next != null) {
+      slow = slow.next;
+      fast = fast.next.next;
+    }
+
+    // reverse the second part of the list [Problem 206]
+    // convert 1->2->3->4->5->6 into 1->2->3->4 and 6->5->4
+    // reverse the second half in-place
+    ListNode prev = null, curr = slow, tmp;
+    while (curr != null) {
+      tmp = curr.next;
+
+      curr.next = prev;
+      prev = curr;
+      curr = tmp;
+    }
+
+    // merge two sorted linked lists [Problem 21]
+    // merge 1->2->3->4 and 6->5->4 into 1->6->2->5->3->4
+    ListNode first = head, second = prev;
+    while (second.next != null) {
+      tmp = first.next;
+      first.next = second;
+      first = tmp;
+
+      tmp = second.next;
+      second.next = first;
+      second = tmp;
+    }
+  }
+}
+```
+
+-   Time complexity: $\mathcal{O}(N)$. There are three steps here. Identifying the middle node takes $\mathcal{O}(N)$ time. To reverse the second part of the list, one needs $N/2$ operations. The final step, to merge two lists, requires $N/2$ operations as well. In total, that results in $\mathcal{O}(N)$ time complexity.
+-   Space complexity: $\mathcal{O}(1)$, since we do not allocate any additional data structures.

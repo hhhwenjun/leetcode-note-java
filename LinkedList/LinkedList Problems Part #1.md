@@ -36,9 +36,10 @@ Output: [8,9,9,9,0,0,0,1]
 - `0 <= Node.val <= 9`
 - It is guaranteed that the list represents a number that does not have leading zeros.
 
-### My Solution(Wrong solution)
+### My Solution
 
 ```java
+// wrong solution
 public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
     long l1Num = transferToInt(l1);
     long l2Num = transferToInt(l2);
@@ -78,6 +79,42 @@ public ListNode transferToNode(long num){
 * Do not transfer to number then transfer to node since **don't know the number size**
 * More complicated than other methods
 * Can have problems when casting
+
+```java
+// correct solution
+public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+    // each time add up the number
+    int carry = 0;
+    ListNode dummyHead = new ListNode();
+    ListNode curr = dummyHead;
+
+    // take the carry over number to next node
+    while(l1 != null || l2 != null){
+        int result = 0;
+        if (l1 == null) {
+            result = l2.val + carry;
+        }
+        else if (l2 == null){
+            result = l1.val + carry;
+        }
+        else {
+            result = l1.val + l2.val + carry;
+        }
+        int storeValue = result % 10;
+        carry = result / 10;
+
+        curr.next = new ListNode(storeValue);
+        curr = curr.next;
+        l1 = l1 == null ? null : l1.next;
+        l2 = l2 == null ? null : l2.next;
+    }
+
+
+    // if at the end of list, carry > 0, add 1 extra node at the end
+    if (carry > 0) curr.next = new ListNode(carry);
+    return dummyHead.next;
+}
+```
 
 ### Standard Solution
 
