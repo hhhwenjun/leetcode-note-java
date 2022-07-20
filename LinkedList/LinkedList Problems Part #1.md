@@ -665,5 +665,323 @@ class MyLinkedList {
 }
 ```
 
--   Time complexity: $\mathcal{O}(1)$ for addAtHead and addAtTail. $\mathcal{O}(\min(k, N - k))$ for get, addAtIndex, and deleteAtIndex, where k*k* is an index of the element to get, add or delete.
+-   Time complexity: $\mathcal{O}(1)$ for addAtHead and addAtTail. $\mathcal{O}(\min(k, N - k))$ for `get`, `addAtIndex`, and `deleteAtIndex`, where k*k* is an index of the element to get, add or delete.
 -   Space complexity: $\mathcal{O}(1)$ for all operations.
+
+## Insert into a Sorted Circular Linked List (Medium #708)
+
+**Question**: Given a Circular Linked List node, which is sorted in ascending order, write a function to insert a value `insertVal` into the list such that it remains a sorted circular list. The given node can be a reference to any single node in the list and may not necessarily be the smallest value in the circular list.
+
+If there are multiple suitable places for insertion, you may choose any place to insert the new value. After the insertion, the circular list should remain sorted.
+
+If the list is empty (i.e., the given node is `null`), you should create a new single circular list and return the reference to that single node. Otherwise, you should return the originally given node.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2019/01/19/example_1_before_65p.jpg)
+ 
+
+```
+Input: head = [3,4,1], insertVal = 2
+Output: [3,4,1,2]
+Explanation: In the figure above, there is a sorted circular list of three elements. You are given a reference to the node with value 3, and we need to insert 2 into the list. The new node should be inserted between node 1 and node 3. After the insertion, the list should look like this, and we should still return node 3.
+```
+
+**Example 2:**
+
+```
+Input: head = [], insertVal = 1
+Output: [1]
+Explanation: The list is empty (given head is null). We create a new single circular list and return the reference to that single node.
+```
+
+**Example 3:**
+
+```
+Input: head = [1], insertVal = 0
+Output: [1,0]
+```
+
+**Constraints:**
+
+-   The number of nodes in the list is in the range `[0, 5 * 104]`.
+-   `-106 <= Node.val, insertVal <= 106`
+
+### My Solution
+
+```java
+// find the smallest node, then use prev and curr to go through the list
+// each time compare with the curr and prev value, insert to list
+public Node insert(Node head, int insertVal) {
+
+    // edge case
+    if (head == null){
+        Node newHead = new Node(insertVal);
+        newHead.next = newHead;
+        return newHead;
+    }
+    // find smallest
+    Node currSmall = head.next;
+    Node smallest = currSmall; 
+    Node prevSmall = head;
+    Node prevSmallest = prevSmall;
+    int smallestVal = currSmall.val;
+    boolean indicator = true;
+    while(indicator || prevSmall != head){
+        indicator = false;
+        if (currSmall.val <= smallest.val && prevSmall.val != currSmall.val){
+            smallest = currSmall;
+            smallestVal = smallest.val;
+            prevSmallest = prevSmall;
+        }
+        currSmall = currSmall.next;
+        prevSmall = prevSmall.next;
+    }
+
+    // start from smallest node and find the location
+    Node curr = smallest;
+    Node prev = prevSmallest;
+
+    if (insertVal < curr.val){
+        Node newNode = new Node(insertVal);
+        newNode.next = curr;
+        prev.next = newNode;
+        return head;
+    }
+    // if insertVal should be after the smallest node
+    prev = curr;
+    curr = curr.next;
+    while(curr != smallest){
+        if (insertVal <= curr.val && insertVal > prev.val){
+            Node newNode = new Node(insertVal);
+            newNode.next = curr;
+            prev.next = newNode;
+            return head;
+        }
+        curr = curr.next;
+        prev = prev.next;
+    }
+    // otherwise it should be the largest node
+    // before the smallest node
+    Node newNode = new Node(insertVal);
+    newNode.next = smallest;
+    prevSmallest.next = newNode;
+    return head;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Two-Pointers
+
+*   As simple as the problem might seem to be, it is actually not trivial to write a solution that covers all cases.
+*   The idea is similar but much neater
+*   For this problem, we iterate through the cyclic list using two pointers, namely `prev` and `curr`. When we find a suitable place to insert the new value, we insert it between the `prev` and `curr` nodes.
+
+![pic](https://leetcode.com/problems/insert-into-a-sorted-circular-linked-list/Figures/708/708_two_pointers.png)
+
+*   Though not explicitly stated in the problem description, our sorted list can contain some duplicate values. And in the extreme case, the entire list has only one single unique value.
+
+![pic](https://leetcode.com/problems/insert-into-a-sorted-circular-linked-list/Figures/708/708_case_3.png)
+
+```java
+public Node insert(Node head, int insertVal){
+    if (head == null){
+        Node newNode = new Node(insertVal, null);
+        newNode.next = newNode;
+        return newNode;
+    }
+    Node prev = head;
+    Node curr = head.next;
+    boolean toInsert = false;
+    
+    do {
+        if (prev.val <= inserVal && insertVal <= curr.val){
+            // case 1
+            toInsert = true;
+        } else if (prev.val > curr.val){
+            // case 2
+            if (insertVal >= prev.val || insertVal <= curr.val){
+                toInsert = true;
+            }
+        }
+        if (toInsert){
+            prev.next = new Node(isnertVal, curr);
+            return head;
+        }
+        prev = curr;
+        curr = curr.next;
+    } while (prev != head); // since prev starts at head, use do-while loop
+    
+    // case 3
+    prev.next = new node(insertVal, curr);
+    return head;
+}
+```
+
+-   Time Complexity: $\mathcal{O}(N)$ where N is the size of the list. In the worst case, we would iterate through the entire list.
+-   Space Complexity: $\mathcal{O}(1)$. It is a constant space solution.
+
+## Copy List with Random Pointer (Medium #138)
+
+**Question**: A linked list of length `n` is given such that each node contains an additional random pointer, which could point to any node in the list, or `null`.
+
+Construct a [**deep copy**](https://en.wikipedia.org/wiki/Object_copying#Deep_copy) of the list. The deep copy should consist of exactly `n` **brand new** nodes, where each new node has its value set to the value of its corresponding original node. Both the `next` and `random` pointer of the new nodes should point to new nodes in the copied list such that the pointers in the original list and copied list represent the same list state. **None of the pointers in the new list should point to nodes in the original list**.
+
+For example, if there are two nodes `X` and `Y` in the original list, where `X.random --> Y`, then for the corresponding two nodes `x` and `y` in the copied list, `x.random --> y`.
+
+Return *the head of the copied linked list*.
+
+The linked list is represented in the input/output as a list of `n` nodes. Each node is represented as a pair of `[val, random_index]` where:
+
+-   `val`: an integer representing `Node.val`
+-   `random_index`: the index of the node (range from `0` to `n-1`) that the `random` pointer points to, or `null` if it does not point to any node.
+
+Your code will **only** be given the `head` of the original linked list.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2019/12/18/e1.png)
+
+```
+Input: head = [[7,null],[13,0],[11,4],[10,2],[1,0]]
+Output: [[7,null],[13,0],[11,4],[10,2],[1,0]]
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2019/12/18/e2.png)
+
+```
+Input: head = [[1,1],[2,1]]
+Output: [[1,1],[2,1]]
+```
+
+**Example 3:**
+
+**![img](https://assets.leetcode.com/uploads/2019/12/18/e3.png)**
+
+```
+Input: head = [[3,null],[3,0],[3,null]]
+Output: [[3,null],[3,0],[3,null]]
+```
+
+**Constraints:**
+
+-   `0 <= n <= 1000`
+-   `-104 <= Node.val <= 104`
+-   `Node.random` is `null` or is pointing to some node in the linked list.
+
+### My Solution
+
+```java
+public Node copyRandomList(Node head) {
+    if (head == null) return head;
+    // store original random index - new random node
+    Map<Node, Node> randomMap = new HashMap<>();
+
+    // 1. copy the linked list without random index
+    // 2. loop through the list, check random index and get it from random map
+    Node dummyHead = new Node(0);
+    Node newCurr = dummyHead;
+    Node curr = head;
+    while(curr != null){
+        newCurr.next = new Node(curr.val);
+        newCurr = newCurr.next;
+        randomMap.put(curr, newCurr);
+        curr = curr.next;
+    }
+    curr = head;
+    newCurr = dummyHead.next;
+
+    // get it from random map and connect random node
+    while(curr != null){
+        if (curr.random != null) {
+            newCurr.random = randomMap.get(curr.random);
+        }
+        newCurr = newCurr.next;
+        curr = curr.next;
+    }
+
+    return dummyHead.next;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Iterative with $O(n)$ Space
+
+*   Similar idea to my solution
+
+```java
+HashMap<Node, Node> visited = new HashMap<>();
+
+public Node getClonedNode(Node node){
+    // if the node exists then
+    if (node != null){
+        // check if the node is in the visited dictionary
+        if (this.visited.containsKey(node)){
+            // if its in the visited dictionary then return the new node reference from dict
+            return this.visited.get(node);
+        }
+        else {
+            this.visited.put(node, new Node(node.val, null, null));
+            return this.visited.get(node);
+        }
+    }
+    return null;
+}
+
+public Node copyRandomList(Node head){
+    if (head == null) return null;
+    Node oldNode = head;
+    Node newNode = new Node(oldNode.val);
+    this.visited.put(oldNode, newNode);
+    
+    // iterate on the linked list until all nodes are cloned
+    while (oldNode != null){
+        // get the clones of the nodes referenced by random and next pointers
+        newNode.random = this.getClonedNode(oldNode.random);
+        newNode.next = this.getClonedNode(oldNode.next);
+        
+        // move one step ahead in the linked list
+        oldNode = oldNode.next;
+        newNode = newNode.next;
+    }
+    return this.visited.get(head);
+}
+```
+
+-   Time Complexity: $O(N)$ because we make one pass over the original linked list.
+-   Space Complexity: $O(N)$ as we have a dictionary containing a mapping from old list nodes to new list nodes. Since there are N nodes, we have $O(N)$ space complexity.
+
+#### Solution #2 Recursion
+
+*   Same time and space complexity as the last method
+
+```java
+HashMap<Node, Node> visitedHash = new HashMap<Node, Node>();
+
+public Node copyRandomList(Node head) {
+
+    if (head == null) {
+      return null;
+    }
+
+    if (this.visitedHash.containsKey(head)) {
+      return this.visitedHash.get(head);
+    }
+
+    Node node = new Node(head.val, null, null);
+    this.visitedHash.put(head, node);
+
+    // Recursively copy the remaining linked list starting once from the next pointer and then from
+    // the random pointer.
+    // Thus we have two independent recursive calls.
+    // Finally we update the next and random pointers for the new node created.
+    node.next = this.copyRandomList(head.next);
+    node.random = this.copyRandomList(head.random);
+	return node;
+}
+```
+
