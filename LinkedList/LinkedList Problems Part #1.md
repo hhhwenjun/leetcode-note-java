@@ -985,3 +985,114 @@ public Node copyRandomList(Node head) {
 }
 ```
 
+## Rotate List (Medium #61)
+
+**Question**: Given the `head` of a linked list, rotate the list to the right by `k` places.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2020/11/13/rotate1.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: head = [1,2,3,4,5], k = 2
+Output: [4,5,1,2,3]
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2020/11/13/roate2.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: head = [0,1,2], k = 4
+Output: [2,0,1]
+```
+
+**Constraints:**
+
+-   The number of nodes in the list is in the range `[0, 500]`.
+-   `-100 <= Node.val <= 100`
+-   `0 <= k <= 2 * 109`
+
+### My Solution
+
+*   My solution is the almost standard solution for this problem
+*   All solutions have time complexity as $O(N)$ and space complexity as $O(1)$
+
+#### Solution #1 Two Pointers
+
+```java
+public ListNode rotateRight(ListNode head, int k) {
+    // 1. find true k : k % length of list, a loop to find length of list
+    if (head == null || head.next == null || k == 0) return head;
+
+    ListNode curr = head;
+    int length = 0;
+    while (curr != null){
+        length++;
+        curr = curr.next;
+    }
+    int trueK = k % length;
+	// equals to no rotation
+    if (trueK == 0) return head;
+
+    // 2. two pointers: slow, fast, fast go to the end of list, slow k steps away from fast
+    ListNode slow = head;
+    ListNode fast = head;
+    int loc = 0;
+    while(loc != trueK){
+        loc++;
+        fast = fast.next;
+    }
+
+    // find the break point
+    while(fast != null && fast.next != null){
+        fast = fast.next;
+        slow = slow.next; // stop at 3
+    }
+
+    // 3. slow pointer 1, 2, 3 || 4, 5, then move the back of list to the front, make a new head
+    ListNode newHead = slow.next;
+    fast.next = head;
+    slow.next = null;
+
+    // 4. return the new head, such as 4 in last cases
+    return newHead;
+}
+```
+
+#### Solution #2 Cycle Linked List
+
+*   Link the linked list into a circle, use a new head, break the link
+
+```java
+public ListNode rotateRight(ListNode head, int k) {
+    // handle the null cases
+    if (head == null || head.next == null){
+        return head;
+    }
+    ListNode dummyHead = new ListNode(0);
+    ListNode dummyEnd = new ListNode(0);
+    ListNode curr = head;
+    int length = 1;
+    while(curr.next != null){
+        curr = curr.next;
+        length++;
+    }
+    // connect the nodes as a cycle
+    curr.next = head;
+
+    // put the dummy head and dummy end to the right locations
+    int loc = length - k % length;
+    int index = 1;
+    curr = head;
+    while(curr.next != null && index < loc){
+        index++;
+        curr = curr.next;
+    }
+    dummyEnd = curr;
+    dummyHead = curr.next;
+    curr.next = null;
+    return dummyHead;
+}
+```
+

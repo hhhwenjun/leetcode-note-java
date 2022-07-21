@@ -947,7 +947,22 @@ public int findDuplicate(int[] nums) {
 }
 ```
 
+```java
+// third attempt: array
+public int findDuplicate(int[] nums) {
+    // 1. create a new array with size n, record occurence
+    int[] count = new int[nums.length + 1];
 
+    // 2. if occurence > 1, return the number
+    for (int num : nums){
+        count[num]++;
+        if (count[num] > 1){
+            return num;
+        }
+    }
+    return -1;
+}
+```
 
 ### Standard Solution
 
@@ -1112,3 +1127,30 @@ public int findDuplicate(int[] nums){
 * Time Complexity: $O(n)$
 * Space Complexity: $O(1)$
 
+#### Solution #5 Two Pointers
+
+*   Hare and tortoise method of cycle linked list
+*   Regard the duplicate number as the entry of a cycle
+
+```java
+public int findDuplicate(int[] nums) {
+    // Find the intersection point of the two runners.
+    int tortoise = nums[0];
+    int hare = nums[0];
+    do {
+        tortoise = nums[tortoise];
+        hare = nums[nums[hare]];
+    } while (tortoise != hare);
+
+    // Find the "entrance" to the cycle.
+    tortoise = nums[0];
+    while (tortoise != hare) {
+        tortoise = nums[tortoise];
+        hare = nums[hare];
+    }
+    return hare;
+}
+```
+
+* Time Complexity: $O(n)$
+* Space Complexity: $O(1)$

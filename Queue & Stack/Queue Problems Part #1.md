@@ -182,3 +182,316 @@ class HitCounter{
   - `hit` - $O(1)$.
   - `getHits` - If there are a total of n pairs present in the deque, worst case time complexity can be $O(n)$. However, by clubbing all the timestamps with same value together, for the $i^{th} $ timestamp with k repetitions, the time complexity is $O(1)$ as here, instead of removing all those k repetitions, we only remove a single entry from the deque.
 - Space complexity: If there are a total of $N$ elements that we encountered throughout, the space complexity is $O(N)$ (similar to Approach 1). However, in the case of repetitions, the space required for storing those k values $O(1)$.
+
+## Design Circular Queue (Medium #622)
+
+**Question**: Design your implementation of the circular queue. The circular queue is a linear data structure in which the operations are performed based on FIFO (First In First Out) principle, and the last position is connected back to the first position to make a circle. It is also called "Ring Buffer".
+
+One of the benefits of the circular queue is that we can make use of the spaces in front of the queue. In a normal queue, once the queue becomes full, we cannot insert the next element even if there is a space in front of the queue. But using the circular queue, we can use the space to store new values.
+
+Implementation of the `MyCircularQueue` class:
+
+-   `MyCircularQueue(k)` Initializes the object with the size of the queue to be `k`.
+-   `int Front()` Gets the front item from the queue. If the queue is empty, return `-1`.
+-   `int Rear()` Gets the last item from the queue. If the queue is empty, return `-1`.
+-   `boolean enQueue(int value)` Inserts an element into the circular queue. Return `true` if the operation is successful.
+-   `boolean deQueue()` Deletes an element from the circular queue. Return `true` if the operation is successful.
+-   `boolean isEmpty()` Checks whether the circular queue is empty or not.
+-   `boolean isFull()` Checks whether the circular queue is full or not.
+
+You must solve the problem without using the built-in queue data structure in your programming language. 
+
+**Example 1:**
+
+```
+Input
+["MyCircularQueue", "enQueue", "enQueue", "enQueue", "enQueue", "Rear", "isFull", "deQueue", "enQueue", "Rear"]
+[[3], [1], [2], [3], [4], [], [], [], [4], []]
+Output
+[null, true, true, true, false, 3, true, true, true, 4]
+
+Explanation
+MyCircularQueue myCircularQueue = new MyCircularQueue(3);
+myCircularQueue.enQueue(1); // return True
+myCircularQueue.enQueue(2); // return True
+myCircularQueue.enQueue(3); // return True
+myCircularQueue.enQueue(4); // return False
+myCircularQueue.Rear();     // return 3
+myCircularQueue.isFull();   // return True
+myCircularQueue.deQueue();  // return True
+myCircularQueue.enQueue(4); // return True
+myCircularQueue.Rear();     // return 4
+```
+
+**Constraints:**
+
+-   `1 <= k <= 1000`
+-   `0 <= value <= 1000`
+-   At most `3000` calls will be made to `enQueue`, `deQueue`, `Front`, `Rear`, `isEmpty`, and `isFull`.
+
+### My Solution
+
+```java
+class MyCircularQueue {
+    private int[] queue;
+    private int size;
+    // two pointers to track the queue
+    private int front;
+    private int rear;
+    private int capacity;
+
+    public MyCircularQueue(int k) {
+        queue = new int[k];
+        capacity = k;
+        size = 0;
+        front = 0;
+        rear = 0;
+    }
+    
+    public boolean enQueue(int value) {
+        if (size >= capacity){
+            return false;
+        }
+        // queue is empty
+        if (size == 0){
+            queue[rear] = value;
+        }
+        else {
+            // in-case we pass the end or array(circular)
+            rear = (rear + 1) % capacity;
+            queue[rear] = value;
+        }
+        size++;
+        return true;
+    }
+    
+    public boolean deQueue() {
+        if (size <= 0){
+            return false;
+        }
+        // only 1 element left in the queue
+        if (rear == front){
+            queue[rear] = 0;
+        }
+        else {
+            queue[front] = 0;
+            front = (front + 1) % capacity;
+        }
+        size--;
+        return true;
+    }
+    
+    public int Front() {
+        if (size <= 0){
+            return -1;
+        }
+        return queue[front];
+    }
+    public int Rear() {
+        if (size <= 0){
+            return -1;
+        }
+        return queue[rear];
+    }
+    public boolean isEmpty() {
+        return size == 0;
+    }
+    public boolean isFull() {
+        return size == capacity;
+    }
+}
+```
+
+*   The solution works well; the space complexity is $O(N)$ and the time complexity is $O(1)$
+*   Two pointers solution is easy to find the front and rear
+
+### Standard Solution
+
+#### Solution #1 Array
+
+*   Similar idea but only using 1 pointer
+
+*   A simplified code, don't need to clear the cell to 0, only left the new element cover the old element.
+
+```java
+class MyCircularQueue {
+
+  private int[] queue;
+  private int headIndex;
+  private int count;
+  private int capacity;
+
+  /** Initialize your data structure here. Set the size of the queue to be k. */
+  public MyCircularQueue(int k) {
+    this.capacity = k;
+    this.queue = new int[k];
+    this.headIndex = 0;
+    this.count = 0;
+  }
+
+  /** Insert an element into the circular queue. Return true if the operation is successful. */
+  public boolean enQueue(int value) {
+    if (this.count == this.capacity)
+      return false;
+    this.queue[(this.headIndex + this.count) % this.capacity] = value;
+    this.count += 1;
+    return true;
+  }
+
+  /** Delete an element from the circular queue. Return true if the operation is successful. */
+  public boolean deQueue() {
+    if (this.count == 0)
+      return false;
+    this.headIndex = (this.headIndex + 1) % this.capacity;
+    this.count -= 1;
+    return true;
+  }
+
+  /** Get the front item from the queue. */
+  public int Front() {
+    if (this.count == 0)
+      return -1;
+    return this.queue[this.headIndex];
+  }
+
+  /** Get the last item from the queue. */
+  public int Rear() {
+    if (this.count == 0)
+      return -1;
+    int tailIndex = (this.headIndex + this.count - 1) % this.capacity;
+    return this.queue[tailIndex];
+  }
+
+  /** Checks whether the circular queue is empty or not. */
+  public boolean isEmpty() {
+    return (this.count == 0);
+  }
+
+  /** Checks whether the circular queue is full or not. */
+  public boolean isFull() {
+    return (this.count == this.capacity);
+  }
+}
+```
+
+-   Time complexity: $\mathcal{O}(1)$. All of the methods in our circular data structure are of constant time complexity.
+-   Space Complexity: $\mathcal{O}(N)$. The overall space complexity of the data structure is linear, where N is the pre-assigned capacity of the queue. *However, it is worth mentioning that the memory consumption of the data structure remains at its pre-assigned capacity during its entire life cycle.*
+
+## Moving Average from Data Stream (Easy #346)
+
+**Question**: Given a stream of integers and a window size, calculate the moving average of all integers in the sliding window.
+
+Implement the `MovingAverage` class:
+
+-   `MovingAverage(int size)` Initializes the object with the size of the window `size`.
+-   `double next(int val)` Returns the moving average of the last `size` values of the stream.
+
+**Example 1:**
+
+```
+Input
+["MovingAverage", "next", "next", "next", "next"]
+[[3], [1], [10], [3], [5]]
+Output
+[null, 1.0, 5.5, 4.66667, 6.0]
+
+Explanation
+MovingAverage movingAverage = new MovingAverage(3);
+movingAverage.next(1); // return 1.0 = 1 / 1
+movingAverage.next(10); // return 5.5 = (1 + 10) / 2
+movingAverage.next(3); // return 4.66667 = (1 + 10 + 3) / 3
+movingAverage.next(5); // return 6.0 = (10 + 3 + 5) / 3
+```
+
+**Constraints:**
+
+-   `1 <= size <= 1000`
+-   `-105 <= val <= 105`
+-   At most `104` calls will be made to `next`.
+
+### My Solution
+
+*   Each time only keep the  same size of elements in the list
+
+```java
+class MovingAverage {
+    
+    private int size;
+    private List<Integer> list;
+
+    public MovingAverage(int size) {
+        this.size = size;
+        list = new ArrayList<>();
+    }
+    
+    public double next(int val) {
+        list.add(val);
+        if (list.size() > size){
+            list.remove(0);
+        }
+        int denominator = list.size();
+        int sum = 0;
+        for (int i = 0; i < denominator; i++){
+            int curr = list.get(i);
+            sum += curr;
+        }
+        return (double)sum / (double)denominator;
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Array or List
+
+```java
+class MovingAverage {
+  int size;
+  List queue = new ArrayList<Integer>();
+  public MovingAverage(int size) {
+    this.size = size;
+  }
+
+  public double next(int val) {
+    queue.add(val);
+    // calculate the sum of the moving window
+    int windowSum = 0;
+    for(int i = Math.max(0, queue.size() - size); i < queue.size(); ++i)
+      windowSum += (int)queue.get(i);
+
+    return windowSum * 1.0 / Math.min(queue.size(), size);
+  }
+}
+```
+
+-   Time Complexity: $\mathcal{O}(N)$ where N is the size of the moving window since we need to retrieve N elements from the queue at each invocation of `next(val)` function.
+-   Space Complexity: $\mathcal{O}(M)$, where M is the length of the queue which would grow at each invocation of the `next(val)` function.
+
+#### Solution #2 Deque
+
+*   Each time add value to the sum, delete the value in the tail if exceed the specified size
+
+```java
+class MovingAverage {
+  int size, windowSum = 0, count = 0;
+  Deque queue = new ArrayDeque<Integer>();
+
+  public MovingAverage(int size) {
+    this.size = size;
+  }
+
+  public double next(int val) {
+    ++count;
+    // calculate the new sum by shifting the window
+    queue.add(val);
+    int tail = count > size ? (int)queue.poll() : 0;
+
+    windowSum = windowSum - tail + val;
+
+    return windowSum * 1.0 / Math.min(size, count);
+  }
+}
+```
+
+-   Time Complexity: $\mathcal{O}(1)$, as we explained in intuition.
+-   Space Complexity: $\mathcal{O}(N)$, where N is the size of the moving window.

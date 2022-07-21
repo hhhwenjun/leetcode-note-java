@@ -25,7 +25,7 @@ Output: 4
 -   `1 <= k <= nums.length <= 104`
 -   `-104 <= nums[i] <= 104`
 
-### My Problem
+### My Solution
 
 ```java
 public int findKthLargest(int[] nums, int k) {
