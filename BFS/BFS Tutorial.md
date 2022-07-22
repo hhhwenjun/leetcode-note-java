@@ -7,6 +7,80 @@
 *   Time Complexity: $O(V + E)$. Here, V represents the number of vertices, and E represents the number of edges. We need to check every vertex and traverse through every edge in the graph. The time complexity is the same as it was for the DFS approach.
 *   Space Complexity: $O(V)$. Generally, we will check if a vertex has been visited before adding it to the queue, so the queue will use at most $O(V)$ space. Keeping track of which vertices have been visited will also require $O(V)$ space.
 
+### Queue Application
+
+*   One common application of Breadth-first Search (BFS) is to find the shortest path from the root node to the target node.
+*   Queue structure is widely applied in the process
+
+### BFS Template
+
+#### Template 1
+
+```java
+/**
+ * Return the length of the shortest path between root and target node.
+ */
+int BFS(Node root, Node target) {
+    Queue<Node> queue;  // store all nodes which are waiting to be processed
+    int step = 0;       // number of steps neeeded from root to current node
+    // initialize
+    add root to queue;
+    // BFS
+    while (queue is not empty) {
+        // iterate the nodes which are already in the queue
+        int size = queue.size();
+        for (int i = 0; i < size; ++i) {
+            Node cur = the first node in queue;
+            return step if cur is target;
+            for (Node next : the neighbors of cur) {
+                add next to queue;
+            }
+            remove the first node from queue;
+        }
+        step = step + 1;
+    }
+    return -1;          // there is no path from root to target
+}
+```
+
+#### Template 2
+
+*   Sometimes, it is important to make sure that we `never visit a node twice`.
+
+```java
+/**
+ * Return the length of the shortest path between root and target node.
+ */
+int BFS(Node root, Node target) {
+    Queue<Node> queue;  // store all nodes which are waiting to be processed
+    Set<Node> visited;  // store all the nodes that we've visited
+    int step = 0;       // number of steps neeeded from root to current node
+    // initialize
+    add root to queue;
+    add root to visited;
+    // BFS
+    while (queue is not empty) {
+        // iterate the nodes which are already in the queue
+        int size = queue.size();
+        for (int i = 0; i < size; ++i) {
+            Node cur = the first node in queue;
+            return step if cur is target;
+            for (Node next : the neighbors of cur) {
+                if (next is not in visited) {
+                    add next to queue;
+                    add next to visited;
+                }
+            }
+            remove the first node from queue;
+        }
+        step = step + 1;
+    }
+    return -1;          // there is no path from root to target
+}
+```
+
+
+
 ## Shortest Path in Binary Matrix (Medium #1091)
 
 **Question**: Given an `n x n` binary matrix `grid`, return *the length of the shortest **clear path** in the matrix*. If there is no clear path, return `-1`.
@@ -436,3 +510,130 @@ class Solution {
 
 -   Time Complexity: $\mathcal{O}(N)$, where N is the size of the grid. First, we scan the grid to find the initial values for the queue, which would take $\mathcal{O}(N)$ time. Then we run the BFS process on the queue, which in the worst case would enumerate all the cells in the grid once and only once. Therefore, it takes $\mathcal{O}(N)$ time. Thus combining the above two steps, the overall time complexity would be $\mathcal{O}(N) + \mathcal{O}(N) = \mathcal{O}(N)$
 -   Space Complexity: $\mathcal{O}(N)$, where N is the size of the grid. In the worst case, the grid is filled with rotten oranges. As a result, the queue would be initialized with all the cells in the grid. By the way, normally for BFS, the main space complexity lies in the process rather than the initialization. For instance, for a BFS traversal in a tree, at any given moment, the queue would hold no more than 2 levels of tree nodes. Therefore, the space complexity of BFS traversal in a tree would depend on the ***width*** of the input tree.
+
+## Walls and Gates (Meidum #286)
+
+**Question**: You are given an `m x n` grid `rooms` initialized with these three possible values.
+
+-   `-1` A wall or an obstacle.
+-   `0` A gate.
+-   `INF` Infinity means an empty room. We use the value `231 - 1 = 2147483647` to represent `INF` as you may assume that the distance to a gate is less than `2147483647`.
+
+Fill each empty room with the distance to *its nearest gate*. If it is impossible to reach a gate, it should be filled with `INF`.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2021/01/03/grid.jpg)
+
+```
+Input: rooms = [[2147483647,-1,0,2147483647],[2147483647,2147483647,2147483647,-1],[2147483647,-1,2147483647,-1],[0,-1,2147483647,2147483647]]
+Output: [[3,-1,0,1],[2,2,1,-1],[1,-1,2,-1],[0,-1,3,4]]
+```
+
+**Example 2:**
+
+```
+Input: rooms = [[-1]]
+Output: [[-1]]
+```
+
+**Constraints:**
+
+-   `m == rooms.length`
+-   `n == rooms[i].length`
+-   `1 <= m, n <= 250`
+-   `rooms[i][j]` is `-1`, `0`, or `231 - 1`.
+
+### Standard Solution
+
+#### Solution #1 BFS
+
+*   It would keep the smallest distance because the queue structure first goes through all the gates, then the nodes near the gates.
+
+```java
+// 1. move 4 directions
+int[][] directions = new int[][]{{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
+int EMPTY = Integer.MAX_VALUE;
+int GATE = 0;
+
+public void wallsAndGates(int[][] rooms) {
+
+    int row = rooms.length;
+    if (row == 0) return;
+    int col = rooms[0].length;
+
+    // 2. put gate in a queue,
+    Queue<int[]> queue = new LinkedList<>();
+    for (int i = 0; i < row; i++){
+        for (int j = 0; j < col; j++){
+            if (rooms[i][j] == GATE){
+                queue.add(new int[]{i, j});
+            }
+        }
+    }
+
+    // 3. dfs to mark other cell value
+    while (!queue.isEmpty()){
+        int[] curr = queue.poll();
+        int currRow = curr[0];
+        int currCol = curr[1];
+        for (int[] direction : directions){
+            int nextRow = currRow + direction[0];
+            int nextCol = currCol + direction[1];
+
+            if (nextRow < 0 || nextRow >= row || nextCol < 0 || nextCol >= col
+               || rooms[nextRow][nextCol] != EMPTY){
+                continue;
+            }
+            rooms[nextRow][nextCol] = rooms[currRow][currCol] + 1;
+            queue.add(new int[]{nextRow, nextCol});
+        }
+    }
+}
+```
+
+-   Time complexity: $O(mn)$.
+
+    If you are having difficulty deriving the time complexity, start simple.
+
+    Let us start with the case with only one gate. The breadth-first search takes at most $m \times n$ steps to reach all rooms. Therefore the time complexity is $O(mn)$. But what if you are doing a breadth-first search from k gates?
+
+    Once we set a room's distance, we are basically marking it as visited, which means each room is visited at most once. Therefore, the time complexity does not depend on the number of gates and is $O(mn)$.
+
+-   Space complexity: $O(mn)$. The space complexity depends on the queue's size. We insert at most $m \times n$ points into the queue.
+
+*   Queue: implement with linked list
+
+#### Solution #2 DFS
+
+*   BFS cannot be implements through recursion
+
+```java
+private void dfs(int[][] rooms, int i, int j, int distance) {
+    if (i < 0 || i >= rooms.length || j < 0 ||  j >= rooms[0].length) {
+        return ;
+    }
+    if (rooms[i][j] < distance) {
+        return ;
+    } else {
+        rooms[i][j] = distance;
+        dfs(rooms, i + 1, j, distance + 1);
+        dfs(rooms, i - 1, j, distance + 1);
+        dfs(rooms, i, j + 1, distance + 1);
+        dfs(rooms, i, j - 1, distance + 1);
+    }
+}
+public void wallsAndGates(int[][] rooms) {
+    if (rooms == null || rooms.length == 0 || rooms[0].length == 0) {
+        return ;
+    }
+    for (int i = 0; i < rooms.length; ++i) {
+        for (int j = 0; j < rooms[0].length; ++j) {
+            if (rooms[i][j] == 0) {
+                dfs(rooms, i, j, 0);
+            }
+        }
+    }
+}
+```
+
