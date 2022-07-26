@@ -404,3 +404,226 @@ class MyStack {
 }
 ```
 
+## Min Stack (Medium #155)
+
+**Question**: Design a stack that supports push, pop, top, and retrieving the minimum element in constant time.
+
+Implement the `MinStack` class:
+
+-   `MinStack()` initializes the stack object.
+-   `void push(int val)` pushes the element `val` onto the stack.
+-   `void pop()` removes the element on the top of the stack.
+-   `int top()` gets the top element of the stack.
+-   `int getMin()` retrieves the minimum element in the stack.
+
+You must implement a solution with `O(1)` time complexity for each function.
+
+**Example 1:**
+
+```
+Input
+["MinStack","push","push","push","getMin","pop","top","getMin"]
+[[],[-2],[0],[-3],[],[],[],[]]
+
+Output
+[null,null,null,null,-3,null,0,-2]
+
+Explanation
+MinStack minStack = new MinStack();
+minStack.push(-2);
+minStack.push(0);
+minStack.push(-3);
+minStack.getMin(); // return -3
+minStack.pop();
+minStack.top();    // return 0
+minStack.getMin(); // return -2
+```
+
+**Constraints:**
+
+-   `-231 <= val <= 231 - 1`
+-   Methods `pop`, `top` and `getMin` operations will always be called on **non-empty** stacks.
+-   At most `3 * 104` calls will be made to `push`, `pop`, `top`, and `getMin`.
+
+### Standard Solution
+
+#### Solution #1 Minimum Pairs
+
+*   Use a pair to record current value and the current minimum value
+*   Each time push/pop the pair to the list
+
+```java
+private Stack<int[]> stack = new Stack<>();
+public MinStack() { }
+
+public void push(int x) {
+
+    /* If the stack is empty, then the min value
+     * must just be the first value we add. */
+    if (stack.isEmpty()) {
+        stack.push(new int[]{x, x});
+        return;
+    }
+    int currentMin = stack.peek()[1];
+    stack.push(new int[]{x, Math.min(x, currentMin)});
+}
+public void pop() {
+    stack.pop();
+}
+public int top() {
+    return stack.peek()[0];
+}
+public int getMin() {
+    return stack.peek()[1];
+}
+```
+
+*   Time Complexity: $O(1)$ for all operations.
+
+*   Space Complexity: $O(n)$
+
+#### Solution #2 Use two stacks
+
+*   We have two stacks, one is the normal stack and another one is only store minimum values
+*   Each time we check minimum values in min stack, and the normal stack
+
+```java
+private Stack<Integer> stack = new Stack<>();
+private Stack<Integer> minStack = new Stack<>();
+public MinStack() { }
+
+public void push(int x) {
+    stack.push(x);
+    if (minStack.isEmpty() || x <= minStack.peek()) {
+        minStack.push(x);
+    }
+}
+public void pop() {
+    if (stack.peek().equals(minStack.peek())) {
+        minStack.pop();
+    }
+    stack.pop();
+}
+public int top() {
+    return stack.peek();
+}
+public int getMin() {
+    return minStack.peek();
+}
+```
+
+-   Time Complexity: $O(1)$ for all operations. Same as above. All our modifications are still $O(1)$
+-   Space Complexity: $O(n)$
+
+## Valid Parentheses (Easy #20)
+
+**Question**: Given a string `s` containing just the characters `'('`, `')'`, `'{'`, `'}'`, `'['` and `']'`, determine if the input string is valid.
+
+An input string is valid if:
+
+1.  Open brackets must be closed by the same type of brackets.
+2.  Open brackets must be closed in the correct order.
+
+**Example 1:**
+
+```
+Input: s = "()"
+Output: true
+```
+
+**Example 2:**
+
+```
+Input: s = "()[]{}"
+Output: true
+```
+
+**Example 3:**
+
+```
+Input: s = "(]"
+Output: false
+```
+
+**Constraints:**
+
+-   `1 <= s.length <= 104`
+-   `s` consists of parentheses only `'()[]{}'`.
+
+### My Solution
+
+```java
+private Map<Character, Character> parenMap = new HashMap<>();
+public boolean isValid(String s) {
+    // 1. create a stack to store char in string
+    parenMap.put(')', '(');
+    parenMap.put('}', '{');
+    parenMap.put(']', '[');
+    Stack<Character> stack = new Stack<>();
+
+    // 2. each time we find ) we pop the element in stack
+    for (char ch : s.toCharArray()){
+        if (!parenMap.containsKey(ch)){
+            stack.add(ch);
+        }
+        else {
+            if (stack.isEmpty()) return false;
+            char curr = stack.pop();
+            char pair = parenMap.get(ch);
+            if (curr != pair) return false;
+        }
+    }
+    // 3. if the pop element is not the supposed half bracket, return false
+    return stack.isEmpty();
+}
+```
+
+### Standard Solution
+
+#### Solution #1 HashMap
+
+*   Similar solution to my solution
+
+```java
+  // Hash table that takes care of the mappings.
+private HashMap<Character, Character> mappings;
+
+// Initialize hash map with mappings. This simply makes the code easier to read.
+public Solution() {
+    this.mappings = new HashMap<Character, Character>();
+    this.mappings.put(')', '(');
+    this.mappings.put('}', '{');
+    this.mappings.put(']', '[');
+}
+
+public boolean isValid(String s) {
+
+// Initialize a stack to be used in the algorithm.
+Stack<Character> stack = new Stack<Character>();
+
+    for (int i = 0; i < s.length(); i++) {
+        char c = s.charAt(i);
+
+        // If the current character is a closing bracket.
+        if (this.mappings.containsKey(c)) {
+
+        // Get the top element of the stack. If the stack is empty, set a dummy value of '#'
+        char topElement = stack.empty() ? '#' : stack.pop();
+
+        // If the mapping for this bracket doesn't match the stack's top element, return false.
+        if (topElement != this.mappings.get(c)) {
+            return false;
+        }
+        else {
+            // If it was an opening bracket, push to the stack.
+            stack.push(c);
+        }
+    }
+
+	// If the stack still contains elements, then it is an invalid expression.
+	return stack.isEmpty();
+}
+```
+
+-   Time complexity: $O(n)$ because we simply traverse the given string one character at a time and push and pop operations on a stack take $O(1)$ time.
+-   Space complexity: $O(n)$ as we push all opening brackets onto the stack and in the worst case, we will end up pushing all the brackets onto the stack. e.g. `((((((((((`.

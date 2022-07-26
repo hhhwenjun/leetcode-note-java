@@ -32,6 +32,47 @@ Output: 0
 -   `1 <= m, n <= 50`
 -   `grid[i][j]` is either `0` or `1`.
 
+### My Solution
+
+```java
+int[][] grid;
+int[][] directions = new int[][]{{0, 1}, {1, 0}, {-1, 0}, {0, -1}};
+
+public int maxAreaOfIsland(int[][] grid) {
+    this.grid = grid;
+
+    // dfs to find each island, for each island, record the area, compare to find max
+    // 1. for loop to search each cell, to see if it is the start of a new island
+    int length = grid.length;
+    int width = grid[0].length;
+    int max = 0;
+    for (int i = 0; i < length; i++){
+        for (int j = 0; j < width; j++){
+            if (grid[i][j] == 1){
+                // dfs here to find island area
+                max = Math.max(max, dfs(i, j));
+            }
+        }
+    }
+    return max;
+}
+
+public int dfs(int i, int j){
+    // 2. for each cell we visited, flip it to 0
+    if (i < 0 || i >= grid.length || j < 0 || j >= grid[0].length || grid[i][j] == 0){
+        return 0;
+    }
+    // 3. add 1 to area if the current cell has value 1
+    grid[i][j] = 0;
+    int area = 1;
+    // find neighbor islands in 4 directions
+    for (int[] direction : directions){
+        area += dfs(i + direction[0], j + direction[1]);
+    }
+    return area;
+}
+```
+
 ### Solution
 
 #### Standard Solution #1 DFS with Recursion
@@ -186,6 +227,59 @@ class Solution {
 
 -   Time complexity: $O(M \times N)$ where M is the number of rows and N is the number of columns.
 -   Space complexity: worst-case $O(M \times N)$ in case that the grid map is filled with lands where DFS goes by $M \times N$ deep.
+
+#### Solution #2 BFS
+
+```java
+class Solution {
+  public int numIslands(char[][] grid) {
+    if (grid == null || grid.length == 0) {
+      return 0;
+    }
+
+    int nr = grid.length;
+    int nc = grid[0].length;
+    int num_islands = 0;
+
+    for (int r = 0; r < nr; ++r) {
+      for (int c = 0; c < nc; ++c) {
+        if (grid[r][c] == '1') {
+          ++num_islands;
+          grid[r][c] = '0'; // mark as visited
+          Queue<Integer> neighbors = new LinkedList<>();
+            // encode the row and col info
+          neighbors.add(r * nc + c);
+          while (!neighbors.isEmpty()) {
+            int id = neighbors.remove();
+            int row = id / nc;
+            int col = id % nc;
+            if (row - 1 >= 0 && grid[row-1][col] == '1') {
+              neighbors.add((row-1) * nc + col);
+              grid[row-1][col] = '0';
+            }
+            if (row + 1 < nr && grid[row+1][col] == '1') {
+              neighbors.add((row+1) * nc + col);
+              grid[row+1][col] = '0';
+            }
+            if (col - 1 >= 0 && grid[row][col-1] == '1') {
+              neighbors.add(row * nc + col-1);
+              grid[row][col-1] = '0';
+            }
+            if (col + 1 < nc && grid[row][col+1] == '1') {
+              neighbors.add(row * nc + col+1);
+              grid[row][col+1] = '0';
+            }
+          }
+        }
+      }
+    }
+    return num_islands;
+  }
+}
+```
+
+-   Time complexity: $O(M \times N)$ where M is the number of rows and N is the number of columns.
+-   Space complexity: $O(min(M, N))$ because in worst case where the grid is filled with lands, the size of queue can grow up to $min(M,N)$.
 
 ## Robot Return to Origin (Easy #657)
 
@@ -1042,3 +1136,177 @@ class Solution {
 
 *   Time Complexity: $O(M \cdot N)$.
 *   Space complexity: $O(M \cdot N)$. The `seen` set is the biggest use of additional memory.
+
+## Open the Lock (Medium #752)
+
+**Question**: You have a lock in front of you with 4 circular wheels. Each wheel has 10 slots: `'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'`. The wheels can rotate freely and wrap around: for example we can turn `'9'` to be `'0'`, or `'0'` to be `'9'`. Each move consists of turning one wheel one slot.
+
+The lock initially starts at `'0000'`, a string representing the state of the 4 wheels.
+
+You are given a list of `deadends` dead ends, meaning if the lock displays any of these codes, the wheels of the lock will stop turning and you will be unable to open it.
+
+Given a `target` representing the value of the wheels that will unlock the lock, return the minimum total number of turns required to open the lock, or -1 if it is impossible.
+
+**Example 1:**
+
+```
+Input: deadends = ["0201","0101","0102","1212","2002"], target = "0202"
+Output: 6
+Explanation: 
+A sequence of valid moves would be "0000" -> "1000" -> "1100" -> "1200" -> "1201" -> "1202" -> "0202".
+Note that a sequence like "0000" -> "0001" -> "0002" -> "0102" -> "0202" would be invalid,
+because the wheels of the lock become stuck after the display becomes the dead end "0102".
+```
+
+**Example 2:**
+
+```
+Input: deadends = ["8888"], target = "0009"
+Output: 1
+Explanation: We can turn the last wheel in reverse to move from "0000" -> "0009".
+```
+
+**Example 3:**
+
+```
+Input: deadends = ["8887","8889","8878","8898","8788","8988","7888","9888"], target = "8888"
+Output: -1
+Explanation: We cannot reach the target without getting stuck.
+```
+
+**Constraints:**
+
+-   `1 <= deadends.length <= 500`
+-   `deadends[i].length == 4`
+-   `target.length == 4`
+-   target **will not be** in the list `deadends`.
+-   `target` and `deadends[i]` consist of digits only.
+
+### My Solution
+
+*   Faster than the given standard bfs solution
+
+```java
+class Pair {
+    String display;
+    int step;
+    
+    public Pair(String display, int step){
+        this.display = display;
+        this.step = step;
+    }
+}
+
+class Solution {
+    Set<String> deadendsSet;
+    String target;
+    
+    public int openLock(String[] deadends, String target) {
+        deadendsSet = new HashSet<>();
+        for (String deadend : deadends){
+            deadendsSet.add(deadend);
+        }
+        this.target = target;
+        
+        // 1. starts from target, find its neighbors, bfs
+        Queue<Pair> queue = new LinkedList<>();
+        queue.add(new Pair(target, 0));
+        int output = -1;
+        String newtarget = "0000";
+        if (deadendsSet.contains(newtarget)) return output;
+        // 2. each time we have neighbors 2 + 2 + 2 + 2
+        while(!queue.isEmpty()){
+            Pair currPair = queue.poll();
+            String curr = currPair.display;
+            
+            // skip to enhance some efficiency
+            if (deadendsSet.contains(curr)){
+                continue;
+            }
+            deadendsSet.add(curr);
+            int val = currPair.step;
+            if (curr.equals(newtarget)){
+                output = val;
+                break;
+            }
+            // each time we change 1 digit value -> 2 possible change method +/-1
+            for (int i = 0; i < curr.length(); i++){
+                char digit = curr.charAt(i);
+                int digitVal = digit - '0';
+                int digitPossible1 = (digitVal + 1 + 10) % 10;
+                int digitPossible2 = (digitVal - 1 + 10) % 10;
+                String next1 = curr.substring(0, i) + digitPossible1 + curr.substring(i + 1);
+                String next2 = curr.substring(0, i) + digitPossible2 + curr.substring(i + 1);
+                
+                if (!deadendsSet.contains(next1)){
+                    queue.add(new Pair(next1, val + 1));
+                }
+                if (!deadendsSet.contains(next2)){
+                    queue.add(new Pair(next2, val + 1));
+                }
+            }
+        }
+        // 3. until we find "0000", reach it and return output
+        return output;
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 BFS
+
+```java
+class Solution {
+    public int openLock(String[] deadends, String target) {
+        Set<String> dead = new HashSet();
+        for (String d: deadends) dead.add(d);
+
+        Queue<String> queue = new LinkedList();
+        queue.offer("0000");
+        queue.offer(null);
+
+        Set<String> seen = new HashSet();
+        seen.add("0000");
+
+        int depth = 0;
+        while (!queue.isEmpty()) {
+            String node = queue.poll();
+            if (node == null) {
+                depth++;
+                if (queue.peek() != null)
+                    queue.offer(null);
+            } else if (node.equals(target)) {
+                return depth;
+            } else if (!dead.contains(node)) {
+                for (int i = 0; i < 4; ++i) {
+                    for (int d = -1; d <= 1; d += 2) {
+                        int y = ((node.charAt(i) - '0') + d + 10) % 10;
+                        String nei = node.substring(0, i) + ("" + y) + node.substring(i+1);
+                        if (!seen.contains(nei)) {
+                            seen.add(nei);
+                            queue.offer(nei);
+                        }
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+-   Time Complexity: $O(N^2 * \mathcal{A}^N + D)$ where $\mathcal{A}$ is the number of digits in our alphabet, N is the number of digits in the lock, and D is the size of `deadends`. We might visit every lock combination, plus we need to instantiate our set `dead`. When we visit every lock combination, we spend $O(N^2)$ time enumerating through and constructing each node.
+
+```
+Complexity: O(N^2 * A^N + D)
+where, N is Number of dials (4 in our case)
+A is number of alphabets (10 in our case -> 0 to 9)
+D is the size of deadends.
+
+There are 10 x 10 x 10 x 10 possible combinations => 10^4 => A^N
+For each combination, we are looping 4 times (which is N) and in each iteration, there are substring operations ( which is O(N) * constant) => O(4N*constant) => O(4N) => O(NN) => O(N^2)
+Total complexity => A^N * N^2, plus D to create the hashset => N^2 * A^N + D
+```
+
+-   Space Complexity: $O(\mathcal{A}^N + D)$, for the `queue` and the set `dead`.

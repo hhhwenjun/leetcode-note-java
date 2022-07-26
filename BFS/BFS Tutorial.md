@@ -637,3 +637,262 @@ public void wallsAndGates(int[][] rooms) {
 }
 ```
 
+## Perfect Squares (Medium #279)
+
+**Question**: Given an integer `n`, return *the least number of perfect square numbers that sum to* `n`.
+
+A **perfect square** is an integer that is the square of an integer; in other words, it is the product of some integer with itself. For example, `1`, `4`, `9`, and `16` are perfect squares while `3` and `11` are not 
+
+**Example 1:**
+
+```
+Input: n = 12
+Output: 3
+Explanation: 12 = 4 + 4 + 4.
+```
+
+**Example 2:**
+
+```
+Input: n = 13
+Output: 2
+Explanation: 13 = 4 + 9.
+```
+
+**Constraints:**
+
+-   `1 <= n <= 104`
+
+### Standard Solution
+
+#### Solution #1 Dynamic Programming
+
+<img src="https://leetcode.com/problems/perfect-squares/Figures/279/279_dp.png" alt="pic" style="zoom:50%;" />
+
+*   1D array to record the DP results
+*   Each time loop the square array, and cumulatively plus the previous result, until sqaure array value larger than target
+
+```java
+public int numSquares(int n){
+    int dp[] = new int[n + 1];
+    Arrays.fill(dp, Integer.MAX_VALUE);
+    // bottom case
+    dp[0] = 0;
+    
+    // pre-calculate the sqaure numbers.
+    int max_square_index = (int) Math.sqrt(n) + 1;
+    int square_nums[] = new int[max_square_index];
+    for (int i = 1; i < max_square_index; i++){
+        square_nums[i] = i * i;
+    }
+    for (int i = 1; i <= n; i++){
+        for (int s = 1; s < max_square_index; s++){
+            if (i < square_nums[s]) break;
+            dp[i] = Math.min(dp[i], dp[i - square_nums[s]] + 1);
+        }
+    }
+    return dp[n];
+}
+```
+
+-   Time complexity: $\mathcal{O}(n\cdot\sqrt{n})$. In main step, we have a nested loop, where the outer loop is of n iterations and in the inner loop it takes at maximum $\sqrt{n}$ iterations.
+-   Space Complexity: $\mathcal{O}(n)$. We keep all the intermediate sub-solutions in the array `dp[]`.
+
+#### Solution #2 Greedy + BFS
+
+*   The idea is similar to the last method, but using BFS
+*   Each time use a new queue. For each element in the queue, there is a possible way to reach the number of squares
+*   Each time loop through the possible square number, add the remainders to the queue
+
+```java
+public int numsSquares(int n){
+    ArrayList<Integer> square_nums = new ArrayList<Integer>();
+    for (int i = 1; i * i <= n; i++){
+        square_nums.add(i * i);
+    }
+    Set<Integer> queue = new HashSet<Integer>();
+    queue.add(n);
+    
+    int level = 0;
+    while(queue.size() > 0){
+        level += 1;
+        Set<Integer> next_queue = new HashSet<Integer>();
+        
+        for (Integer remainder : queue){
+            for (Integer square : square_nums){
+                if (remainder.equals(square)){
+                    return level;
+                } else if (remainder < square){
+                    break;
+                } else {
+                    next_queue.add(remainder - square);
+                }
+            }
+        }
+        queue = next_queue;
+    }
+    return level;
+}
+```
+
+-   Time complexity: $\mathcal{O}( \frac{\sqrt{n}^{h+1} - 1}{\sqrt{n} - 1} ) = \mathcal{O}(n^{\frac{h}{2}})$ where `h` is the height of the N-ary tree. 
+-   Space complexity: $\mathcal{O}\Big((\sqrt{n})^h\Big)$, which is also the maximal number of nodes that can appear at the level `h`. As one can see, though we keep a list of `square_nums`, the main consumption of the space is the `queue` variable, which keeps track of the remainders to visit for a given level of the N-ary tree.
+
+## Open the Lock(Medium #752)
+
+**Question**: You have a lock in front of you with 4 circular wheels. Each wheel has 10 slots: `'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'`. The wheels can rotate freely and wrap around: for example we can turn `'9'` to be `'0'`, or `'0'` to be `'9'`. Each move consists of turning one wheel one slot.
+
+The lock initially starts at `'0000'`, a string representing the state of the 4 wheels.
+
+You are given a list of `deadends` dead ends, meaning if the lock displays any of these codes, the wheels of the lock will stop turning and you will be unable to open it.
+
+Given a `target` representing the value of the wheels that will unlock the lock, return the minimum total number of turns required to open the lock, or -1 if it is impossible.
+
+**Example 1:**
+
+```
+Input: deadends = ["0201","0101","0102","1212","2002"], target = "0202"
+Output: 6
+Explanation: 
+A sequence of valid moves would be "0000" -> "1000" -> "1100" -> "1200" -> "1201" -> "1202" -> "0202".
+Note that a sequence like "0000" -> "0001" -> "0002" -> "0102" -> "0202" would be invalid,
+because the wheels of the lock become stuck after the display becomes the dead end "0102".
+```
+
+**Example 2:**
+
+```
+Input: deadends = ["8888"], target = "0009"
+Output: 1
+Explanation: We can turn the last wheel in reverse to move from "0000" -> "0009".
+```
+
+**Example 3:**
+
+```
+Input: deadends = ["8887","8889","8878","8898","8788","8988","7888","9888"], target = "8888"
+Output: -1
+Explanation: We cannot reach the target without getting stuck.
+```
+
+**Constraints:**
+
+-   `1 <= deadends.length <= 500`
+-   `deadends[i].length == 4`
+-   `target.length == 4`
+-   target **will not be** in the list `deadends`.
+-   `target` and `deadends[i]` consist of digits only.
+
+### My Solution
+
+```java
+class Pair {
+    String display;
+    int step;
+    
+    public Pair(String display, int step){
+        this.display = display;
+        this.step = step;
+    }
+}
+
+class Solution {
+    Set<String> deadendsSet;
+    String target;
+    public int openLock(String[] deadends, String target) {
+        deadendsSet = new HashSet<>();
+        for (String deadend : deadends){
+            deadendsSet.add(deadend);
+        }
+        this.target = target;
+        
+        // 1. starts from target, find its neighbors, bfs
+        Queue<Pair> queue = new LinkedList<>();
+        queue.add(new Pair(target, 0));
+        int output = -1;
+        String newtarget = "0000";
+        if (deadendsSet.contains(newtarget)) return output;
+        // 2. each time we have neighbors 2 + 2 + 2 + 2
+        while(!queue.isEmpty()){
+            Pair currPair = queue.poll();
+            String curr = currPair.display;
+            
+            // skip to enhance some efficiency
+            if (deadendsSet.contains(curr)){
+                continue;
+            }
+            deadendsSet.add(curr);
+            int val = currPair.step;
+            if (curr.equals(newtarget)){
+                output = val;
+                break;
+            }
+            // each time we change 1 digit value -> 2 possible change method +/-1
+            for (int i = 0; i < curr.length(); i++){
+                char digit = curr.charAt(i);
+                int digitVal = digit - '0';
+                int digitPossible1 = (digitVal + 1 + 10) % 10;
+                int digitPossible2 = (digitVal - 1 + 10) % 10;
+                String next1 = curr.substring(0, i) + digitPossible1 + curr.substring(i + 1);
+                String next2 = curr.substring(0, i) + digitPossible2 + curr.substring(i + 1);
+                
+                if (!deadendsSet.contains(next1)){
+                    queue.add(new Pair(next1, val + 1));
+                }
+                if (!deadendsSet.contains(next2)){
+                    queue.add(new Pair(next2, val + 1));
+                }
+            }
+        }
+        // 3. until we find "0000", reach it and return output
+        return output;
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 BFS
+
+```java
+class Solution {
+    public int openLock(String[] deadends, String target) {
+        Set<String> dead = new HashSet();
+        for (String d: deadends) dead.add(d);
+
+        Queue<String> queue = new LinkedList();
+        queue.offer("0000");
+        queue.offer(null);
+
+        Set<String> seen = new HashSet();
+        seen.add("0000");
+
+        int depth = 0;
+        while (!queue.isEmpty()) {
+            String node = queue.poll();
+            if (node == null) {
+                depth++;
+                if (queue.peek() != null)
+                    queue.offer(null);
+            } else if (node.equals(target)) {
+                return depth;
+            } else if (!dead.contains(node)) {
+                for (int i = 0; i < 4; ++i) {
+                    for (int d = -1; d <= 1; d += 2) {
+                        int y = ((node.charAt(i) - '0') + d + 10) % 10;
+                        String nei = node.substring(0, i) + ("" + y) + node.substring(i+1);
+                        if (!seen.contains(nei)) {
+                            seen.add(nei);
+                            queue.offer(nei);
+                        }
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+-   Time Complexity: $O(N^2 * \mathcal{A}^N + D)$ where $\mathcal{A}$ is the number of digits in our alphabet, N is the number of digits in the lock, and D is the size of `deadends`. We might visit every lock combination, plus we need to instantiate our set `dead`. When we visit every lock combination, we spend $O(N^2)$ time enumerating through and constructing each node.
+-   Space Complexity: $O(\mathcal{A}^N + D)$, for the `queue` and the set `dead`.
