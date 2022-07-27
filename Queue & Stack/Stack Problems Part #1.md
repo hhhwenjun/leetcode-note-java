@@ -627,3 +627,139 @@ Stack<Character> stack = new Stack<Character>();
 
 -   Time complexity: $O(n)$ because we simply traverse the given string one character at a time and push and pop operations on a stack take $O(1)$ time.
 -   Space complexity: $O(n)$ as we push all opening brackets onto the stack and in the worst case, we will end up pushing all the brackets onto the stack. e.g. `((((((((((`.
+
+## Daily Temperatures (Medium #739)
+
+**Question**: Given an array of integers `temperatures` represents the daily temperatures, return *an array* `answer` *such that* `answer[i]` *is the number of days you have to wait after the* `ith` *day to get a warmer temperature*. If there is no future day for which this is possible, keep `answer[i] == 0` instead.
+
+**Example 1:**
+
+```
+Input: temperatures = [73,74,75,71,69,72,76,73]
+Output: [1,1,4,2,1,1,0,0]
+```
+
+**Example 2:**
+
+```
+Input: temperatures = [30,40,50,60]
+Output: [1,1,1,0]
+```
+
+**Example 3:**
+
+```
+Input: temperatures = [30,60,90]
+Output: [1,1,0]
+```
+
+**Constraints:**
+
+-   `1 <= temperatures.length <= 105`
+-   `30 <= temperatures[i] <= 100`
+
+### My Solution
+
+*   Two pointer method, but time complexity can go to $O(n^2)$, space complexity is $O(1)$ with constant extra space.
+
+```java
+public int[] dailyTemperatures(int[] temperatures) {
+    // two pointers: slow pointer -> current temp, fast pointer -> after ith day
+    // 1. make fast and slow pointer
+    if (temperatures == null) return new int[0];
+    int[] res = new int[temperatures.length];
+    int slow = 0, fast = 0;
+
+    while (slow < temperatures.length){
+        // 2. each time let fast pointer find the day temp > curr temp, slow -> curr
+        int currTemp = temperatures[slow];
+        fast = slow;
+        while(fast < temperatures.length){
+            if (temperatures[fast] > temperatures[slow]){
+                break;
+            }
+            fast++;
+        }
+        // we cannot find any day warmer
+        if (fast == temperatures.length){
+            res[slow] = 0;
+        }
+        else {
+            res[slow] = fast - slow;
+        }
+        // 3. then slow++, fast = slow, point to the same day temp, repeat the process
+        slow++;
+    }
+    return res;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Monotonic Stack
+
+*   Use a stack to push each day to the stack; if we peek at the previous day and smaller than the current day, pop it out and add to the answer
+
+*   In this way, we only need 1 pass then we can have all the answers
+
+```java
+public int[] dailyTemperatures(int[] temperatures){
+    int n = temperatures.length;
+    int[] answer = new int[n];
+    Deque<Integer> stack = new ArrayDeque<>();
+    
+    for (int currDay = 0; currDay < n; currDay++){
+        int currentTemp = temperatures[currDay];
+        // pop until the current day's temperature is not warmer than the temp at top of the stack
+        while (!stack.isEmpty() && temperatures[stack.peek()] < currentTemp){
+            int prevDay = stack.pop();
+            answer[prevDay] = currDay - prevDay;
+        }
+        stack.push(currDay);
+    }
+    return answer;
+}
+```
+
+-   Time complexity: $O(N)$ At first glance, it may look like the time complexity of this algorithm should be $O(N^2)$ ,because there is a nested while loop inside the for-loop. However, each element can only be added to the stack once, which means the stack is limited to N pops. Every iteration of the while loop uses 1 pop, which means the while loop will not iterate more than N times in total, across all iterations of the for loop.
+
+    An easier way to think about this is that in the worst case, every element will be pushed and popped once. This gives a time complexity of $O(2 \cdot N) = O(N)$*
+
+-   Space complexity: $O(N)$
+
+    If the input was non-increasing, then no element would ever be popped from the stack, and the stack would grow to a size of `N` elements at the end.
+
+    Note: `answer` does not count towards the space complexity because space used for the output format does not count.
+
+#### Solution #2 Array
+
+*   It is hard to understand. Starts from the end of array to the front.
+
+```java
+public int[] dailyTemperatures(int[] temperatures) {
+    int n = temperatures.length;
+    int hottest = 0;
+    int answer[] = new int[n];
+
+    for (int currDay = n - 1; currDay >= 0; currDay--) {
+        int currentTemp = temperatures[currDay];
+        if (currentTemp >= hottest) {
+            hottest = currentTemp;
+            continue;
+        }
+
+        int days = 1;
+        while (temperatures[currDay + days] <= currentTemp) {
+            // Use information from answer to search for the next warmer day
+            days += answer[currDay + days];
+        }
+        answer[currDay] = days;
+    }
+
+    return answer;
+}
+```
+
+*   Time complexity: $O(N)$
+
+*   Space complexity: $O(1)$
