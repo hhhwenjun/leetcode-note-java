@@ -1,6 +1,6 @@
 # DFS Tutorial
 
-### Purpose
+### Graph
 
 *   Traverse all vertices in a “graph”; Go deeper and deeper until cannot move on.
 *   Traverse all paths between any two vertices in a “graph”.
@@ -10,6 +10,56 @@
 *   Traverse all paths between two vertices
     *   Time Complexity: $O((V - 1)!)$ The above example is for an undirected graph. The worst-case scenario, when trying to find all paths, is a complete graph. A complete graph is a graph where every vertex is connected to every other vertex.
     *   Space Complexity: $O(V^3)$ 
+
+### Stack
+
+*   A stack helps with DFS.
+*   Overall, we `only` trace-back and try another path after we reach the `deepest` node.
+
+#### Template-Recursion
+
+```java
+/*
+ * Return true if there is a path from cur to target.
+ */
+boolean DFS(Node cur, Node target, Set<Node> visited) {
+    return true if cur is target;
+    for (next : each neighbor of cur) {
+        if (next is not in visited) {
+            add next to visted;
+            return true if DFS(next, target, visited) == true;
+        }
+    }
+    return false;
+}
+```
+
+#### Template-While
+
+```java
+/*
+ * Return true if there is a path from cur to target.
+ */
+boolean DFS(int root, int target) {
+    Set<Node> visited;
+    Stack<Node> stack;
+    add root to stack;
+    while (stack is not empty) {
+        Node cur = the top element in stack;
+        remove the cur from the stack;
+        return true if cur is target;
+        for (Node next : the neighbors of cur) {
+            if (next is not in visited) {
+                add next to visited;
+                add next to stack;
+            }
+        }
+    }
+    return false;
+}
+```
+
+
 
 ## Find if Path Exists in Graph (Easy #1971)
 
