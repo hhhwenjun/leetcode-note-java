@@ -1310,3 +1310,123 @@ Total complexity => A^N * N^2, plus D to create the hashset => N^2 * A^N + D
 ```
 
 -   Space Complexity: $O(\mathcal{A}^N + D)$, for the `queue` and the set `dead`.
+
+## Reaching Points (Hard #780)
+
+**Question**: Given four integers `sx`, `sy`, `tx`, and `ty`, return `true` *if it is possible to convert the point* `(sx, sy)` *to the point* `(tx, ty)` *through some operations**, or* `false` *otherwise*.
+
+The allowed operation on some point `(x, y)` is to convert it to either `(x, x + y)` or `(x + y, y)`.
+
+**Example 1:**
+
+```
+Input: sx = 1, sy = 1, tx = 3, ty = 5
+Output: true
+Explanation:
+One series of moves that transforms the starting point to the target is:
+(1, 1) -> (1, 2)
+(1, 2) -> (3, 2)
+(3, 2) -> (3, 5)
+```
+
+**Example 2:**
+
+```
+Input: sx = 1, sy = 1, tx = 2, ty = 2
+Output: false
+```
+
+**Example 3:**
+
+```
+Input: sx = 1, sy = 1, tx = 1, ty = 1
+Output: true
+```
+
+**Constraints:**
+
+-   `1 <= sx, sy, tx, ty <= 109`
+
+### Standard Solution
+
+#### Solution #1 DFS without record
+
+```java
+public boolean reachingPoints(int sx, int sy, int tx, int ty) {
+    if (sx > tx || sy > ty) return false;
+    if (sx == tx && sy == ty) return true;
+    return reachingPoints(sx+sy, sy, tx, ty) || reachingPoints(sx, sx+sy, tx, ty);
+}
+```
+
+-   Time Complexity: $O(2^{tx + ty})$, a loose bound found by considering every move as `(x, y) -> (x+1, y)` or `(x, y) -> (x, y+1)` instead.
+-   Space Complexity: $O(tx * ty)$, the size of the implicit call stack.
+
+#### Solution #2 DP, DFS + record
+
+```java
+import java.awt.Point;
+
+class Solution {
+    Set<Point> seen;
+    int tx, ty;
+
+    public boolean reachingPoints(int sx, int sy, int tx, int ty) {
+        seen = new HashSet();
+        this.tx = tx;
+        this.ty = ty;
+        search(new Point(sx, sy));
+        return seen.contains(new Point(tx, ty));
+    }
+
+    public void search(Point P) {
+        if (seen.contains(P)) return;
+        if (P.x > tx || P.y > ty) return;
+        seen.add(P);
+        search(new Point(P.x + P.y, P.y));
+        search(new Point(P.x, P.x + P.y));
+    }
+}
+```
+
+-   Time Complexity: $O(tx * ty)$, as at most `tx * ty` points are searched once per point.
+-   Space Complexity: $O(tx * ty)$, the size of the implicit call stack.
+
+#### Solution #3 Work Backwards
+
+```java
+public boolean reachingPoints(int sx, int sy, int tx, int ty) {
+    while (tx >= sx && ty >= sy) {
+        if (sx == tx && sy == ty)
+            return true;
+        if (tx > ty) tx -= ty;
+        else ty -= tx;
+    }
+    return false;
+}
+```
+
+-   Time Complexity: $O(\max(tx, ty))$. If say `ty = 1`, we could be subtracting `tx` times.
+-   Space Complexity: $O(1)$.
+
+#### Solution #4 Work Backwards + Modulo Variant
+
+```java
+// %: each time reduce the amount until cannot be proceeded
+public boolean reachingPoints(int sx, int sy, int tx, int ty) {
+    while (tx >= sx && ty >= sy) {
+        if (tx == ty) break;
+        if (tx > ty) {
+            if (ty > sy) tx %= ty;
+            else return (tx - sx) % ty == 0;
+        } else {
+            if (tx > sx) ty %= tx;
+            else return (ty - sy) % tx == 0;
+        }
+    }
+    return (tx == sx && ty == sy);
+}
+```
+
+-   Time Complexity: $O(\log(\max{(tx, ty)}))$. The analysis is similar to the analysis of the Euclidean algorithm, and we assume that the modulo operation can be done in $O(1)$ time.
+-   Space Complexity: $O(1)$.

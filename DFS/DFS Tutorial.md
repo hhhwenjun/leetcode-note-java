@@ -545,3 +545,373 @@ class Solution {
 } 
 ```
 
+## Flood Fill (Easy #733)
+
+**Question**: An image is represented by an `m x n` integer grid `image` where `image[i][j]` represents the pixel value of the image.
+
+You are also given three integers `sr`, `sc`, and `color`. You should perform a **flood fill** on the image starting from the pixel `image[sr][sc]`.
+
+To perform a **flood fill**, consider the starting pixel, plus any pixels connected **4-directionally** to the starting pixel of the same color as the starting pixel, plus any pixels connected **4-directionally** to those pixels (also with the same color), and so on. Replace the color of all of the aforementioned pixels with `color`.
+
+Return *the modified image after performing the flood fill*.
+
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2021/06/01/flood1-grid.jpg)
+
+```
+Input: image = [[1,1,1],[1,1,0],[1,0,1]], sr = 1, sc = 1, color = 2
+Output: [[2,2,2],[2,2,0],[2,0,1]]
+Explanation: From the center of the image with position (sr, sc) = (1, 1) (i.e., the red pixel), all pixels connected by a path of the same color as the starting pixel (i.e., the blue pixels) are colored with the new color.
+Note the bottom corner is not colored 2, because it is not 4-directionally connected to the starting pixel.
+```
+
+**Example 2:**
+
+```
+Input: image = [[0,0,0],[0,0,0]], sr = 0, sc = 0, color = 0
+Output: [[0,0,0],[0,0,0]]
+Explanation: The starting pixel is already colored 0, so no changes are made to the image. 
+```
+
+**Constraints:**
+
+-   `m == image.length`
+-   `n == image[i].length`
+-   `1 <= m, n <= 50`
+-   `0 <= image[i][j], color < 216`
+-   `0 <= sr < m`
+-   `0 <= sc < n`
+
+### My Solution
+
+```java
+int[][] directions = new int[][]{{-1, 0}, {0, -1}, {1, 0}, {0, 1}};
+int[][] image;
+int color;
+int currCol;
+
+public int[][] floodFill(int[][] image, int sr, int sc, int color) {
+    // dfs:find all connected neighbors in terms of sr and sc
+    this.image = image;
+    this.color = color;
+    currCol = image[sr][sc];
+    dfs(sr, sc);
+    return image;
+}
+
+public void dfs(int sr, int sc){
+    // if curr cell is out of range or is not connected (0), or we have already seen
+    if (sr < 0 || sr >= image.length || sc < 0 || 
+        sc >= image[0].length || image[sr][sc] == color || image[sr][sc] != currCol){
+        return;
+    }
+    image[sr][sc] = color;
+    for (int[] direction : directions){
+        // find all available neighbors for the curr cell
+        int row = sr + direction[0];
+        int col = sc + direction[1];
+        dfs(row, col);
+    }
+}
+```
+
+### Standard Solution
+
+#### Solution #1 DFS
+
+*   Same as my solution
+
+```java
+public int[][] floodFill(int[][] image, int sr, int sc, int newColor) {
+    int color = image[sr][sc];
+    if (color != newColor) dfs(image, sr, sc, color, newColor);
+    return image;
+}
+public void dfs(int[][] image, int r, int c, int color, int newColor) {
+    if (image[r][c] == color) {
+        image[r][c] = newColor;
+        if (r >= 1) dfs(image, r-1, c, color, newColor);
+        if (c >= 1) dfs(image, r, c-1, color, newColor);
+        if (r+1 < image.length) dfs(image, r+1, c, color, newColor);
+        if (c+1 < image[0].length) dfs(image, r, c+1, color, newColor);
+    }
+}
+```
+
+-   Time Complexity: $O(N)$, where N is the number of pixels in the image. We might process every pixel.
+-   Space Complexity: $O(N)$, the size of the implicit call stack when calling `dfs`.
+
+## 01 Matrix (Medium #542)
+
+**Question**: Given an `m x n` binary matrix `mat`, return *the distance of the nearest* `0` *for each cell*.
+
+The distance between two adjacent cells is `1`.
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/04/24/01-1-grid.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: mat = [[0,0,0],[0,1,0],[0,0,0]]
+Output: [[0,0,0],[0,1,0],[0,0,0]]
+```
+
+**Example 2:**
+
+<img src="https://assets.leetcode.com/uploads/2021/04/24/01-2-grid.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: mat = [[0,0,0],[0,1,0],[1,1,1]]
+Output: [[0,0,0],[0,1,0],[1,2,1]]
+```
+
+**Constraints:**
+
+-   `m == mat.length`
+-   `n == mat[i].length`
+-   `1 <= m, n <= 104`
+-   `1 <= m * n <= 104`
+-   `mat[i][j]` is either `0` or `1`.
+-   There is at least one `0` in `mat`.
+
+### My Solution
+
+```java
+public int[][] updateMatrix(int[][] mat) {
+    // get the dimension info of the matrix
+    int length = mat.length;
+    int width = mat[0].length;
+    boolean[][] visited = new boolean[length][width];
+    Queue<int[]> queue = new LinkedList<>();
+
+    // bfs: put cell to a queue
+    // 1. put all the 0 cells into a queue, mark visited array as true
+    for (int i = 0; i < length; i++){
+        for (int j = 0; j < width; j++){
+            if (mat[i][j] == 0){
+                // dimension: i, j || distance
+                queue.add(new int[]{i, j, 0});
+                visited[i][j] = true;
+            }
+        }
+    }
+    int[][] directions = new int[][]{{0, 1}, {1, 0}, {-1, 0}, {0, -1}};
+    // 2. poll each cell out, traverse 4 directions unvisited array, + 1
+    while(!queue.isEmpty()){
+        int[] curr = queue.poll();
+        int currX = curr[0];
+        int currY = curr[1];
+        int currDis = curr[2];
+        mat[currX][currY] = currDis;
+
+        for (int[] direction : directions){
+            int nextX = currX + direction[0];
+            int nextY = currY + direction[1];
+            if (nextX < 0 || nextX >= length || nextY < 0 || nextY >= width || visited[nextX][nextY]){
+                continue;
+            }
+            // 3. put them back to queue, repeat the process
+            queue.add(new int[]{nextX, nextY, currDis + 1});
+            visited[nextX][nextY] = true;
+        }
+    }
+    return mat;
+}
+```
+
+
+
+### Standard Solution
+
+#### Solution #1 DFS
+
+*   Record the number of one
+*   Each time when encounter a 0, check if it surrounds by -1, and reduce the number of 1
+*   Then check each 1 if surrounds by -1 and repeat the process
+
+```java
+public int[][] updateMatrix(int[][] matrix) {
+    int n = matrix.length;
+    int m = matrix[0].length;
+    int ones = 0;
+    for(int i = 0; i < n; i++)
+        for(int j = 0; j < m; j++)
+            if(matrix[i][j] == 1){
+                matrix[i][j] = -1;
+                ones++;
+            }
+    int x = 0;
+    while(ones > 0){
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < m; j++){
+                if(matrix[i][j] == x){
+                     if(isValid(matrix,i+1,j) && matrix[i+1][j] == -1){
+                         matrix[i+1][j] = x + 1;
+                         ones--;
+                     }
+                    if(isValid(matrix,i-1,j) && matrix[i-1][j] == -1){
+                         matrix[i-1][j] = x + 1;
+                         ones--;
+                     }
+                    if(isValid(matrix,i,j+1) && matrix[i][j+1] == -1){
+                         matrix[i][j+1] = x + 1;
+                         ones--;
+                     }if(isValid(matrix,i,j-1) && matrix[i][j-1] == -1){
+                         matrix[i][j-1] = x + 1;
+                         ones--;
+                     }
+                }
+            }
+        }
+        x++;
+    }
+    return matrix;
+}
+private boolean isValid(int[][] mat, int i, int j){
+    return (i >= 0 && i < mat.length && j >= 0 && j < mat[0].length);
+}
+```
+
+#### Solution #2 BFS
+
+```java
+public int[][] updateMatrix(int[][] matrix) {
+    int m = matrix.length;
+    int n = matrix[0].length;
+    Queue<int[]> queue = new LinkedList<>();
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            if (matrix[i][j] == 0) {
+                queue.offer(new int[] {i, j});
+            }
+            else {
+                matrix[i][j] = Integer.MAX_VALUE;
+            }
+        }
+    }
+    // DO BFS IN ALL NEIGHBOURS SO THAT WE GET FINAL RESULT 
+    int[][] dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+
+    while (!queue.isEmpty()) {
+        int[] cell = queue.poll();
+        for (int[] d : dirs) {
+            int r = cell[0] + d[0];
+            int c = cell[1] + d[1];
+             // if new cell is out of bounds or is already closer to another 0, 
+             // stop further bfs in this cell 
+            if (r < 0 || r >= m || c < 0 || c >= n || 
+                matrix[r][c] <= matrix[cell[0]][cell[1]] + 1) continue;
+            queue.add(new int[] {r, c});
+            matrix[r][c] = matrix[cell[0]][cell[1]] + 1;
+        }
+    }
+
+    return matrix;
+}
+```
+
+-   Time complexity: $O(r \cdot c)$. Since, the new cells are added to the queue only if their current distance is greater than the calculated distance, cells are not likely to be added multiple times.
+-   Space complexity: $O(r \cdot c)$. An additional $O(r \cdot c)$ space is required to maintain the queue.
+
+## Keys and Rooms (Medium #841)
+
+**Question**: There are `n` rooms labeled from `0` to `n - 1` and all the rooms are locked except for room `0`. Your goal is to visit all the rooms. However, you cannot enter a locked room without having its key.
+
+When you visit a room, you may find a set of **distinct keys** in it. Each key has a number on it, denoting which room it unlocks, and you can take all of them with you to unlock the other rooms.
+
+Given an array `rooms` where `rooms[i]` is the set of keys that you can obtain if you visited room `i`, return `true` *if you can visit **all** the rooms, or* `false` *otherwise*.
+
+**Example 1:**
+
+```
+Input: rooms = [[1],[2],[3],[]]
+Output: true
+Explanation: 
+We visit room 0 and pick up key 1.
+We then visit room 1 and pick up key 2.
+We then visit room 2 and pick up key 3.
+We then visit room 3.
+Since we were able to visit every room, we return true.
+```
+
+**Example 2:**
+
+```
+Input: rooms = [[1,3],[3,0,1],[2],[0]]
+Output: false
+Explanation: We can not enter room number 2 since the only key that unlocks it is in that room.
+```
+
+**Constraints:**
+
+-   `n == rooms.length`
+-   `2 <= n <= 1000`
+-   `0 <= rooms[i].length <= 1000`
+-   `1 <= sum(rooms[i].length) <= 3000`
+-   `0 <= rooms[i][j] < n`
+-   All the values of `rooms[i]` are **unique**.
+
+### My Solution
+
+```java
+// bfs solution
+public boolean canVisitAllRooms(List<List<Integer>> rooms) {
+    // bfs: visited the adjacent list
+    int num = rooms.size();
+    int[] visited = new int[num];
+    Queue<Integer> queue = new LinkedList<>();
+
+    // 1. go to the first room, put it into queue, visited array
+    queue.add(0);
+    visited[0] = 1;
+
+    // 2. add the adjacent rooms to the queue
+    while(!queue.isEmpty()){
+        int currRoom = queue.poll();
+        // visit the rooms with keys (adjacency list)
+        for (int room : rooms.get(currRoom)){
+            if (visited[room] == 1) continue;
+            visited[room] = 1;
+            queue.add(room);
+        }
+    }
+    // 3. if the queue is empty, but visited is not all true
+    int sum = 0;
+    for (int digit : visited) sum += digit;
+    return sum == num;
+}
+```
+
+*   The time and space complexity is $O(N)$
+
+### Standard Solution
+
+#### Solution #1 DFS
+
+```java
+public boolean canVisitAllRooms(List<List<Integer>> rooms) {
+    boolean[] seen = new boolean[rooms.size()];
+    seen[0] = true;
+    Stack<Integer> stack = new Stack();
+    stack.push(0);
+
+    //At the beginning, we have a to-do list "stack" of keys to use.
+    //'seen' represents at some point we have entered this room.
+    while (!stack.isEmpty()) { // While we have keys...
+        int node = stack.pop(); // Get the next key 'node'
+        for (int nei: rooms.get(node)) // For every key in room # 'node'...
+            if (!seen[nei]) { // ...that hasn't been used yet
+                seen[nei] = true; // mark that we've entered the room
+                stack.push(nei); // add the key to the todo list
+            }
+    }
+
+    for (boolean v: seen)  // if any room hasn't been visited, return false
+        if (!v) return false;
+    return true;
+}
+```
+
+-   Time Complexity: $O(N + E)$, where N is the number of rooms, and E is the total number of keys.
+-   Space Complexity: $O(N)$ in additional space complexity, to store `stack` and `seen`.

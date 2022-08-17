@@ -1691,3 +1691,50 @@ public int[][] merge(int[][] intervals){
 -   Space complexity: $O(\log N)$ (or $O(n)$)
 
     If we can sort `intervals` in place, we do not need more than constant additional space, although the sorting itself takes $O(\log n)$ space. Otherwise, we must allocate linear space to store a copy of `intervals` and sort that.
+
+## Meeting Rooms (Easy #252)
+
+**Question**: Given an array of meeting time `intervals` where `intervals[i] = [starti, endi]`, determine if a person could attend all meetings.
+
+**Example 1:**
+
+```
+Input: intervals = [[0,30],[5,10],[15,20]]
+Output: false
+```
+
+**Example 2:**
+
+```
+Input: intervals = [[7,10],[2,4]]
+Output: true
+```
+
+**Constraints:**
+
+-   `0 <= intervals.length <= 104`
+-   `intervals[i].length == 2`
+-   `0 <= starti < endi <= 106`
+
+### My Solution
+
+```java
+public boolean canAttendMeetings(int[][] intervals) {
+    // sort the intervals by the starting time of meetings
+    // each time check the end time vs. next starting time of meeting
+
+    Arrays.sort(intervals, (a, b) -> a[0] - b[0]);
+    int prev = 0;
+
+    for (int[] interval : intervals){
+        int start = interval[0];
+        int end = interval[1];
+        if (start < prev) return false;
+        prev = end;
+    }
+    return true;
+}
+```
+
+-   Time complexity: $O(n \log n)$. The time complexity is dominated by sorting. Once the array has been sorted, only $O(n)$ time is taken to go through the array and determine if there is any overlap.
+-   Space complexity: $O(1)$. Since no additional space is allocated.
