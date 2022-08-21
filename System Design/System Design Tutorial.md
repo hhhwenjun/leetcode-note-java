@@ -20,7 +20,7 @@ This course is divided into three main chapters -
     *   Will it be synchronous or asynchronous? 
     *   You need to make these decisions based on the requirements
 *   Database(Design database schema)
-    *   hat databases will you need? 
+    *   What databases will you need? 
     *   What kind of data do you need to store? 
     *   SQL or NoSQL, what will be the database schema? 
 *   Examples
@@ -53,3 +53,43 @@ This course is divided into three main chapters -
 *   Discuss design choices
 *   Limitations of the design
     *   If your system does not have a monitoring component, it would be good to mention this at this stage.
+
+### Low-Level Design
+
+<img src="/Users/wenjunhan/Library/Application Support/typora-user-images/image-20220821113249954.png" alt="image-20220821113249954" style="zoom:67%;" />
+
+#### Structure
+
+*   Dive deeper into the implemention of the individual system
+*   Covers a sub-system
+*   Optimisations within the sub-system
+*   Sample: Design a parking lot, Uber's pricing system
+
+#### Expection
+
+*   Requirements: 
+    *   fulfulls function and non-function requirement, good code structure, working + clean code
+    *   Modular, futuristic, non-restrictive
+*   Code:
+    *   Interfaces
+    *   Class diagrams
+    *   Entities
+    *   Data model
+    *   Design patterns
+*   Quality:
+    *   Working code, pass basic tests
+    *   Modular: able to add new features, code consistent when adding new features(old codes works well)
+    *   Testable: unit test cases
+*   Expected Outcome (Example of Uber's pricing engine)
+    *   `getFareEstimate()` which fetches the `basePrice` and `surgePrice` and accordingly returns the total estimated fare.`getBasePrice()` will return the base price based on distance, time, and ride type. If there are too many requests from users for the current number of drivers, we will apply a surge price and increase the fare.
+    *   We could use the Factory Design Pattern here and add two factories, `BasePriceCalculatorFactory` for calculating `basePrice` and `SurgePriceCalculatorFactory` for calculating `surgePrice`.
+
+ ![image-20220821113020030](/Users/wenjunhan/Library/Application Support/typora-user-images/image-20220821113020030.png)
+
+#### How to Approach LLD Interview
+
+*   Lock down the requirements, both functional and non-functional. The idea is to limit the scope early on so we don't get lost trying to build too many things.
+*   The next step is the code. The first thing to do here will be to define the interfaces.
+*   Next are class diagrams, where we define what classes we need, how they will interact, what hierarchy they will follow, etc. 
+    *   We will further define our entities and data models, and while doing all this, we need to consider what design pattern will be most suitable.
+*   Talking about design patterns, the next step would be to ensure code quality. This means we should have a working code with some basic test cases that are passing for the logic we have written.

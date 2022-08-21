@@ -111,8 +111,89 @@ public void inorder(TreeNode root, List<Integer> list){
 }
 ```
 
-* Time complexity : $O(n)$. We need to traverse over the whole tree once to do the in order traversal. Here, n refers to the number of nodes in the given tree.
+* Time complexity : $O(n)$. We need to traverse over the whole tree once to do them in-order traversal. Here, n refers to the number of nodes in the given tree.
 * Space complexity : $O(n)$. The sorted list will contain n elements.
 
+## Kth Smallest Element in a BST (Medium #230) 
 
+**Question**: Given the `root` of a binary search tree, and an integer `k`, return *the* `kth` *smallest value (**1-indexed**) of all the values of the nodes in the tree*.
 
+**Example 1:**
+
+![img](https://assets.leetcode.com/uploads/2021/01/28/kthtree1.jpg)
+
+```
+Input: root = [3,1,4,null,2], k = 1
+Output: 1
+```
+
+**Example 2:**
+
+![img](https://assets.leetcode.com/uploads/2021/01/28/kthtree2.jpg)
+
+```
+Input: root = [5,3,6,2,4,null,null,1], k = 3
+Output: 3
+```
+
+**Constraints:**
+
+-   The number of nodes in the tree is `n`.
+-   `1 <= k <= n <= 104`
+-   `0 <= Node.val <= 104`
+
+**Follow up:** If the BST is modified often (i.e., we can do insert and delete operations) and you need to find the kth smallest frequently, how would you optimize?
+
+### My Solution
+
+```java
+public int kthSmallest(TreeNode root, int k) {
+    // 1. traverse the tree and put values in a list
+    List<Integer> treeList = new ArrayList<>();
+
+    inorder(root, treeList);
+    // 2. get the corresponding value in kth location
+    return treeList.get(k - 1);
+
+}
+
+public void inorder(TreeNode root, List<Integer> treeList){
+    if (root == null) return;
+    inorder(root.left, treeList);
+    treeList.add(root.val);
+    inorder(root.right, treeList);
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Recursive Inorder Traversal
+
+*   Same as my solution
+
+-   Time complexity: $O(N)$ to build a traversal.
+-   Space complexity: $O(N)$ to keep an inorder traversal.
+
+#### Solution #2 Iterative Inorder Traversal
+
+*   With the help of a stack to do the iterative traversal, speed up the solution.
+*   One could stop after the kth element.
+
+```java
+public int kthSmallest(TreeNode root, int k){
+    LinkedList<TreeNode> stack = new LinkedList<>();
+    
+    while(true){
+        while(root != null){
+            stack.push(root);
+            root = root.left;
+        }
+        root = stack.pop();
+        if (--k == 0) return root.val;
+        root = root.right;
+    }
+}
+```
+
+-   Time complexity: $O(H + k)$, where H is a tree height. This complexity is defined by the stack, which contains at least. $H + k$ elements since before starting to pop out, one has to go down to a leaf. This results in $O(\log N + k)$ for the balanced tree and $O(N + k)$ for the completely unbalanced tree with all the nodes in the left subtree.
+-   Space complexity: $O(H)$ to keep the stack, where H is a tree height. That makes $O(N)$ in the worst case of the skewed tree and $O(\log N)$ in the average case of the balanced tree.

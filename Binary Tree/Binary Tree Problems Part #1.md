@@ -40,6 +40,15 @@ public int maxDepth(TreeNode root) {
 }
 ```
 
+```java
+// simple recursion
+public int maxDepth(TreeNode root) {
+    // base case root is null
+    if (root == null) return 0;
+    return Math.max(1 + maxDepth(root.left), 1 + maxDepth(root.right));
+}
+```
+
 ### Standard Solution
 
 #### Solution #1 Recursion
@@ -92,6 +101,9 @@ public int maxDepth(TreeNode root) {
     return depth;
 }
 ```
+
+-   Time complexity: $\mathcal{O}(N)$.
+-   Space complexity: in the worst case, the tree is completely unbalanced, *e.g.,* each node has only a left child node, and the recursion call would occur N times (the height of the tree). Therefore the storage to keep the call stack would be $\mathcal{O}(N)$. But in the average case (the tree is balanced), the height of the tree would be $\log(N)$. Therefore, the space complexity, in this case, would be $\mathcal{O}(\log(N))$.
 
 ## Symmetric Tree(Easy 101)
 
