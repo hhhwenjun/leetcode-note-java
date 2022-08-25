@@ -36,26 +36,29 @@ Notice that the answer must be a substring, "pwke" is a subsequence and not a su
 
 ### My Solution
 
-* Should be slicing window, until you find duplicate
-* This one cannot work properly. It **skip number while sliding**
-
 ```java
 public int lengthOfLongestSubstring(String s) {
-    public int lengthOfLongestSubstring(String s) {
-        int wordLength = 0;  
-        Map<Character, Integer> wordMap = new HashMap<>();
-        char[] scharArry = s.toCharArray();
-        
-        for (int low = 0, high = 0; high < s.length(); high++){           
-            if (wordMap.containsKey(scharArry[high])){
-                low = Math.max(wordMap.get(scharArry[high]) + 1, low);
-            }
+    // two pointer + hashmap
+    // 1. create a hashmap, store the number of char
+    Map<Character, Integer> indexMap = new HashMap<>();
 
-            wordLength = Math.max(wordLength, high - low + 1);
-            wordMap.put(scharArry[high], high);
+    if (s.length() < 1) return 0;
+
+    // 2. loop through the string, two pointers form a window
+    int low = 0, high = 0;
+    int longest = 0;
+    while(high < s.length()){
+        indexMap.put(s.charAt(high), indexMap.getOrDefault(s.charAt(high), 0) + 1);
+
+        while (indexMap.get(s.charAt(high)) > 1){
+            indexMap.put(s.charAt(low), indexMap.get(s.charAt(low)) - 1);
+            low++;
         }
-        return wordLength;
+
+        longest = Math.max(longest, high - low + 1);
+        high++;
     }
+    return longest;
 }
 ```
 
@@ -64,6 +67,9 @@ public int lengthOfLongestSubstring(String s) {
 #### Solution #1 Sliding Window
 
 * Using HashSet with sliding window, define start and end index
+* `int[26]` for Letters 'a' - 'z' or 'A' - 'Z'
+* `int[128]` for ASCII
+* `int[256]` for Extended ASCII
 
 ```java
 public int lengthOfLongestSubstring(String s){

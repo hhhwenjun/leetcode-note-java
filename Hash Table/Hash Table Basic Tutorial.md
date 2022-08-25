@@ -568,6 +568,201 @@ class MyHashMap {
   * Time complexity: `O(N/K)` 
   * Space complexity: `O(K + M)`
 
+## Linked HashMap
+
+Hash table and linked list implementation of the `Map` interface, with predictable iteration order. This implementation differs from `HashMap` in that it maintains a doubly-linked list running through all of its entries. This linked list defines the iteration ordering, which is normally the order in which keys were inserted into the map (*insertion-order*). Note that insertion order is not affected if a key is *re-inserted* into the map.
+
+*   The main difference between HashMap and LinkedHashMap is that **LinkedHashMap maintains the insertion order of keys, the order in which keys are inserted into LinkedHashMap**. On the other hand, HashMap doesn't maintain any order or keys, or values.
+
+*   A special [`constructor`](https://docs.oracle.com/javase/8/docs/api/java/util/LinkedHashMap.html#LinkedHashMap-int-float-boolean-) is provided to create a linked hash map whose order of iteration is the order in which its entries were last accessed, from least-recently accessed to most-recently (*access-order*). This kind of map is well-suited to building LRU caches.
+    *   `LinkedHashMap(int initialCapacity, float loadFactor, boolean accessOrder)`
+
+### LRU Cache (Medium #146)
+
+**Question**: Design a data structure that follows the constraints of a **[Least Recently Used (LRU) cache](https://en.wikipedia.org/wiki/Cache_replacement_policies#LRU)**.
+
+Implement the `LRUCache` class:
+
+-   `LRUCache(int capacity)` Initialize the LRU cache with **positive** size `capacity`.
+-   `int get(int key)` Return the value of the `key` if the key exists, otherwise return `-1`.
+-   `void put(int key, int value)` Update the value of the `key` if the `key` exists. Otherwise, add the `key-value` pair to the cache. If the number of keys exceeds the `capacity` from this operation, **evict** the least recently used key.
+
+The functions `get` and `put` must each run in `O(1)` average time complexity.
+
+**Example 1:**
+
+```
+Input
+["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]
+[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]
+Output
+[null, null, null, 1, null, -1, null, -1, 3, 4]
+
+Explanation
+LRUCache lRUCache = new LRUCache(2);
+lRUCache.put(1, 1); // cache is {1=1}
+lRUCache.put(2, 2); // cache is {1=1, 2=2}
+lRUCache.get(1);    // return 1
+lRUCache.put(3, 3); // LRU key was 2, evicts key 2, cache is {1=1, 3=3}
+lRUCache.get(2);    // returns -1 (not found)
+lRUCache.put(4, 4); // LRU key was 1, evicts key 1, cache is {4=4, 3=3}
+lRUCache.get(1);    // return -1 (not found)
+lRUCache.get(3);    // return 3
+lRUCache.get(4);    // return 4
+```
+
+**Constraints:**
+
+-   `1 <= capacity <= 3000`
+-   `0 <= key <= 104`
+-   `0 <= value <= 105`
+-   At most `2 * 105` calls will be made to `get` and `put`.
+
+#### Solution 1: LinkedHashMap
+
+*   If you know the features of linkedhashmap, it is the best suited method
+
+```java
+// inherit from the linkedhashmap class
+class LRUCache extends LinkedHashMap<Integer, Integer>{
+    private int capacity;
+   
+    public LRUCache(int capacity) {
+        super(capacity, 0.75F, true);
+        this.capacity = capacity;
+    }
+    
+    public int get(int key) {
+        return super.getOrDefault(key, -1);
+    }
+    
+    public void put(int key, int value) {
+        super.put(key, value);
+    }
+    
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<Integer, Integer> eldest){
+        return size() > capacity;
+    }
+}
+```
+
+-   Time complexity  $\mathcal{O}(1)$ both for `put` and `get` since all operations with ordered dictionary : `get/in/set/move_to_end/popitem` (`get/containsKey/put/remove`) are done in a constant time.
+-   Space complexity: $\mathcal{O}(capacity)$ since the space is used only for an ordered dictionary with at most `capacity + 1` element.
+
+#### Solution 2: Hashmap + Double LinkedList
+
+<img src="https://leetcode.com/problems/lru-cache/Figures/146/structure.png" alt="compute" style="zoom:50%;" />
+
+```java
+public class LRUCache {
+
+  class DLinkedNode {
+    int key;
+    int value;
+    DLinkedNode prev;
+    DLinkedNode next;
+  }
+
+  private void addNode(DLinkedNode node) {
+    /**
+     * Always add the new node right after head.
+     */
+    node.prev = head;
+    node.next = head.next;
+
+    head.next.prev = node;
+    head.next = node;
+  }
+
+  private void removeNode(DLinkedNode node){
+    /**
+     * Remove an existing node from the linked list.
+     */
+    DLinkedNode prev = node.prev;
+    DLinkedNode next = node.next;
+
+    prev.next = next;
+    next.prev = prev;
+  }
+
+  private void moveToHead(DLinkedNode node){
+    /**
+     * Move certain node in between to the head.
+     */
+    removeNode(node);
+    addNode(node);
+  }
+
+  private DLinkedNode popTail() {
+    /**
+     * Pop the current tail.
+     */
+    DLinkedNode res = tail.prev;
+    removeNode(res);
+    return res;
+  }
+
+  private Map<Integer, DLinkedNode> cache = new HashMap<>();
+  private int size;
+  private int capacity;
+  private DLinkedNode head, tail;
+
+  public LRUCache(int capacity) {
+    this.size = 0;
+    this.capacity = capacity;
+
+    head = new DLinkedNode();
+    // head.prev = null;
+
+    tail = new DLinkedNode();
+    // tail.next = null;
+
+    head.next = tail;
+    tail.prev = head;
+  }
+
+  public int get(int key) {
+    DLinkedNode node = cache.get(key);
+    if (node == null) return -1;
+
+    // move the accessed node to the head;
+    moveToHead(node);
+
+    return node.value;
+  }
+
+  public void put(int key, int value) {
+    DLinkedNode node = cache.get(key);
+
+    if(node == null) {
+      DLinkedNode newNode = new DLinkedNode();
+      newNode.key = key;
+      newNode.value = value;
+
+      cache.put(key, newNode);
+      addNode(newNode);
+
+      ++size;
+
+      if(size > capacity) {
+        // pop the tail
+        DLinkedNode tail = popTail();
+        cache.remove(tail.key);
+        --size;
+      }
+    } else {
+      // update the value.
+      node.value = value;
+      moveToHead(node);
+    }
+  }
+}
+```
+
+-   Time complexity: $\mathcal{O}(1)$ both for `put` and `get`.
+-   Space complexity: $\mathcal{O}(capacity)$ since the space is used only for a hashmap and double linked list with at most `capacity + 1` elements.
+
 ## Problem Solving Tips !!
 
 * Be clear about the structure of hash table:

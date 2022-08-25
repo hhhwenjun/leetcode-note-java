@@ -2,7 +2,7 @@
 
 ## Definition
 
-*   **Dynamic Programming** (DP) is a programming paradigm that can systematically and efficiently explore all possible solutions to a problem.
+*   **Dynamic Programming** (DP) is a programming paradigm that can systematically and efficiently **explore all possible solutions** to a problem.
     *   The problem can be broken down into "overlapping subproblems" - smaller versions of the original problem that are re-used multiple times.
     *   The problem has an "optimal substructure" - an optimal solution can be formed from optimal solutions to the overlapping subproblems of the original problem.
 *   **Top-down and Bottom-up**
@@ -2409,3 +2409,132 @@ class Solution {
 
 -   Time Complexity: $O(N)$, where N is length of the string. We iterate the length of `dp` array which is N+1*N*+1.
 -   Space Complexity: $O(N)$. The length of the DP array.
+
+## Longest Palindromic Substring (Medium #5)
+
+**Question**: Given a string `s`, return *the longest palindromic substring* in `s`.
+
+**Example 1:**
+
+```
+Input: s = "babad"
+Output: "bab"
+Explanation: "aba" is also a valid answer.
+```
+
+**Example 2:**
+
+```
+Input: s = "cbbd"
+Output: "bb"
+```
+
+**Constraints:**
+
+-   `1 <= s.length <= 1000`
+-   `s` consist of only digits and English letters.
+
+### My Solution
+
+*   It is a brute force solution with $O(n^3)$ time complexity and $O(1)$ space complexity
+*   It works but just time limit exceeded
+
+```java
+public String longestPalindrome(String s) {
+    // brute force method
+    int maxLength = 0;
+    if (s.length() <= 1) return s;
+    String res = "";
+    for (int i = 0; i < s.length(); i++){
+        for (int j = i; j <= s.length(); j++){
+            String curr = s.substring(i, j);
+            if (isPalindrome(curr)){
+                if (curr.length() > maxLength){
+                    maxLength = curr.length();
+                    res = curr;
+                }
+            }
+        }
+    }
+    return res;
+}
+
+public boolean isPalindrome(String s){
+    int low = 0, high = s.length() - 1;
+    while(low < high){
+        if (s.charAt(low) != s.charAt(high)){
+            return false;
+        }
+        low++;
+        high--;
+    }
+    return true;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Dynamic Programming
+
+```java
+public String longestPalindrome(String s) {
+
+    if (s == null || "".equals(s)) {
+        return s;
+    }
+    
+    int len = s.length();
+    String ans = "";
+    int max = 0;
+    // 2D array, start and end of the substring
+    boolean[][] dp = new boolean[len][len];
+    for (int j = 0; j < len; j++) {
+        for (int i = 0; i <= j; i++) {
+            boolean judge = s.charAt(i) == s.charAt(j);
+            // check the substring is a palindrome
+            dp[i][j] = j - i > 2 ? dp[i + 1][j - 1] && judge : judge;
+            if (dp[i][j] && j - i + 1 > max) {
+                max = j - i + 1;
+                ans = s.substring(i, j + 1);
+            }
+        }
+    }
+    return ans;
+}
+```
+
+-   Time complexity: $O(n^2)$. This gives us a runtime complexity of $O(n^2)$.
+-   Space complexity: $O(n^2)$. It uses $O(n^2)$ space to store the table.
+
+#### Solution #2 Expand Around Center
+
+```java
+public String longestPalindrome(String s) {
+    // expand around center
+    if (s == null || s.equals("")) return "";
+    int start = 0, end = 0;
+    for (int i = 0; i < s.length(); i++){
+        int len1 = expandAroundCenter(s, i, i);
+        int len2 = expandAroundCenter(s, i, i+1);
+        int len = Math.max(len1, len2);
+        if (len > end - start){
+            start = i - (len - 1) / 2;
+            end = i + len / 2;
+        }
+    }
+
+    return s.substring(start, end + 1);
+}
+
+public int expandAroundCenter(String s, int start, int end){
+    int left = start, right = end;
+    while(left >= 0 && right <= s.length() - 1 && s.charAt(left) == s.charAt(right)){
+        left--;
+        right++;
+    }
+    return right - left - 1;
+}
+```
+
+-   Time complexity: $O(n^2)$. Since expanding a palindrome around its center could take $O(n)$ time, the overall complexity is $O(n^2)$.
+-   Space complexity: $O(1)$.
