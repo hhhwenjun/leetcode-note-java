@@ -109,3 +109,102 @@ public ListNode getMid(ListNode head){
 
 -   Time Complexity: $\mathcal{O}(n \log n)$, where n is the number of nodes in the linked list. The algorithm can be split into 2 phases, Split and Merge.
 -   Space Complexity: $\mathcal{O}(\log n)$, where n is the number of nodes in the linked list. Since the problem is recursive, we need additional space to store the recursive call stack. The maximum depth of the recursion tree is $\log n$
+
+## Largest Number (Medium #179)
+
+**Question**: Given a list of non-negative integers `nums`, arrange them such that they form the largest number and return it.
+
+Since the result may be very large, so you need to return a string instead of an integer.
+
+**Example 1:**
+
+```
+Input: nums = [10,2]
+Output: "210"
+```
+
+**Example 2:**
+
+```
+Input: nums = [3,30,34,5,9]
+Output: "9534330"
+```
+
+**Constraints:**
+
+-   `1 <= nums.length <= 100`
+-   `0 <= nums[i] <= 109`
+
+### Standard Solution
+
+#### Solution #1 Sorting via Custom Comparator
+
+*   Create a custom comparator, and compare the adding order (solve the problem: single digit vs. multiple digits)
+*   Sort the string array
+*   Add element to the string
+
+```java
+private class LargeNumberComparator implements Comparator<String>{
+    @Override
+    public int compare(String a, String b){
+        String order1 = a + b;
+        String order2 = b + a;
+        return order2.compareTo(order1);
+    }
+}
+
+public String largestNumber(int[] nums) {
+    // get input integers as strings
+    String[] strs = new String[nums.length];
+    for (int i = 0; i < nums.length; i++){
+        strs[i] = String.valueOf(nums[i]);
+    }
+
+    // sort strings according to custom comparator
+    Arrays.sort(strs, new LargeNumberComparator());
+
+    // if, after being sorted, the largest number is 0,
+    // the entire number is 0.
+    if (strs[0].equals("0")) return "0";
+
+    // build largest number from sorted array
+    String largestNumberStr = new String();
+    for (String numStr : strs){
+        largestNumberStr += numStr;
+    }
+    return largestNumberStr;
+}
+```
+
+```java
+// almost same but much faster solution
+public String largestNumber(int[] nums) {
+    if (nums == null || nums.length == 0) return "";
+    String[] strs = new String[nums.length];
+    for (int i = 0; i < nums.length; i++) {
+        strs[i] = nums[i]+"";
+    }
+    Arrays.sort(strs, new Comparator<String>() {
+        @Override
+        public int compare(String i, String j) {
+            String s1 = i+j;
+            String s2 = j+i;
+            return s1.compareTo(s2);
+        }
+    });
+    if (strs[strs.length-1].charAt(0) == '0') return "0";
+    String res = new String();
+    for (int i = 0; i < strs.length; i++) {
+        res = strs[i]+res;
+    }
+    return res;
+}
+```
+
+-   Time complexity: $\mathcal{O}(nlgn)$
+
+    Although we are doing extra work in our comparator, it is only by a constant factor. Therefore, the overall runtime is dominated by the complexity of `sort`, which is $\mathcal{O}(nlgn)$ in Python and Java.
+
+-   Space complexity: $\mathcal{O}(n)$
+
+    Here, we allocate $\mathcal{O}(n)$ additional space to store the copy of `nums`. Although we could do that work in place (if we decide that it is okay to modify `nums`), we must allocate $\mathcal{O}(n)$ space for the final return string. Therefore, the overall memory footprint is linear in length of `nums`.

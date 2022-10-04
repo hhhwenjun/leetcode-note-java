@@ -1738,3 +1738,172 @@ public boolean canAttendMeetings(int[][] intervals) {
 
 -   Time complexity: $O(n \log n)$. The time complexity is dominated by sorting. Once the array has been sorted, only $O(n)$ time is taken to go through the array and determine if there is any overlap.
 -   Space complexity: $O(1)$. Since no additional space is allocated.
+
+## Encode and Decode Strings (Medium #271)
+
+**Question**: Design an algorithm to encode **a list of strings** to **a string**. The encoded string is then sent over the network and is decoded back to the original list of strings.
+
+Machine 1 (sender) has the function:
+
+```
+string encode(vector<string> strs) {
+  // ... your code
+  return encoded_string;
+}
+```
+
+Machine 2 (receiver) has the function:
+
+```
+vector<string> decode(string s) {
+  //... your code
+  return strs;
+}
+```
+
+So Machine 1 does:
+
+```
+string encoded_string = encode(strs);
+```
+
+and Machine 2 does:
+
+```
+vector<string> strs2 = decode(encoded_string);
+```
+
+`strs2` in Machine 2 should be the same as `strs` in Machine 1.
+
+Implement the `encode` and `decode` methods.
+
+You are not allowed to solve the problem using any serialize methods (such as `eval`).
+
+**Example 1:**
+
+```
+Input: dummy_input = ["Hello","World"]
+Output: ["Hello","World"]
+Explanation:
+Machine 1:
+Codec encoder = new Codec();
+String msg = encoder.encode(strs);
+Machine 1 ---msg---> Machine 2
+
+Machine 2:
+Codec decoder = new Codec();
+String[] strs = decoder.decode(msg);
+```
+
+**Example 2:**
+
+```
+Input: dummy_input = [""]
+Output: [""]
+```
+
+**Constraints:**
+
+-   `1 <= strs.length <= 200`
+-   `0 <= strs[i].length <= 200`
+-   `strs[i]` contains any possible characters out of `256` valid ASCII characters.
+
+**Follow up:** Could you write a generalized algorithm to work on any possible set of characters?
+
+### Standard Solution
+
+*   A string can use 256 ASCII codes, so the delimiter should be different than them.
+
+#### Solution #1 Non-ASCII delimiter
+
+*   The first method is use a non-ASCII delimiter to split the strings
+*   We can use the index of 257, 258 character to split the strings, 258 is used when the string is empty (separate the situations of 257)
+
+```java
+public class Codec {
+    // use non-ascii delimiter: string can use either code in ascii, 256 in total
+    // Encodes a list of strings to a single string.
+    public String encode(List<String> strs) {
+        if (strs.size() == 0) return Character.toString((char)258);
+        
+        String delimiter = Character.toString((char)257);
+        StringBuilder sb = new StringBuilder();
+        for (String str : strs){
+            sb.append(str);
+            sb.append(delimiter);
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        return sb.toString();
+    }
+    // Decodes a single string to a list of strings.
+    public List<String> decode(String s) {
+        if (s.equals(Character.toString((char)258))) return new ArrayList<String>();
+        
+        String delimiter = Character.toString((char)257);
+        String[] resStrings = s.split(delimiter, -1);
+        return Arrays.asList(resStrings);
+        
+    }
+}
+
+// Your Codec object will be instantiated and called as such:
+// Codec codec = new Codec();
+// codec.decode(codec.encode(strs));
+```
+
+-   Time complexity: $\mathcal{O}(N)$ both for encoding and decoding, where N is the number of strings in the input array.
+-   Space complexity: $\mathcal{O}(1)$ for encode to keep the output, since the output is one string. $\mathcal{O}(N)$ for decode keep the output, since the output is an array of strings.
+
+#### Solution #2 Chunked Transfer Encoding
+
+<img src="https://leetcode.com/problems/encode-and-decode-strings/Figures/271/encodin.png" alt="fig" style="zoom:50%;" />
+
+*   Data stream is divided into chunks. Each chunk is preceded by its size in bytes.
+
+```java
+public class Codec {
+    // Encodes string length to bytes string
+    public String intToString(String s) {
+ 		int x = s.length();
+        char[] bytes = new char[4];
+        for (int i = 3; i > -1; i--){
+            bytes[3 - i] = (char)(x >> (i * 8) & 0xff);
+        }
+        return new String(bytes);
+    }
+    // Encodes a list of strings to a single string.
+    public String encode(List<String> strs){
+        StringBuilder sb = new StringBuilder();
+        for (String s : strs){
+            sb.append(intToString(s));
+            sb.append(s);
+        }
+        return sb.toString();
+    }
+
+    // Decodes bytes string to integer
+    public int stringToInt(String bytesStr){
+        int result = 0;
+        for (char b : bytesStr.toCharArray()){
+            result = (result << 8) + (int)b;
+        }
+        return result;
+    }
+    
+    // Decodes a single string to a list of strings.
+    public List<String> decode(String s) {
+ 		int i = 0, n = s.length();
+        List<String> output = new ArrayList();
+        while(i < n){
+            int length = stringToInt(s.substring(i, i + 4));
+            i += 4;
+            output.add(s.substring(i, i + length));
+            i += length;
+        }
+        return output;
+    }
+}
+```
+
+-   Time complexity: $\mathcal{O}(N)$ both for encode and decode, where N is a number of strings in the input array.
+-   Space complexity: $\mathcal{O}(1)$ for encoding to keep the output, since the output is one string. $\mathcal{O}(N)$ for decode keep the output, since the output is an array of strings.

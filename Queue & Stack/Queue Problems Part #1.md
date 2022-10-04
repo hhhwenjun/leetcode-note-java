@@ -495,3 +495,199 @@ class MovingAverage {
 
 -   Time Complexity: $\mathcal{O}(1)$, as we explained in intuition.
 -   Space Complexity: $\mathcal{O}(N)$, where N is the size of the moving window.
+
+## Flatten Nested List Iterator (Medium #341)
+
+**Question**: You are given a nested list of integers `nestedList`. Each element is either an integer or a list whose elements may also be integers or other lists. Implement an iterator to flatten it.
+
+Implement the `NestedIterator` class:
+
+-   `NestedIterator(List<NestedInteger> nestedList)` Initializes the iterator with the nested list `nestedList`.
+-   `int next()` Returns the next integer in the nested list.
+-   `boolean hasNext()` Returns `true` if there are still some integers in the nested list and `false` otherwise.
+
+Your code will be tested with the following pseudocode:
+
+```
+initialize iterator with nestedList
+res = []
+while iterator.hasNext()
+    append iterator.next() to the end of res
+return res
+```
+
+If `res` matches the expected flattened list, then your code will be judged as correct.
+
+**Example 1:**
+
+```
+Input: nestedList = [[1,1],2,[1,1]]
+Output: [1,1,2,1,1]
+Explanation: By calling next repeatedly until hasNext returns false, the order of elements returned by next should be: [1,1,2,1,1].
+```
+
+**Example 2:**
+
+```
+Input: nestedList = [1,[4,[6]]]
+Output: [1,4,6]
+Explanation: By calling next repeatedly until hasNext returns false, the order of elements returned by next should be: [1,4,6].
+```
+
+**Constraints:**
+
+-   `1 <= nestedList.length <= 500`
+-   The values of the integers in the nested list is in the range `[-106, 106]`.
+
+### Standard Solution
+
+*   Need to fully understand the `iterator`. `next()` would return the element
+*   Flatten the elements into a list or other structure, then use `iterator` to iterate the structure.
+
+#### Solution #1 Recursion + List
+
+```java
+import java.util.NoSuchElementException;
+public class NestedIterator implements Iterator<Integer> {
+    
+    int curr;
+    List<Integer> list;
+
+    public NestedIterator(List<NestedInteger> nestedList) {
+        curr = 0;
+        list = new ArrayList<>();
+        flattenList(nestedList);
+    }
+    
+    // recursively unpacks a nest list in dfs
+    // flatten all the elements to a list before the iterator begins
+    private void flattenList(List<NestedInteger> nestedList){
+        for (NestedInteger nestedInteger : nestedList){
+            if (nestedInteger.isInteger()){
+                list.add(nestedInteger.getInteger());
+            } else {
+                flattenList(nestedInteger.getList());
+            }
+        }
+    }
+
+    @Override
+    public Integer next() {
+        if (!hasNext()) throw new NoSuchElementException();
+        return list.get(curr++);
+    }
+
+    @Override
+    public boolean hasNext() {
+        return curr < list.size();
+    }
+}
+```
+
+-   Let N be the total number of *integers* within the nested list, L be the total number of *lists* within the nested list, and D be the maximum nesting depth (maximum number of lists inside each other).
+
+-   Time complexity:
+
+    We'll analyze each of the methods separately.
+
+    -   **Constructor:** $O(N + L)$
+
+        The constructor is where all the time-consuming work is done.
+
+        For each list within the nested list, there will be one call to `flattenList(...)`. The loop within `flattenList(...)` will then iterate n times, where n is the number of integers within that list. Across all calls to `flattenList(...)`, there will be a total of N loop iterations. Therefore, the time complexity is the number of lists plus the number of integers, giving us $O(N + L)$
+
+        Notice that the maximum depth of the nesting does not impact the time complexity.
+
+    -   **next():** $O(1)$
+
+        Getting the next element requires incrementing `position` by 1 and accessing an element at a particular index of the `integers` list. Both of these are $O(1)$ operations.
+
+    -   **hasNext():** $O(1)$.
+
+        Checking whether or not there is a next element requires comparing the length of the `integers` list to the `position` variable. This is an $O(1)$ operation.
+
+-   Space complexity: $O(N + D)$.
+
+    The most obvious auxiliary space is the `integers` list. The length of this is $O(N)$
+
+    The less obvious auxiliary space is the space used by the `flattenList(...)` function. Recall that recursive functions need to keep track of where they're up to by putting stack frames on the runtime stack. Therefore, we need to determine what the maximum number of stack frames there could be at a time is. Each time we encounter a nested list, we call `flattenList(...)` and a stack frame is added. Each time we finish processing a nested list, `flattenList(...)` returns and a stack frame is removed. Therefore, the maximum number of stack frames on the runtime stack is the maximum nesting depth, D.
+
+    Because these two operations happen one-after-the-other, and either could be the largest, we add their time complexities together giving a final result of $O(N + D)$
+
+#### Solution #2 Stack
+
+```java
+import java.util.NoSuchElementException;
+
+public class NestedIterator implements Iterator<Integer> {
+
+    // In Java, the Stack class is considered deprecated. Best practice is to use
+    // a Deque instead. We'll use addFirst() for push, and removeFirst() for pop.
+    private Deque<NestedInteger> stack;
+    
+    public NestedIterator(List<NestedInteger> nestedList) {
+        // The constructor puts them on in the order we require. No need to reverse.
+        stack = new ArrayDeque(nestedList);
+    }
+        
+    
+    @Override
+    public Integer next() {
+        // As per java specs, throw an exception if there's no elements left.
+        if (!hasNext()) throw new NoSuchElementException();
+        // hasNext ensures the stack top is now an integer. Pop and return
+        // this integer.
+        return stack.removeFirst().getInteger();
+    }
+
+    
+    @Override
+    public boolean hasNext() {
+        // Check if there are integers left by getting one onto the top of stack.
+        makeStackTopAnInteger();
+        // If there are any integers remaining, one will be on the top of the stack,
+        // and therefore the stack can't possibly be empty.
+        return !stack.isEmpty();
+    }
+
+
+    private void makeStackTopAnInteger() {
+        // While there are items remaining on the stack and the front of 
+        // stack is a list (i.e. not integer), keep unpacking.
+        while (!stack.isEmpty() && !stack.peekFirst().isInteger()) {
+            // Put the NestedIntegers onto the stack in reverse order.
+            List<NestedInteger> nestedList = stack.removeFirst().getList();
+            for (int i = nestedList.size() - 1; i >= 0; i--) {
+                stack.addFirst(nestedList.get(i));
+            }
+        }
+    }
+}
+```
+
+-   Time complexity.
+
+    -   **Constructor:** $O(N + L)$
+
+        The worst-case occurs when the initial input nestedList consists entirely of integers and empty lists (everything is in the top-level). In this case, every item is reversed and stored, giving a total time complexity of $O(N + L)$
+
+    -   **makeStackTopAnInteger():** $O(\dfrac{L}{N})$or $O(1)$
+
+        If the top of the stack is an integer, then this function does nothing; taking $O(1)$ time.
+
+        Otherwise, it needs to process the stack until an integer is on top. The best way of analyzing the time complexity is to look at the total cost across all calls to `makeStackTopAnInteger()` and then divide by the number of calls made. Once the iterator is exhausted `makeStackTopAnInteger()` must have seen every integer at least once, costing $O(N)$ time. Additionally, it has seen every list (except the first) on the stack at least once also, so this costs $O(L)$ time. Adding these together, we get $O(N + L)$ time.
+
+        The amortized time of a single `makeStackTopAnInteger` is the total cost, $O(N + L)$, divided by the number of times it's called. In order to get all integers, we need to have called it N times. This gives us an amortized time complexity of $\dfrac{O(N + L)}{N} = O(\dfrac{N}{N} + \dfrac{L}{N}) = O(\dfrac{L}{N})$
+
+    -   **next():** $O(\dfrac{L}{N})$ or $O(1)$
+
+        All of this method is $O(1)$, except for possibly the call to `makeStackTopAnInteger()`, giving us a time complexity the same as `makeStackTopAnInteger()`.
+
+    -   **hasNext():** $O(\dfrac{L}{N})$ or $O(1)$
+
+        All of these methods is $O(1)$, except for possibly the call to `makeStackTopAnInteger()`, giving us a time complexity the same as `makeStackTopAnInteger()`.
+
+-   Space complexity: $O(N + L)$
+
+    In the worst case, where the top list contains N integers, or L empty lists, it will cost $O(N + L)$ space. Other expensive cases occur when the nesting is very deep. However, it's useful to remember that $D ≤ L$ (because each layer of nesting requires another list), and so we don't need to take this into account.
+

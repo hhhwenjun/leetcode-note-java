@@ -154,7 +154,7 @@ public ListNode swapPairs(ListNode head){
         firstNode.next = secondNode.next;
         secondNode.next = firstNode;
         
-        // Reinitializing the ehad and prevNode for next swap
+        // Reinitializing the head and prevNode for next swap
         prevNode = firstNode;
         head = firstNode.next;//jump
     }

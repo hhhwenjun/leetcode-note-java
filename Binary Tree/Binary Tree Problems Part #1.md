@@ -309,6 +309,113 @@ public boolean hasPathSum(TreeNode root, int sum) {
 
 *   Time and space complexity is the same as above solution
 
+## Path Sum III (Medium #437)
+
+**Question**: Given the `root` of a binary tree and an integer `targetSum`, return *the number of paths where the sum of the values along the path equals* `targetSum`.
+
+The path does not need to start or end at the root or a leaf, but it must go downwards (i.e., traveling only from parent nodes to child nodes).
+
+**Example 1:**
+
+<img src="https://assets.leetcode.com/uploads/2021/04/09/pathsum3-1-tree.jpg" alt="img" style="zoom:50%;" />
+
+```
+Input: root = [10,5,-3,3,2,null,11,3,-2,null,1], targetSum = 8
+Output: 3
+Explanation: The paths that sum to 8 are shown.
+```
+
+**Example 2:**
+
+```
+Input: root = [5,4,8,11,null,13,4,7,2,null,null,5,1], targetSum = 22
+Output: 3
+```
+
+**Constraints:**
+
+-   The number of nodes in the tree is in the range `[0, 1000]`.
+-   `-109 <= Node.val <= 109`
+-   `-1000 <= targetSum <= 1000`
+
+### Standard Solution
+
+#### Solution #1 Prefix Sum
+
+*   Use a hashmap to record the pre-calculated sum
+*   Each time reduce the target sum and check if the map has the corresponding sum key (similar to dynamic programming)
+*   Remove the sum from the hashmap if jump to another parallel subtree.
+
+```java
+int count = 0;
+int k = 0;
+HashMap<Long, Integer> h = new HashMap<>();
+public int pathSum(TreeNode root, int targetSum) {
+    k = targetSum;
+    preorder(root, 0L);
+    return count;
+}
+
+public void preorder(TreeNode node, long currSum){
+    if (node == null) return;
+
+    // current prefix sum
+    currSum += node.val;
+    // here is the sum we're looking for
+    if (currSum == k){
+        count++;
+    }
+
+    // number of times the currSum - k has occured already
+    count += h.getOrDefault(currSum - k, 0);
+
+    // add the current sum into hashmap
+    h.put(currSum, h.getOrDefault(currSum, 0) + 1);
+
+    // process left subtree
+    preorder(node.left, currSum);
+    // process right subtree
+    preorder(node.right, currSum);
+
+    // remove the current sum from hashmap
+    // in order not to use it during parallel subtree processing
+    h.put(currSum, h.get(currSum) - 1);
+}
+```
+
+-   Time complexity: $\mathcal{O}(N)$, where N is a number of nodes. During preorder traversal, each node is visited once.
+-   Space complexity: up to $\mathcal{O}(N)$ to keep the hashmap of prefix sums, where N is a number of nodes.
+
+#### Solution #2 Recursion with Duplicate Traversal
+
+*   We only need to implement the sum from the root solution. Then treat every node in the tree as a root.
+
+```java
+int target;
+int count = 0;
+
+public int pathSum(TreeNode root, int targetSum) {
+    target = targetSum;
+    fromRoot(root, 0); // from the root
+
+    // treat every node as a root, start from the root again
+    if (root != null && root.left != null) pathSum(root.left, targetSum);
+    if (root != null && root.right != null) pathSum(root.right, targetSum);
+    return count;
+}
+
+// calculate the sum from the root
+public void fromRoot(TreeNode root, long sum){
+    if (root == null) return;
+    sum += root.val;
+    if (sum == target) count++;
+    fromRoot(root.left, sum);
+    fromRoot(root.right, sum);
+}
+```
+
+*   Time complexity should be $O(n^2)$, while the space should be $O(n)$
+
 ## Count Univalue Subtrees(Medium #250)
 
 **Question**: Given the `root` of a binary tree, return the number of **uni-value** subtrees.

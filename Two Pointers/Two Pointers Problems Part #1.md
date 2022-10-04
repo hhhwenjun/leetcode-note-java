@@ -406,3 +406,149 @@ public int trap(int[] height) {
 
 -   Time complexity: $O(n)$. Single iteration of $O(n)$.
 -   Space complexity: $O(1)$ extra space. Only constant space required for $\text{left}$, $\text{right}$, $\text{left\_max}$ and $\text{right\_max}$.
+
+## Product of Array Except Self (Medium #238)
+
+**Question**: Given an integer array `nums`, return *an array* `answer` *such that* `answer[i]` *is equal to the product of all the elements of* `nums` *except* `nums[i]`.
+
+The product of any prefix or suffix of `nums` is **guaranteed** to fit in a **32-bit** integer.
+
+You must write an algorithm that runs in `O(n)` time and without using the division operation.
+
+**Example 1:**
+
+```
+Input: nums = [1,2,3,4]
+Output: [24,12,8,6]
+```
+
+**Example 2:**
+
+```
+Input: nums = [-1,1,0,-3,3]
+Output: [0,0,9,0,0]
+```
+
+**Constraints:**
+
+-   `2 <= nums.length <= 105`
+-   `-30 <= nums[i] <= 30`
+-   The product of any prefix or suffix of `nums` is **guaranteed** to fit in a **32-bit** integer.
+
+**Follow up:** Can you solve the problem in `O(1) `extra space complexity? (The output array **does not** count as extra space for space complexity analysis.)
+
+### My Solution
+
+```java
+// correct but time limit exceeded
+public int[] productExceptSelf(int[] nums) {
+    // product every digit in the array, then change i element back to origin
+    int[] res = new int[nums.length];
+    Arrays.fill(res, 1);
+    for (int i = 0; i < nums.length; i++){
+        int curr = nums[i];
+        for (int j = 0; j < nums.length; j++){
+            if (i == j) continue;
+            res[j] = res[j] * curr;
+        }
+    }
+    return res;
+}
+```
+
+### Standard Solution
+
+#### Solution #1 Left and Right Product Lists
+
+![img](https://leetcode.com/problems/product-of-array-except-self/Figures/238/diag-1.png)
+
+*   Use previous product times `nums[i - 1]` to avoid times themselves. Similarly, calculate the product starting from the right direction.
+
+```java
+public int[] productExceptSelf(int[] nums){
+    // the length of the input array
+    int length = nums.length;
+    
+    // the left and right arrays as described in the algorithm
+    int[] L = new int[length];
+    int[] R = new int[length];
+    
+    // final answer array to be returned
+    int[] answer = new int[length];
+    
+    // L[i] contains the product of all elements to the left
+    // note: for the element at index '0', no elements to the left, L[0] would be 1
+    L[0] = 1;
+    for (int i = 1; i < length; i++){
+        // L[i - 1] already contains the product of elements to the left of 'i - 1'
+        L[i] = nums[i - 1] * L[i - 1];
+    }
+    
+    R[length - 1] = 1; 
+    for (int i = length - 2; i >= 0; i--){
+        // R[i + 1] already contains the product of elements to the right of 'i + 1'
+        R[i] = nums[i + 1] * R[i + 1];
+    }
+    
+    // constructing the answer array
+    for (int i = 0; i < length; i++){
+        // For the first element, R[i] would be product except for self
+        // For the last element of the array, product except for self would be L[i]
+        // Else, multiple product of all elements to the left and to the right
+        answer[i] = L[i] * R[i];
+    }
+    return answer;
+}
+```
+
+-   Time complexity: $O(N)$ where N represents the number of elements in the input array. We use one iteration to construct the array L, one to construct the array R, and one last to construct the `answer` array using L and R.
+-   Space complexity: $O(N)$ used up by the two intermediate arrays that we constructed to keep track of the product of elements to the left and right.
+
+#### Solution #2 O(1) Space Approach
+
+*   Similar idea to the first solution, but more space efficient
+
+```java
+public int[] productExceptSelf(int[] nums) {
+    // The length of the input array 
+    int length = nums.length;
+
+    // Final answer array to be returned
+    int[] answer = new int[length];
+    
+    answer[0] = 1;
+    for (int i = 1; i < length; i++) {
+        answer[i] = nums[i - 1] * answer[i - 1];
+    }
+
+    int R = 1;
+    for (int i = length - 1; i >= 0; i--) {
+
+        // For the index 'i', R would contain the 
+        // product of all elements to the right. We update R accordingly
+        answer[i] = answer[i] * R;
+        R *= nums[i];
+    }
+    return answer;
+}
+```
+
+*   More simplified version
+
+```java
+public int[] productExceptSelf(int[] nums) {
+    int[] result = new int[nums.length];
+    for (int i = 0, tmp = 1; i < nums.length; i++) {
+        result[i] = tmp;
+        tmp *= nums[i];
+    }
+    for (int i = nums.length - 1, tmp = 1; i >= 0; i--) {
+        result[i] *= tmp;
+        tmp *= nums[i];
+    }
+    return result;
+}
+```
+
+-   Time complexity: $O(N)$ where N represents the number of elements in the input array. We use one iteration to construct the array L, and one to update the array answer.
+-   Space complexity: $O(1)$ since don't use any additional array for our computations. The problem statement mentions that using the answer array doesn't add to the space complexity.
