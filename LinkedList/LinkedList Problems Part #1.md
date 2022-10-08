@@ -679,7 +679,7 @@ If the list is empty (i.e., the given node is `null`), you should create a new s
 **Example 1:**
 
 ![img](https://assets.leetcode.com/uploads/2019/01/19/example_1_before_65p.jpg)
- 
+
 
 ```
 Input: head = [3,4,1], insertVal = 2
@@ -1096,3 +1096,174 @@ public ListNode rotateRight(ListNode head, int k) {
 }
 ```
 
+## Merge k Sorted Lists (Heard #23)
+
+**Question**: You are given an array of `k` linked-lists `lists`, each linked-list is sorted in ascending order.
+
+*Merge all the linked-lists into one sorted linked-list and return it.*
+
+**Example 1:**
+
+```
+Input: lists = [[1,4,5],[1,3,4],[2,6]]
+Output: [1,1,2,3,4,4,5,6]
+Explanation: The linked-lists are:
+[
+  1->4->5,
+  1->3->4,
+  2->6
+]
+merging them into one sorted list:
+1->1->2->3->4->4->5->6
+```
+
+**Example 2:**
+
+```
+Input: lists = []
+Output: []
+```
+
+**Example 3:**
+
+```
+Input: lists = [[]]
+Output: []
+```
+
+**Constraints:**
+
+-   `k == lists.length`
+-   `0 <= k <= 104`
+-   `0 <= lists[i].length <= 500`
+-   `-104 <= lists[i][j] <= 104`
+-   `lists[i]` is sorted in **ascending order**.
+-   The sum of `lists[i].length` will not exceed `104`.
+
+### My Solution
+
+```java
+public ListNode mergeKLists(ListNode[] lists) {
+    // each time compare the listnode pointer
+    // find the max length of the new list
+    int length = 0;
+    for (ListNode list : lists){
+        ListNode curr = list;
+        while(curr != null){
+            curr = curr.next;
+            length++;
+        }
+    }
+    int currListLength = 0;
+    ListNode dummyHead = new ListNode();
+    ListNode curr = dummyHead;
+    // if not reach the number of nodes
+    while(currListLength < length){
+        int min = Integer.MAX_VALUE;
+        ListNode minNode = new ListNode();
+        int minIndex = 0;
+        for (int i = 0; i < lists.length; i++){
+            if (lists[i] != null && lists[i].val < min){
+                min = lists[i].val;
+                minNode = lists[i];
+                minIndex = i;
+            }
+        }
+        curr.next = minNode;
+        curr = curr.next;
+        currListLength++;
+        if (lists[minIndex] != null) lists[minIndex] = lists[minIndex].next;
+    }
+    return dummyHead.next;
+}
+```
+
+*   The method of compare them one by one, slow in time complexity but fast in space complexity.
+*   Time complexity: $O(kN)$ where $\text{k}$ is the number of linked lists.
+    -   Almost every selection of node in the final linked costs $O(k)$ ($\text{k-1}$ times comparison).
+    -   There are N nodes in the final linked list.
+*   Space complexity:
+    -   $O(1)$ It's not hard to apply the in-place method - connect selected nodes instead of creating new nodes to fill the new linked list.
+
+### Standard Solution
+
+#### Solution #1 Compare them 1 by 1
+
+*   Same as my solution concept, low space complexity but slow
+
+#### Solution #2 Collect all the values of list and sort
+
+*   Use a list to include all the value of list node, then sort the list
+*   Create a new LinkedList with new nodes of the values
+
+```java
+public ListNode mergeKLists(ListNode[] lists){
+    List<Integer> list = new ArrayList<Integer>();
+    for (ListNode node : lists){
+        while(node != null){
+            list.add(node.val);
+            node = node.next;
+        }
+    }
+    Collections.sort(list);
+    ListNode head = new ListNode(0);
+    ListNode curr = head;
+    for (int listVal : list){
+        ListNode newNode = new ListNode(listVal);
+        curr.next = newNode;
+        curr = curr.next;
+    }
+    curr.next = null;
+    return head.next;
+}
+```
+
+-   Time complexity: $O(N\log N)$ where N is the total number of nodes.
+    -   Collecting all the values costs $O(N)$ time.
+    -   A stable sorting algorithm costs $O(N\log N)$ time.
+    -   Iterating for creating the linked list costs $O(N)$ time.
+-   Space complexity: $O(N)$
+    -   Sorting cost $O(N)$ space (depends on the algorithm you choose).
+    -   Creating a new linked list costs $O(N)$ space.
+
+#### Solution #3 Optimize solution by Priority Queue
+
+*   Put all the nodes in the priority queue and poll them out
+*   Put the head of the lists, then poll min out, then put the next node into the queue
+
+```java
+public ListNode mergeKLists(ListNode[] lists) { 
+    Comparator<ListNode> cmp;
+    cmp = new Comparator<ListNode>() {  
+    @Override
+    public int compare(ListNode o1, ListNode o2) {
+        // TODO Auto-generated method stub
+        return o1.val-o2.val;
+    }
+    };
+
+    Queue<ListNode> q = new PriorityQueue<ListNode>(cmp);
+    for(ListNode l : lists){
+        if(l!=null){
+            q.add(l);
+        }        
+    }
+    ListNode head = new ListNode(0);
+    ListNode point = head;
+    while(!q.isEmpty()){ 
+        point.next = q.poll();
+        point = point.next; 
+        ListNode next = point.next;
+        if(next!=null){
+            q.add(next);
+        }
+    }
+    return head.next;
+}
+```
+
+-   Time complexity: $O(N\log k)$ where $\text{k}$ is the number of linked lists.
+    -   The comparison cost will be reduced to $O(\log k)$ for every pop and insertion to the priority queue. But finding the node with the smallest value just costs $O(1)$ time.
+    -   There are N nodes in the final linked list.
+-   Space complexity :
+    -   $O(k)$ The above code applies the in-place method, which costs $O(1)$ space. And the priority queue (often implemented with heaps) costs $O(k)$ space (it's far less than N in most situations).
